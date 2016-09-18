@@ -206,12 +206,11 @@
             // columnHeader9
             // 
             this.columnHeader9.Text = "date";
-            this.columnHeader9.Width = 68;
             // 
             // columnHeader10
             // 
             this.columnHeader10.Text = "txt";
-            this.columnHeader10.Width = 182;
+            this.columnHeader10.Width = 170;
             // 
             // Form1
             // 
