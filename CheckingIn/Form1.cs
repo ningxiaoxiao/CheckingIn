@@ -158,11 +158,13 @@ namespace CheckingIn
         /// <param name="name"></param>
         /// <param name="dt"></param>
         /// <param name="t"></param>
-        private void Warn(string name, DateTime dt, string t)
+        private void Warn(string name, object dt, string t)
         {
+
+
             var wr = _warnTable.NewRow();
             wr["name"] = name;
-            wr["date"] = dt.Date;
+            wr["date"] = ((DateTime)dt).Date;
             wr["txt"] = t;
             _warnTable.Rows.Add(wr);
         }
@@ -175,10 +177,10 @@ namespace CheckingIn
             //读出所有姓名
             var dv = new DataView(_xlsdt);
             var namedt = dv.ToTable(true, "name");
-            //生成所有当月工作日
 
             progressBar1.Maximum = namedt.Rows.Count;
             progressBar1.Value = 0;
+
             //对每人个进行遍历
             foreach (DataRow r in namedt.Rows)
             {
@@ -194,50 +196,56 @@ namespace CheckingIn
 
                 foreach (DataRow dater in datedt.Rows)
                 {
-                    //得到这个人今天所有的打卡时间
+                    //今日日期
                     var date = dater["date"];
 
-                    var timeview = new DataView(_xlsdt) { RowFilter = $"name = '{n}' AND date = '{date}'" };
-                    var t = timeview.ToTable();
+                    //判断是不是工作日
+                    //如果有30个出勤,就算工作日
+                    //取出今天工作的人
+                    var dateview = new DataView(_xlsdt) { RowFilter = $"date ='{date}'" };
+                    var isworkday = dateview.Count > 50;
 
-                    //TODO  测试一下数据库返回直接排序
-
-                    //写入到一个新的数组里,进行排序
-                    var times = new ArrayList();
-
-                    foreach (DataRow timer in t.Rows)
+                    if (!isworkday)
                     {
-                        times.Add(timer["time"]);
+                        Warn(n, date, "出勤人员少于50人,非工作日");
                     }
 
-                    if (times.Count == 0)
+                    
+                    //得到这个人今天所有的打卡时间
+                    var timeview = new DataView(_xlsdt)
                     {
-                        //todo 测试这一天 是不是工作日
-                        //如果有10个出勤,就算工作日
+                        RowFilter = $"name = '{n}' AND date = '{date}'",
+                        Sort = "time asc" //从小到大
+                    };
+
+                    
+
+                    if (timeview.Count == 0)
+                    {
+                        if (isworkday)
+                            Warn(n, date, "工作日未出勤");
 
                         continue;//当天没有记录 返回
                     }
 
 
-                    times.Sort();
                     //进行记录
                     TimeSpan wt;
-                    NewRecord(n, date, times[0], times[times.Count - 1], out wt);
+                    NewRecord(n, date, timeview[0].Row["time"], timeview[timeview.Count - 1].Row["time"], out wt);
 
 
                     //相关警告
-                    if (times.Count < 2)
+                    if (timeview.Count < 2)
                     {
-                        Warn(n, (DateTime)date, "打卡次数少于2次");
+                        Warn(n, date, "打卡次数少于2次");
                     }
                     else if (wt < new TimeSpan(0, 9, 0, 0))
                     {
-                        Warn(n, (DateTime)date, "工作时间少于9小时");
+                        Warn(n, date, "工作时间少于9小时");
                     }
 
-
-
-
+                    if (!isworkday)
+                        Warn(n, date, "非工作日出勤");
 
                     // Console.Out.WriteLine("{0}:{1}:{2}:{3}", n, date, times[0], times[times.Count - 1]);
                 }
@@ -265,12 +273,10 @@ namespace CheckingIn
             //得到这个人所有的日期
             var dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}'" };
 
-            var days = dv.ToTable();
-
             monthCalendar1.RemoveAllBoldedDates();
-            foreach (DataRow dr in days.Rows)
+            foreach (DataRowView dr in dv)
             {
-                monthCalendar1.AddBoldedDate((DateTime)dr["date"]);
+                monthCalendar1.AddBoldedDate((DateTime)dr.Row["date"]);
             }
             var v = monthCalendar1.BoldedDates[0];
 
@@ -279,16 +285,16 @@ namespace CheckingIn
 
             //得到相关提示记录
             dv = new DataView(_warnTable) { RowFilter = $"name = '{comboBox1.Text}'" };
-            var ws = dv.ToTable();
+
 
             listView_warn.Items.Clear();
-            foreach (DataRow i in ws.Rows)
+            foreach (DataRowView i in dv)
             {
                 listView_warn.Items.Add(
                     new ListViewItem(new[]
                     {
-                        ((DateTime) i["date"]).ToShortDateString(),
-                        i["txt"].ToString(),
+                        ((DateTime) i.Row["date"]).ToShortDateString(),
+                        i.Row["txt"].ToString(),
                     })
                     );
             }

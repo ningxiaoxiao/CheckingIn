@@ -115,27 +115,27 @@
             // columnHeader1
             // 
             this.columnHeader1.Text = "name";
-            this.columnHeader1.Width = 81;
+            this.columnHeader1.Width = 65;
             // 
             // columnHeader2
             // 
             this.columnHeader2.Text = "date";
-            this.columnHeader2.Width = 84;
+            this.columnHeader2.Width = 70;
             // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "in";
-            this.columnHeader3.Width = 80;
+            this.columnHeader3.Width = 70;
             // 
             // columnHeader4
             // 
             this.columnHeader4.Text = "out";
-            this.columnHeader4.Width = 88;
+            this.columnHeader4.Width = 70;
             // 
             // columnHeader8
             // 
             this.columnHeader8.Text = "worktime";
-            this.columnHeader8.Width = 86;
+            this.columnHeader8.Width = 70;
             // 
             // listView2
             // 
@@ -155,17 +155,17 @@
             // columnHeader5
             // 
             this.columnHeader5.Text = "name";
-            this.columnHeader5.Width = 80;
+            this.columnHeader5.Width = 65;
             // 
             // columnHeader7
             // 
             this.columnHeader7.Text = "date";
-            this.columnHeader7.Width = 99;
+            this.columnHeader7.Width = 70;
             // 
             // columnHeader6
             // 
             this.columnHeader6.Text = "time";
-            this.columnHeader6.Width = 251;
+            this.columnHeader6.Width = 70;
             // 
             // label1
             // 
@@ -206,11 +206,12 @@
             // columnHeader9
             // 
             this.columnHeader9.Text = "date";
+            this.columnHeader9.Width = 70;
             // 
             // columnHeader10
             // 
             this.columnHeader10.Text = "txt";
-            this.columnHeader10.Width = 170;
+            this.columnHeader10.Width = 165;
             // 
             // Form1
             // 
