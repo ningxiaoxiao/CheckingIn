@@ -38,12 +38,16 @@
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.listView2 = new System.Windows.Forms.ListView();
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.listView3 = new System.Windows.Forms.ListView();
+            this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // button1
@@ -96,7 +100,8 @@
             this.columnHeader1,
             this.columnHeader2,
             this.columnHeader3,
-            this.columnHeader4});
+            this.columnHeader4,
+            this.columnHeader8});
             this.listView1.GridLines = true;
             this.listView1.Location = new System.Drawing.Point(12, 201);
             this.listView1.Name = "listView1";
@@ -114,17 +119,22 @@
             // columnHeader2
             // 
             this.columnHeader2.Text = "date";
-            this.columnHeader2.Width = 98;
+            this.columnHeader2.Width = 84;
             // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "in";
-            this.columnHeader3.Width = 129;
+            this.columnHeader3.Width = 80;
             // 
             // columnHeader4
             // 
             this.columnHeader4.Text = "out";
-            this.columnHeader4.Width = 125;
+            this.columnHeader4.Width = 88;
+            // 
+            // columnHeader8
+            // 
+            this.columnHeader8.Text = "worktime";
+            this.columnHeader8.Width = 86;
             // 
             // listView2
             // 
@@ -145,6 +155,11 @@
             // 
             this.columnHeader5.Text = "name";
             this.columnHeader5.Width = 80;
+            // 
+            // columnHeader7
+            // 
+            this.columnHeader7.Text = "date";
+            this.columnHeader7.Width = 99;
             // 
             // columnHeader6
             // 
@@ -169,16 +184,35 @@
             this.label2.TabIndex = 11;
             this.label2.Text = "原始数据";
             // 
-            // columnHeader7
+            // listView3
             // 
-            this.columnHeader7.Text = "date";
-            this.columnHeader7.Width = 99;
+            this.listView3.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader9,
+            this.columnHeader10});
+            this.listView3.GridLines = true;
+            this.listView3.Location = new System.Drawing.Point(12, 67);
+            this.listView3.Name = "listView3";
+            this.listView3.Size = new System.Drawing.Size(239, 116);
+            this.listView3.TabIndex = 12;
+            this.listView3.UseCompatibleStateImageBehavior = false;
+            this.listView3.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader9
+            // 
+            this.columnHeader9.Text = "date";
+            this.columnHeader9.Width = 68;
+            // 
+            // columnHeader10
+            // 
+            this.columnHeader10.Text = "txt";
+            this.columnHeader10.Width = 182;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(492, 555);
+            this.Controls.Add(this.listView3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.listView2);
@@ -202,16 +236,20 @@
         private System.Windows.Forms.MonthCalendar monthCalendar1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ListView listView2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader3;
         private System.Windows.Forms.ColumnHeader columnHeader4;
-        private System.Windows.Forms.ListView listView2;
         private System.Windows.Forms.ColumnHeader columnHeader5;
         private System.Windows.Forms.ColumnHeader columnHeader6;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ColumnHeader columnHeader7;
+        private System.Windows.Forms.ColumnHeader columnHeader8;
+        private System.Windows.Forms.ListView listView3;
+        private System.Windows.Forms.ColumnHeader columnHeader9;
+        private System.Windows.Forms.ColumnHeader columnHeader10;
     }
 }
 
