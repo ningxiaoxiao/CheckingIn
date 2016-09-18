@@ -226,14 +226,16 @@ namespace CheckingIn
 
 
                     //相关警告
-                    if (wt < new TimeSpan(0, 0, 1, 0))
-                    {
-                        Warn(n, (DateTime)date, "工作时间少于1分钟");
-                    }
                     if (times.Count < 2)
                     {
                         Warn(n, (DateTime)date, "打卡次数少于2次");
                     }
+                    else if (wt < new TimeSpan(0, 9, 0, 0))
+                    {
+                        Warn(n, (DateTime)date, "工作时间少于9小时");
+                    }
+
+
 
 
 
