@@ -45,7 +45,7 @@
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.listView3 = new System.Windows.Forms.ListView();
+            this.listView_warn = new System.Windows.Forms.ListView();
             this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
@@ -85,6 +85,7 @@
             this.monthCalendar1.TabIndex = 4;
             this.monthCalendar1.TitleForeColor = System.Drawing.SystemColors.MenuHighlight;
             this.monthCalendar1.TodayDate = new System.DateTime(2016, 7, 5, 0, 0, 0, 0);
+            this.monthCalendar1.DateChanged += new System.Windows.Forms.DateRangeEventHandler(this.monthCalendar1_DateChanged);
             this.monthCalendar1.DateSelected += new System.Windows.Forms.DateRangeEventHandler(this.monthCalendar1_DateSelected);
             // 
             // progressBar1
@@ -184,18 +185,23 @@
             this.label2.TabIndex = 11;
             this.label2.Text = "原始数据";
             // 
-            // listView3
+            // listView_warn
             // 
-            this.listView3.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.listView_warn.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader9,
             this.columnHeader10});
-            this.listView3.GridLines = true;
-            this.listView3.Location = new System.Drawing.Point(12, 67);
-            this.listView3.Name = "listView3";
-            this.listView3.Size = new System.Drawing.Size(239, 116);
-            this.listView3.TabIndex = 12;
-            this.listView3.UseCompatibleStateImageBehavior = false;
-            this.listView3.View = System.Windows.Forms.View.Details;
+            this.listView_warn.FullRowSelect = true;
+            this.listView_warn.GridLines = true;
+            this.listView_warn.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listView_warn.HideSelection = false;
+            this.listView_warn.Location = new System.Drawing.Point(12, 67);
+            this.listView_warn.MultiSelect = false;
+            this.listView_warn.Name = "listView_warn";
+            this.listView_warn.Size = new System.Drawing.Size(239, 116);
+            this.listView_warn.TabIndex = 12;
+            this.listView_warn.UseCompatibleStateImageBehavior = false;
+            this.listView_warn.View = System.Windows.Forms.View.Details;
+            this.listView_warn.SelectedIndexChanged += new System.EventHandler(this.listView_warn_SelectedIndexChanged);
             // 
             // columnHeader9
             // 
@@ -212,7 +218,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(492, 555);
-            this.Controls.Add(this.listView3);
+            this.Controls.Add(this.listView_warn);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.listView2);
@@ -247,7 +253,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader6;
         private System.Windows.Forms.ColumnHeader columnHeader7;
         private System.Windows.Forms.ColumnHeader columnHeader8;
-        private System.Windows.Forms.ListView listView3;
+        private System.Windows.Forms.ListView listView_warn;
         private System.Windows.Forms.ColumnHeader columnHeader9;
         private System.Windows.Forms.ColumnHeader columnHeader10;
     }

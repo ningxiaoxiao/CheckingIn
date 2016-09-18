@@ -279,10 +279,10 @@ namespace CheckingIn
             dv = new DataView(_warnTable) { RowFilter = $"name = '{comboBox1.Text}'" };
             var ws = dv.ToTable();
 
-            listView3.Items.Clear();
+            listView_warn.Items.Clear();
             foreach (DataRow i in ws.Rows)
             {
-                listView3.Items.Add(
+                listView_warn.Items.Add(
                     new ListViewItem(new[]
                     {
                         ((DateTime) i["date"]).ToShortDateString(),
@@ -296,6 +296,26 @@ namespace CheckingIn
 
         private void monthCalendar1_DateSelected(object sender, DateRangeEventArgs e)
         {
+
+        }
+
+        private void listView_warn_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //得到日期
+            if (listView_warn.SelectedItems.Count == 0)
+                return;
+
+            var d = listView_warn.SelectedItems[0].SubItems[0].Text;
+
+            var dt = DateTime.Parse(d);
+
+            //选定日期
+            monthCalendar1.SetDate(dt);
+
+        }
+
+        private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
+        {
             //得到这个用户 当天的记录
             var dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
             _listResultdt = dv.ToTable();
@@ -307,8 +327,7 @@ namespace CheckingIn
             _listdt = dv.ToTable();
             listView2.VirtualListSize = _listdt.Rows.Count;
             listView2.Invalidate();
+
         }
-
-
     }
 }
