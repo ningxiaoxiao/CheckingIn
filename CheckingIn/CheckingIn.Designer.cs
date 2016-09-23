@@ -53,6 +53,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -256,7 +257,7 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(107, 72);
             this.label3.TabIndex = 21;
-            this.label3.Text = "出勤/应出勤\r\n迟到(分)\r\n出差(天)\r\n加班(时)";
+            this.label3.Text = "出勤/应出勤\r\n迟到\r\n出差(天)\r\n加班";
             this.label3.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // label1
@@ -278,11 +279,21 @@
             this.label4.TabIndex = 23;
             this.label4.Text = "日期\r\n上班\r\n下班\r\n工作时间\r\n分析结果";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(138, 78);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(107, 72);
+            this.label5.TabIndex = 24;
+            this.label5.Text = "出勤/应出勤\r\n迟到(分)\r\n出差(天)\r\n加班(时)";
+            // 
             // CheckingIn
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(729, 703);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.label3);
@@ -335,6 +346,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ToolStripMenuItem oA数据ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 增加ToolStripMenuItem;
+        private System.Windows.Forms.Label label5;
     }
 }
 

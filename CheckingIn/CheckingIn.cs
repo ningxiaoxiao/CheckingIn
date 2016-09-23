@@ -27,7 +27,7 @@ namespace CheckingIn
         private DataTable _warnTable;
 
         private string _openedFleName;
-
+        private readonly TimeSpan contInTime = new TimeSpan(0, 9, 30, 0);
         public static CheckingIn inst;
         /// <summary>
         /// 有人出勤的日期
@@ -106,15 +106,11 @@ namespace CheckingIn
                 _openedFleName = openFileDialog1.FileName;
                 var dt = ExcelToDs(openFileDialog1.FileName);
 
-                //进行遍历处理 生成新的名
+                //进行遍历处理 生成新的表
                 foreach (DataRow i in dt.Tables[0].Rows)
                 {
                     //读出时间
                     var time = DateTime.Parse(i["日期时间"].ToString());
-
-
-
-                    //对时间进行处理 
 
                     //如果 时间是 05:00前的 就把日期算到前一天上面去
                     TimeSpan tt;
@@ -174,6 +170,8 @@ namespace CheckingIn
                 //得到所有有人出勤的日期
                 var dv = new DataView(_xlsdt);
                 alldates = dv.ToTable(true, "date");
+
+              
 
                 var t = new Thread(Changedata);
                 t.Start();
@@ -277,15 +275,50 @@ namespace CheckingIn
             _resultdt.Rows.Add(rr);
 
         }
+        private TimeSpan GetOverWorkTimeCount(string name)
+        {
+            var t = new TimeSpan();
+            var dv = new DataView(OAdt) { RowFilter = $"name = '{comboBox1.Text}' and reason ='加班'" };
+            foreach (DataRowView dr in dv)
+            {
+                var s = (DateTime)dr.Row["start"];
+                var ee = (DateTime)dr.Row["end"];
+                t += ee - s;
+            }
+            return t;
+        }
+
+        private int GetOutDaysCount(string name)
+        {
+            var t = new TimeSpan();
+            var dv = new DataView(OAdt) { RowFilter = $"name = '{comboBox1.Text}' and reason ='出差'" };
+            foreach (DataRowView dr in dv)
+            {
+                var s = (DateTime)dr.Row["start"];
+                var ee = (DateTime)dr.Row["end"];
+                t += ee - s;
+            }
+            return t.Days;
+        }
+
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+
+
             //对当前数据进行处理
             GetData(comboBox1.Text);
 
+            //统计信息
 
 
-            //得到这个人所有的日期
+
+
+            label5.Text = $"{workdaycount - noworkdaycount}/{workdaycount}\r\n{delaytime}\r\n{GetOutDaysCount(comboBox1.Text)}\r\n{GetOverWorkTimeCount(comboBox1.Text).TotalHours.ToString(".00")}";
+
+
+
+            //在日期控件上加粗显示有数据的日期
             var dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}'" };
 
             monthCalendar1.RemoveAllBoldedDates();
@@ -297,6 +330,9 @@ namespace CheckingIn
 
             monthCalendar1.SetDate(v.AddMonths(1));
             monthCalendar1.SetDate(v);
+
+
+
 
             //得到相关提示记录
             dv = new DataView(_warnTable) { RowFilter = $"name = '{comboBox1.Text}'" };
@@ -417,7 +453,9 @@ namespace CheckingIn
 
         }
 
-
+        private TimeSpan delaytime;
+        private int noworkdaycount;
+        private int workdaycount;
         private void GetData(string name)
         {
 
@@ -429,6 +467,12 @@ namespace CheckingIn
 
             toolStripProgressBar1.Maximum = alldates.Rows.Count;
             toolStripProgressBar1.Value = 0;
+
+            //
+            delaytime = new TimeSpan();
+            noworkdaycount = 0;
+            workdaycount = 0;
+
             //对所有有人出勤的日期进行遍历
             foreach (DataRow dater in alldates.Rows)
             {
@@ -440,6 +484,7 @@ namespace CheckingIn
                 //如果有30个出勤,就算工作日
                 var dateview = new DataView(_xlsdt) { RowFilter = $"date ='{date}'" };
                 var isworkday = dateview.Count > 50;
+                if (isworkday) workdaycount++;
 
                 //得到这个人今天所有的打卡时间
                 var timeview = new DataView(_xlsdt)
@@ -451,7 +496,11 @@ namespace CheckingIn
                 if (timeview.Count == 0)
                 {
                     if (isworkday)
+                    {
+                        noworkdaycount++;
                         Warn(name, date, "旷工");
+                    }
+
 
                     continue;//当天没有记录 返回
                 }
@@ -471,13 +520,16 @@ namespace CheckingIn
                 else
                 {
 
-                    //todo 统计迟到时间
-                    if (intime > new TimeSpan(0, 9, 30, 0))
+
+
+                    if (intime > contInTime)
                     {
+                        var d = intime - contInTime;
+                        delaytime += d;
                         Warn(name, date, "迟到");
                     }
 
-                    //todo 早退
+
 
                     //两次打卡完整 
 
@@ -486,13 +538,10 @@ namespace CheckingIn
                         Warn(name, date, "少工时");
                     }
 
-                    //todo 统计加班时间
+
                     if (!isworkday)
                         Warn(name, date, "疑似加班");
-
                 }
-
-
             }
         }
 

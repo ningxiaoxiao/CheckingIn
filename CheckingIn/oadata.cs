@@ -31,7 +31,7 @@ namespace CheckingIn
             var nr = CheckingIn.inst.OAdt.NewRow();
             nr["name"] = name;
             nr["start"] = s;
-            nr["end"] = e;
+            nr["end"] = e.AddMinutes(1);
             nr["reason"] = r;
             CheckingIn.inst.OAdt.Rows.Add(nr);
         }

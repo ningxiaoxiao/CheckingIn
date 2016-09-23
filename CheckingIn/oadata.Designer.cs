@@ -92,7 +92,7 @@
             // 
             // button_add
             // 
-            this.button_add.Location = new System.Drawing.Point(366, 18);
+            this.button_add.Location = new System.Drawing.Point(392, 18);
             this.button_add.Margin = new System.Windows.Forms.Padding(4);
             this.button_add.Name = "button_add";
             this.button_add.Size = new System.Drawing.Size(112, 34);
