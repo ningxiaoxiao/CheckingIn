@@ -29,6 +29,10 @@ namespace CheckingIn
         private string _openedFleName;
 
         public static CheckingIn inst;
+        /// <summary>
+        /// 有人出勤的日期
+        /// </summary>
+        private DataTable alldates;
 
         public CheckingIn()
         {
@@ -90,7 +94,11 @@ namespace CheckingIn
             });
         }
 
-
+        /// <summary>
+        /// 读取文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             try
@@ -163,6 +171,9 @@ namespace CheckingIn
 
 
                 }
+                //得到所有有人出勤的日期
+                var dv = new DataView(_xlsdt);
+                alldates = dv.ToTable(true, "date");
 
                 var t = new Thread(Changedata);
                 t.Start();
@@ -244,66 +255,8 @@ namespace CheckingIn
                 //当前人名字
                 var n = r["name"].ToString();
                 comboBox1.Items.Add(n);
-                //读出这个人所有记录
-                var rs = _xlsdt.Select("name = '" + n + "'");
-
-                //得到所有有人出勤的日期
-                var datedt = dv.ToTable(true, "date");
 
 
-                foreach (DataRow dater in datedt.Rows)
-                {
-                    //今日日期
-                    var date = dater["date"];
-
-                    //判断是不是工作日
-                    //如果有30个出勤,就算工作日
-                    //取出今天工作的人
-                    var dateview = new DataView(_xlsdt) { RowFilter = $"date ='{date}'" };
-                    var isworkday = dateview.Count > 50;
-                    /*
-                    if (!isworkday)
-                    {
-                        Warn(n, date, "出勤人员少于50人,非工作日");
-                    }
-                    */
-
-
-                    //得到这个人今天所有的打卡时间
-                    var timeview = new DataView(_xlsdt)
-                    {
-                        RowFilter = $"name = '{n}' AND date = '{date}'",
-                        Sort = "time asc" //从小到大
-                    };
-                    //无打卡记录
-                    if (timeview.Count == 0)
-                    {
-                        if (isworkday)
-                            Warn(n, date, "旷工");
-
-                        continue;//当天没有记录 返回
-                    }
-
-                    //进行记录
-                    TimeSpan wt;
-                    NewRecord(n, date, timeview[0].Row["time"], timeview[timeview.Count - 1].Row["time"], out wt);
-
-
-                    //相关警告
-                    if (timeview.Count < 2)
-                    {
-                        Warn(n, date, "少打卡");
-                    }
-                    else if (wt < new TimeSpan(0, 9, 0, 0))
-                    {
-                        Warn(n, date, "少时");
-                    }
-                    //todo 如果是加班,去掉这条记录
-                    if (!isworkday)
-                        Warn(n, date, "疑似加班");
-
-                    // Console.Out.WriteLine("{0}:{1}:{2}:{3}", n, date, times[0], times[times.Count - 1]);
-                }
                 toolStripProgressBar1.Value += 1;
             }
             comboBox1.SelectedIndex = 0;
@@ -327,6 +280,11 @@ namespace CheckingIn
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //对当前数据进行处理
+            GetData(comboBox1.Text);
+
+
+
             //得到这个人所有的日期
             var dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}'" };
 
@@ -375,6 +333,8 @@ namespace CheckingIn
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
+            //防空
+            if (_xlsdt.Rows.Count == 0) return;
             //得到这一天的警告数据
             var dv = new DataView(_warnTable) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
             var warntxt = "";
@@ -391,7 +351,7 @@ namespace CheckingIn
             if (dv.Count > 0)
             {
                 label4.Text = "";
-                label4.Text += dv[0]["date"].ToString() + "\r\n";
+                label4.Text += ((DateTime)dv[0]["date"]).ToShortDateString() + "\r\n";
                 label4.Text += dv[0]["intime"].ToString() + "\r\n";
                 label4.Text += dv[0]["outtime"].ToString() + "\r\n";
                 label4.Text += dv[0]["worktime"].ToString() + "\r\n";
@@ -400,8 +360,16 @@ namespace CheckingIn
             }
             else
             {
-                label4.Text = "no data\r\nno data\r\nno data\r\nno data\r\nno data";
+                label4.Text = monthCalendar1.SelectionStart.ToShortDateString() + "\r\n00:00:00\r\n00:00:00\r\n00:00:00\r\n" + warntxt;
             }
+
+
+
+
+
+
+
+
 
             //原来的记录
             dv = new DataView(_xlsdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
@@ -447,6 +415,85 @@ namespace CheckingIn
             sw.Close();
 
 
+        }
+
+
+        private void GetData(string name)
+        {
+
+            //防止重复处理
+            var ex = _resultdt.Select($"name ='{name}'");
+            if (ex.Length > 0) return;
+
+
+
+            toolStripProgressBar1.Maximum = alldates.Rows.Count;
+            toolStripProgressBar1.Value = 0;
+            //对所有有人出勤的日期进行遍历
+            foreach (DataRow dater in alldates.Rows)
+            {
+                toolStripProgressBar1.Value += 1;
+                //今日日期
+                var date = dater["date"];
+
+                //判断是不是工作日
+                //如果有30个出勤,就算工作日
+                var dateview = new DataView(_xlsdt) { RowFilter = $"date ='{date}'" };
+                var isworkday = dateview.Count > 50;
+
+                //得到这个人今天所有的打卡时间
+                var timeview = new DataView(_xlsdt)
+                {
+                    RowFilter = $"name = '{name}' AND date = '{date}'",
+                    Sort = "time asc" //从小到大
+                };
+                //无打卡记录
+                if (timeview.Count == 0)
+                {
+                    if (isworkday)
+                        Warn(name, date, "旷工");
+
+                    continue;//当天没有记录 返回
+                }
+
+                //进行记录
+                var intime = (TimeSpan)timeview[0].Row["time"];
+                var outtime = (TimeSpan)timeview[timeview.Count - 1].Row["time"];
+                TimeSpan wt;
+                NewRecord(name, date, intime, outtime, out wt);
+
+
+                //相关警告
+                if (timeview.Count < 2)
+                {
+                    Warn(name, date, "少打卡");
+                }
+                else
+                {
+
+                    //todo 统计迟到时间
+                    if (intime > new TimeSpan(0, 9, 30, 0))
+                    {
+                        Warn(name, date, "迟到");
+                    }
+
+                    //todo 早退
+
+                    //两次打卡完整 
+
+                    if (wt < new TimeSpan(0, 9, 0, 0))
+                    {
+                        Warn(name, date, "少工时");
+                    }
+
+                    //todo 统计加班时间
+                    if (!isworkday)
+                        Warn(name, date, "疑似加班");
+
+                }
+
+
+            }
         }
 
         private void 打开文件ToolStripMenuItem_Click(object sender, EventArgs e)
