@@ -20,13 +20,6 @@ namespace CheckingIn
         /// 原始表格
         /// </summary>
         private DataTable _xlsdt;
-        /// <summary>
-        /// 结果列表使用的
-        /// </summary>
-        private DataTable _resultListdt;
-        /// <summary>
-        /// 列表使用的
-        /// </summary>
         private DataTable _listdt;
 
         public DataTable OAdt;
@@ -45,7 +38,6 @@ namespace CheckingIn
             InitializeComponent();
 
             openFileDialog1.FileOk += OpenFileDialog1_FileOk;
-            listView1.RetrieveVirtualItem += ListView1_RetrieveVirtualItem;
             listView2.RetrieveVirtualItem += ListView2_RetrieveVirtualItem;
 
             InstTable();
@@ -97,21 +89,7 @@ namespace CheckingIn
                 _listdt.Rows[e.ItemIndex]["time"].ToString(),
             });
         }
-        /// <summary>
-        /// 结果表
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ListView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
-        {
-            e.Item = new ListViewItem(new[] {
-                _resultListdt.Rows[e.ItemIndex]["name"].ToString(),
-                ((DateTime)_resultListdt.Rows[e.ItemIndex]["date"]).ToShortDateString(),
-                _resultListdt.Rows[e.ItemIndex]["intime"].ToString(),
-                _resultListdt.Rows[e.ItemIndex]["outtime"].ToString(),
-                _resultListdt.Rows[e.ItemIndex]["worktime"].ToString(),
-            });
-        }
+
 
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
@@ -397,17 +375,41 @@ namespace CheckingIn
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
+            //得到这一天的警告数据
+            var dv = new DataView(_warnTable) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
+            var warntxt = "";
+            foreach (DataRowView i in dv)
+            {
+                warntxt += i.Row["txt"] + " ";
+            }
+            if (warntxt == "")
+                warntxt = "正常";
+
             //得到这个用户 当天的记录
-            var dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
-            _resultListdt = dv.ToTable();
-            listView1.VirtualListSize = _resultListdt.Rows.Count;
-            listView1.Invalidate();
+            dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
+            //结果记录 一天就应该是一条
+            if (dv.Count > 0)
+            {
+                label4.Text = "";
+                label4.Text += dv[0]["date"].ToString() + "\r\n";
+                label4.Text += dv[0]["intime"].ToString() + "\r\n";
+                label4.Text += dv[0]["outtime"].ToString() + "\r\n";
+                label4.Text += dv[0]["worktime"].ToString() + "\r\n";
+                label4.Text += warntxt;
+
+            }
+            else
+            {
+                label4.Text = "no data\r\nno data\r\nno data\r\nno data\r\nno data";
+            }
 
             //原来的记录
             dv = new DataView(_xlsdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
             _listdt = dv.ToTable();
             listView2.VirtualListSize = _listdt.Rows.Count;
             listView2.Invalidate();
+
+
 
         }
         public void WriteExcel(DataTable dt, string path)
@@ -452,7 +454,8 @@ namespace CheckingIn
             openFileDialog1.ShowDialog();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+
+        private void 增加ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var f = new oadata();
             f.Show();
