@@ -3,12 +3,14 @@ using System.Collections;
 using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
+using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
 namespace CheckingIn
 {
-    public partial class Form1 : Form
+    public partial class CheckingIn : Form
     {
         /// <summary>
         /// 处理后的表格
@@ -19,25 +21,39 @@ namespace CheckingIn
         /// </summary>
         private DataTable _xlsdt;
         /// <summary>
-        /// 列表使用的
+        /// 结果列表使用的
         /// </summary>
-        private DataTable _listResultdt;
+        private DataTable _resultListdt;
         /// <summary>
         /// 列表使用的
         /// </summary>
         private DataTable _listdt;
 
+        public DataTable OAdt;
+
         private DataTable _warnTable;
 
+        private string _openedFleName;
 
-        public Form1()
+        public static CheckingIn inst;
+
+        public CheckingIn()
         {
+            inst = this;
+
             CheckForIllegalCrossThreadCalls = false;
             InitializeComponent();
+
             openFileDialog1.FileOk += OpenFileDialog1_FileOk;
             listView1.RetrieveVirtualItem += ListView1_RetrieveVirtualItem;
             listView2.RetrieveVirtualItem += ListView2_RetrieveVirtualItem;
 
+            InstTable();
+
+        }
+
+        private void InstTable()
+        {
             //结果表
             _resultdt = new DataTable();
 
@@ -53,8 +69,26 @@ namespace CheckingIn
             _warnTable.Columns.Add("date", typeof(DateTime));
             _warnTable.Columns.Add("txt", typeof(string));
 
-        }
+            //二次处理的表
 
+            _xlsdt = new DataTable();
+
+            _xlsdt.Columns.Add("name", typeof(string));
+            _xlsdt.Columns.Add("date", typeof(DateTime));
+            _xlsdt.Columns.Add("time", typeof(TimeSpan));
+
+            //OA表
+            OAdt = new DataTable();
+            OAdt.Columns.Add("name", typeof(string));
+            OAdt.Columns.Add("start", typeof(DateTime));
+            OAdt.Columns.Add("end", typeof(DateTime));
+            OAdt.Columns.Add("reason", typeof(string));
+        }
+        /// <summary>
+        /// 原始表
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ListView2_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
             e.Item = new ListViewItem(new[] {
@@ -63,15 +97,19 @@ namespace CheckingIn
                 _listdt.Rows[e.ItemIndex]["time"].ToString(),
             });
         }
-
+        /// <summary>
+        /// 结果表
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ListView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
             e.Item = new ListViewItem(new[] {
-                _listResultdt.Rows[e.ItemIndex]["name"].ToString(),
-                ((DateTime)_listResultdt.Rows[e.ItemIndex]["date"]).ToShortDateString(),
-                _listResultdt.Rows[e.ItemIndex]["intime"].ToString(),
-                _listResultdt.Rows[e.ItemIndex]["outtime"].ToString(),
-                _listResultdt.Rows[e.ItemIndex]["worktime"].ToString(),
+                _resultListdt.Rows[e.ItemIndex]["name"].ToString(),
+                ((DateTime)_resultListdt.Rows[e.ItemIndex]["date"]).ToShortDateString(),
+                _resultListdt.Rows[e.ItemIndex]["intime"].ToString(),
+                _resultListdt.Rows[e.ItemIndex]["outtime"].ToString(),
+                _resultListdt.Rows[e.ItemIndex]["worktime"].ToString(),
             });
         }
 
@@ -79,48 +117,74 @@ namespace CheckingIn
         {
             try
             {
+                _openedFleName = openFileDialog1.FileName;
                 var dt = ExcelToDs(openFileDialog1.FileName);
-
-
-                //二次处理的表
-
-                _xlsdt = new DataTable();
-
-                _xlsdt.Columns.Add("name", typeof(string));
-                _xlsdt.Columns.Add("date", typeof(DateTime));
-                _xlsdt.Columns.Add("time", typeof(TimeSpan));
 
                 //进行遍历处理 生成新的名
                 foreach (DataRow i in dt.Tables[0].Rows)
                 {
-
                     //读出时间
                     var time = DateTime.Parse(i["日期时间"].ToString());
-                    //增加新记录
-                    var newr = _xlsdt.NewRow();
-                    newr["name"] = i["姓名"];
+
+
+
                     //对时间进行处理 
 
                     //如果 时间是 05:00前的 就把日期算到前一天上面去
-
+                    TimeSpan tt;
                     if (time.TimeOfDay < new TimeSpan(5, 0, 0))
                     {
                         time = time.AddDays(-1);
-                        newr["time"] = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
+                        tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
 
-                        Warn(i["姓名"].ToString(), time, "有凌晨打卡");
+                        Warn(i["姓名"].ToString(), time, "凌晨打卡");
                     }
                     else
                     {
-                        newr["time"] = time.TimeOfDay;
+                        tt = time.TimeOfDay;
+                    }
+                    //增加新记录
+                    xlsadd(i["姓名"].ToString(), time.Date, tt);
+
+                }
+                //把OA数据加入进去
+                foreach (DataRow i in OAdt.Rows)
+                {
+                    switch (i["reason"].ToString())
+                    {
+                        case "加班":
+                        case "外出":
+                            xlsadd(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"].ToString());
+                            xlsadd(i["name"].ToString(), (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, i["reason"].ToString());
+                            break;
+                        case "补登":
+                            xlsadd(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"].ToString());
+                            break;
+                        case "出差":
+                            //出差期间,每天自动增加一个上班打卡 和下班打卡
+                            var s = (DateTime)i["start"];
+                            var ee = (DateTime)i["end"];
+
+                            //去掉时间
+                            s = s.Date;
+                            ee = ee.Date;
+                            //得到出差几天
+                            var days = ee - s;
+
+                            for (int d = 0; d <= days.Days; d++)
+                            {
+                                xlsadd(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 9, 30, 0), i["reason"].ToString());
+                                xlsadd(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 18, 30, 0), i["reason"].ToString());
+                            }
+
+                            break;
+
+                        default:
+                            break;
                     }
 
-                    newr["date"] = time.Date;
 
-                    _xlsdt.Rows.Add(newr);
                 }
-
-
 
                 var t = new Thread(Changedata);
                 t.Start();
@@ -132,15 +196,31 @@ namespace CheckingIn
             }
 
         }
-
-        private void button1_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 向处理后的;xls表增加数据
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="date"></param>
+        /// <param name="t"></param>
+        /// <param name="rs"></param>
+        public void xlsadd(string name, DateTime date, TimeSpan t, string rs = null)
         {
-            openFileDialog1.ShowDialog();
+            var r = _xlsdt.NewRow();
+            r["name"] = name;
+            r["date"] = date.Date;
+            r["time"] = t;
+            _xlsdt.Rows.Add(r);
+
+            if (rs != null)
+            {
+                Warn(name, date, rs);
+            }
+
         }
 
-        public DataSet ExcelToDs(string Path)
+        public DataSet ExcelToDs(string path)
         {
-            var strConn = "Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + Path + ";" + "Extended Properties=Excel 8.0;";
+            var strConn = "Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + path + ";" + "Extended Properties=Excel 8.0;";
             var conn = new OleDbConnection(strConn);
             conn.Open();
             var strExcel = "";
@@ -160,8 +240,6 @@ namespace CheckingIn
         /// <param name="t"></param>
         private void Warn(string name, object dt, string t)
         {
-
-
             var wr = _warnTable.NewRow();
             wr["name"] = name;
             wr["date"] = ((DateTime)dt).Date;
@@ -178,8 +256,9 @@ namespace CheckingIn
             var dv = new DataView(_xlsdt);
             var namedt = dv.ToTable(true, "name");
 
-            progressBar1.Maximum = namedt.Rows.Count;
-            progressBar1.Value = 0;
+
+            toolStripProgressBar1.Maximum = namedt.Rows.Count;
+            toolStripProgressBar1.Value = 0;
 
             //对每人个进行遍历
             foreach (DataRow r in namedt.Rows)
@@ -204,30 +283,28 @@ namespace CheckingIn
                     //取出今天工作的人
                     var dateview = new DataView(_xlsdt) { RowFilter = $"date ='{date}'" };
                     var isworkday = dateview.Count > 50;
-
+                    /*
                     if (!isworkday)
                     {
                         Warn(n, date, "出勤人员少于50人,非工作日");
                     }
+                    */
 
-                    
+
                     //得到这个人今天所有的打卡时间
                     var timeview = new DataView(_xlsdt)
                     {
                         RowFilter = $"name = '{n}' AND date = '{date}'",
                         Sort = "time asc" //从小到大
                     };
-
-                    
-
+                    //无打卡记录
                     if (timeview.Count == 0)
                     {
                         if (isworkday)
-                            Warn(n, date, "工作日未出勤");
+                            Warn(n, date, "旷工");
 
                         continue;//当天没有记录 返回
                     }
-
 
                     //进行记录
                     TimeSpan wt;
@@ -237,21 +314,23 @@ namespace CheckingIn
                     //相关警告
                     if (timeview.Count < 2)
                     {
-                        Warn(n, date, "打卡次数少于2次");
+                        Warn(n, date, "少打卡");
                     }
                     else if (wt < new TimeSpan(0, 9, 0, 0))
                     {
-                        Warn(n, date, "工作时间少于9小时");
+                        Warn(n, date, "少时");
                     }
-
+                    //todo 如果是加班,去掉这条记录
                     if (!isworkday)
-                        Warn(n, date, "非工作日出勤");
+                        Warn(n, date, "疑似加班");
 
                     // Console.Out.WriteLine("{0}:{1}:{2}:{3}", n, date, times[0], times[times.Count - 1]);
                 }
-                progressBar1.Value += 1;
+                toolStripProgressBar1.Value += 1;
             }
             comboBox1.SelectedIndex = 0;
+            //输出文件
+
         }
 
         private void NewRecord(string name, object dt, object intime, object outtime, out TimeSpan worktime)
@@ -294,16 +373,10 @@ namespace CheckingIn
                     new ListViewItem(new[]
                     {
                         ((DateTime) i.Row["date"]).ToShortDateString(),
-                        i.Row["txt"].ToString(),
-                    })
+                        i.Row["txt"].ToString()   })
                     );
             }
 
-
-        }
-
-        private void monthCalendar1_DateSelected(object sender, DateRangeEventArgs e)
-        {
 
         }
 
@@ -326,8 +399,8 @@ namespace CheckingIn
         {
             //得到这个用户 当天的记录
             var dv = new DataView(_resultdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
-            _listResultdt = dv.ToTable();
-            listView1.VirtualListSize = _listResultdt.Rows.Count;
+            _resultListdt = dv.ToTable();
+            listView1.VirtualListSize = _resultListdt.Rows.Count;
             listView1.Invalidate();
 
             //原来的记录
@@ -336,6 +409,53 @@ namespace CheckingIn
             listView2.VirtualListSize = _listdt.Rows.Count;
             listView2.Invalidate();
 
+        }
+        public void WriteExcel(DataTable dt, string path)
+        {
+            Thread.Sleep(1000);
+
+
+            var sw = new StreamWriter(path, false, Encoding.GetEncoding("gb2312"));//打开写文件流
+            var sb = new StringBuilder();
+
+
+
+            //写标题
+            for (var k = 0; k < dt.Columns.Count; k++)
+            {
+                sb.Append(dt.Columns[k].ColumnName + "\t");
+            }
+            sb.Append(Environment.NewLine);
+
+            //写内容
+
+            for (var i = 0; i < dt.Rows.Count; i++)//遍历每行内容
+            {
+                Application.DoEvents();
+
+                for (var j = 0; j < dt.Columns.Count; j++)//一行中的每列
+                {
+                    sb.Append(dt.Rows[i][j] + "\t");//每个单元格内容，加到StringBuilder中
+                }
+                sb.Append(Environment.NewLine);
+            }
+
+            sw.Write(sb.ToString());//文件流写入内容
+            sw.Flush();
+            sw.Close();
+
+
+        }
+
+        private void 打开文件ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.ShowDialog();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var f = new oadata();
+            f.Show();
         }
     }
 }
