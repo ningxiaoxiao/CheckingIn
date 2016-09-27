@@ -15,37 +15,41 @@ namespace CheckingIn
             comboBox_name.Items.AddRange(cm);
             if (comboBox_name.Items.Count > 0)
                 comboBox_name.SelectedIndex = 0;
-            listView1.VirtualListSize = CheckingIn.inst.OAdt.Rows.Count;
-            listView1.Update();
+
+            dataGridView1.DataSource = CheckingIn.inst.OAdt;
+
         }
 
         private void button_add_Click(object sender, EventArgs e)
         {
             //写到表里
             AddRecord(comboBox_name.Text, dateTimePicker_start.Value, dateTimePicker_end.Value, _curReason);
-            listView1.VirtualListSize = CheckingIn.inst.OAdt.Rows.Count;
-            listView1.Update();
         }
+
         private void AddRecord(string name, DateTime s, DateTime e, string r)
         {
+            //数据合法性
+            if (name == "" || s > e)
+                return;
+
+
+
             var nr = CheckingIn.inst.OAdt.NewRow();
+            nr["no"] = CheckingIn.inst.OAdt.Rows.Count + 1;
             nr["name"] = name;
             nr["start"] = s;
             nr["end"] = e.AddMinutes(1);
             nr["reason"] = r;
             CheckingIn.inst.OAdt.Rows.Add(nr);
-        }
 
-        private void oadata_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            //todo 写到文档
-        }
+            //写到数据库
 
-        private void oadata_Load(object sender, EventArgs e)
-        {
-            //todo 读取存档
+            CheckingIn.inst.OaAdd(name, s, e.AddMinutes(1), r);
+
 
         }
+
+
 
         private void radioButton1_Click(object sender, EventArgs e)
         {
@@ -58,22 +62,18 @@ namespace CheckingIn
             }
         }
 
-        private void listView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
-        {
-            e.Item = new ListViewItem(new[] {
-                CheckingIn.inst.OAdt.Rows[e.ItemIndex]["name"].ToString(),
-                CheckingIn.inst.OAdt.Rows[e.ItemIndex]["start"].ToString(),
-                CheckingIn.inst.OAdt.Rows[e.ItemIndex]["end"].ToString(),
-                CheckingIn.inst.OAdt.Rows[e.ItemIndex]["reason"].ToString(),
-            });
-        }
-
         private void dateTimePicker_start_ValueChanged(object sender, EventArgs e)
         {
             if (_curReason == "补登")
             {
                 dateTimePicker_end.Value = dateTimePicker_start.Value;
             }
+        }
+
+        private void dateTimePicker_end_ValueChanged(object sender, EventArgs e)
+        {
+            if (dateTimePicker_end.Value < dateTimePicker_start.Value)
+                dateTimePicker_end.Value = dateTimePicker_start.Value;
         }
     }
 }

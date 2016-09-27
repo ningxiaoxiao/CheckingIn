@@ -28,11 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.listView1 = new System.Windows.Forms.ListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.dateTimePicker_end = new System.Windows.Forms.DateTimePicker();
             this.button_add = new System.Windows.Forms.Button();
             this.comboBox_name = new System.Windows.Forms.ComboBox();
@@ -41,44 +36,9 @@
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton3 = new System.Windows.Forms.RadioButton();
             this.radioButton4 = new System.Windows.Forms.RadioButton();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
-            // 
-            // listView1
-            // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2,
-            this.columnHeader3,
-            this.columnHeader4});
-            this.listView1.Location = new System.Drawing.Point(18, 174);
-            this.listView1.Margin = new System.Windows.Forms.Padding(4);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(600, 314);
-            this.listView1.TabIndex = 6;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
-            this.listView1.VirtualMode = true;
-            this.listView1.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.listView1_RetrieveVirtualItem);
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Text = "name";
-            this.columnHeader1.Width = 85;
-            // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Text = "start";
-            this.columnHeader2.Width = 109;
-            // 
-            // columnHeader3
-            // 
-            this.columnHeader3.Text = "end";
-            this.columnHeader3.Width = 115;
-            // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Text = "reason";
-            this.columnHeader4.Width = 268;
             // 
             // dateTimePicker_end
             // 
@@ -89,6 +49,7 @@
             this.dateTimePicker_end.Name = "dateTimePicker_end";
             this.dateTimePicker_end.Size = new System.Drawing.Size(202, 28);
             this.dateTimePicker_end.TabIndex = 13;
+            this.dateTimePicker_end.ValueChanged += new System.EventHandler(this.dateTimePicker_end_ValueChanged);
             // 
             // button_add
             // 
@@ -173,11 +134,21 @@
             this.radioButton4.UseVisualStyleBackColor = true;
             this.radioButton4.Click += new System.EventHandler(this.radioButton1_Click);
             // 
+            // dataGridView1
+            // 
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Location = new System.Drawing.Point(18, 170);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowTemplate.Height = 30;
+            this.dataGridView1.Size = new System.Drawing.Size(596, 300);
+            this.dataGridView1.TabIndex = 18;
+            // 
             // oadata
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(626, 500);
+            this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.radioButton4);
             this.Controls.Add(this.radioButton3);
             this.Controls.Add(this.radioButton2);
@@ -186,26 +157,19 @@
             this.Controls.Add(this.button_add);
             this.Controls.Add(this.comboBox_name);
             this.Controls.Add(this.dateTimePicker_start);
-            this.Controls.Add(this.listView1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "oadata";
             this.Text = "oadata";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.oadata_FormClosed);
-            this.Load += new System.EventHandler(this.oadata_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-        private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.DateTimePicker dateTimePicker_end;
         private System.Windows.Forms.Button button_add;
         private System.Windows.Forms.ComboBox comboBox_name;
@@ -214,5 +178,6 @@
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButton3;
         private System.Windows.Forms.RadioButton radioButton4;
+        private System.Windows.Forms.DataGridView dataGridView1;
     }
 }
