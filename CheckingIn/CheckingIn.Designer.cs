@@ -47,9 +47,21 @@
             this.读取邮箱表ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.oA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.增加ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.清空OA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.读取加班文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.读取外出文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.读取出差文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.读取补登文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.邮箱ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向全体发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向当前用户发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.查看ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.班次ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.加班ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.出差ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.外出ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.补登ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.邮箱ToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
@@ -59,27 +71,28 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.listView1 = new System.Windows.Forms.ListView();
+            this.listView_log = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.button1 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "考勤机器文件|*.xls";
-            this.openFileDialog1.Title = "选择考勤文件";
+            this.openFileDialog1.Filter = "表格文件|*.xls";
             // 
             // comboBox1
             // 
+            this.comboBox1.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(9, 25);
+            this.comboBox1.Location = new System.Drawing.Point(14, 28);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(77, 20);
             this.comboBox1.TabIndex = 3;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.comboBox1.TextUpdate += new System.EventHandler(this.comboBox1_TextUpdate);
             // 
             // monthCalendar1
             // 
@@ -167,7 +180,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.文件ToolStripMenuItem,
             this.oA数据ToolStripMenuItem,
-            this.邮箱ToolStripMenuItem});
+            this.邮箱ToolStripMenuItem,
+            this.查看ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(486, 25);
@@ -216,7 +230,12 @@
             // oA数据ToolStripMenuItem
             // 
             this.oA数据ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.增加ToolStripMenuItem});
+            this.增加ToolStripMenuItem,
+            this.清空OA数据ToolStripMenuItem,
+            this.读取加班文件ToolStripMenuItem,
+            this.读取外出文件ToolStripMenuItem,
+            this.读取出差文件ToolStripMenuItem,
+            this.读取补登文件ToolStripMenuItem});
             this.oA数据ToolStripMenuItem.Name = "oA数据ToolStripMenuItem";
             this.oA数据ToolStripMenuItem.Size = new System.Drawing.Size(62, 21);
             this.oA数据ToolStripMenuItem.Text = "OA数据";
@@ -224,9 +243,44 @@
             // 增加ToolStripMenuItem
             // 
             this.增加ToolStripMenuItem.Name = "增加ToolStripMenuItem";
-            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.增加ToolStripMenuItem.Text = "增加";
             this.增加ToolStripMenuItem.Click += new System.EventHandler(this.增加ToolStripMenuItem_Click);
+            // 
+            // 清空OA数据ToolStripMenuItem
+            // 
+            this.清空OA数据ToolStripMenuItem.Name = "清空OA数据ToolStripMenuItem";
+            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.清空OA数据ToolStripMenuItem.Text = "清空OA数据";
+            this.清空OA数据ToolStripMenuItem.Click += new System.EventHandler(this.清空OA数据ToolStripMenuItem_Click);
+            // 
+            // 读取加班文件ToolStripMenuItem
+            // 
+            this.读取加班文件ToolStripMenuItem.Name = "读取加班文件ToolStripMenuItem";
+            this.读取加班文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.读取加班文件ToolStripMenuItem.Text = "读取加班文件";
+            this.读取加班文件ToolStripMenuItem.Click += new System.EventHandler(this.读取加班文件ToolStripMenuItem_Click);
+            // 
+            // 读取外出文件ToolStripMenuItem
+            // 
+            this.读取外出文件ToolStripMenuItem.Name = "读取外出文件ToolStripMenuItem";
+            this.读取外出文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.读取外出文件ToolStripMenuItem.Text = "读取外出文件";
+            this.读取外出文件ToolStripMenuItem.Click += new System.EventHandler(this.读取外出文件ToolStripMenuItem_Click);
+            // 
+            // 读取出差文件ToolStripMenuItem
+            // 
+            this.读取出差文件ToolStripMenuItem.Name = "读取出差文件ToolStripMenuItem";
+            this.读取出差文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.读取出差文件ToolStripMenuItem.Text = "读取出差文件";
+            this.读取出差文件ToolStripMenuItem.Click += new System.EventHandler(this.读取出差文件ToolStripMenuItem_Click);
+            // 
+            // 读取补登文件ToolStripMenuItem
+            // 
+            this.读取补登文件ToolStripMenuItem.Name = "读取补登文件ToolStripMenuItem";
+            this.读取补登文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.读取补登文件ToolStripMenuItem.Text = "读取补登文件";
+            this.读取补登文件ToolStripMenuItem.Click += new System.EventHandler(this.读取补登文件ToolStripMenuItem_Click);
             // 
             // 邮箱ToolStripMenuItem
             // 
@@ -251,6 +305,61 @@
             this.向当前用户发送ToolStripMenuItem.Text = "向当前用户发送";
             this.向当前用户发送ToolStripMenuItem.Click += new System.EventHandler(this.向当前用户发送ToolStripMenuItem_Click);
             // 
+            // 查看ToolStripMenuItem
+            // 
+            this.查看ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.班次ToolStripMenuItem,
+            this.加班ToolStripMenuItem,
+            this.出差ToolStripMenuItem,
+            this.外出ToolStripMenuItem,
+            this.补登ToolStripMenuItem,
+            this.邮箱ToolStripMenuItem1});
+            this.查看ToolStripMenuItem.Name = "查看ToolStripMenuItem";
+            this.查看ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.查看ToolStripMenuItem.Text = "查看";
+            // 
+            // 班次ToolStripMenuItem
+            // 
+            this.班次ToolStripMenuItem.Name = "班次ToolStripMenuItem";
+            this.班次ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.班次ToolStripMenuItem.Text = "班次";
+            this.班次ToolStripMenuItem.Click += new System.EventHandler(this.班次ToolStripMenuItem_Click);
+            // 
+            // 加班ToolStripMenuItem
+            // 
+            this.加班ToolStripMenuItem.Name = "加班ToolStripMenuItem";
+            this.加班ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.加班ToolStripMenuItem.Text = "加班";
+            this.加班ToolStripMenuItem.Click += new System.EventHandler(this.加班ToolStripMenuItem_Click);
+            // 
+            // 出差ToolStripMenuItem
+            // 
+            this.出差ToolStripMenuItem.Name = "出差ToolStripMenuItem";
+            this.出差ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.出差ToolStripMenuItem.Text = "出差";
+            this.出差ToolStripMenuItem.Click += new System.EventHandler(this.出差ToolStripMenuItem_Click);
+            // 
+            // 外出ToolStripMenuItem
+            // 
+            this.外出ToolStripMenuItem.Name = "外出ToolStripMenuItem";
+            this.外出ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.外出ToolStripMenuItem.Text = "外出";
+            this.外出ToolStripMenuItem.Click += new System.EventHandler(this.外出ToolStripMenuItem_Click);
+            // 
+            // 补登ToolStripMenuItem
+            // 
+            this.补登ToolStripMenuItem.Name = "补登ToolStripMenuItem";
+            this.补登ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.补登ToolStripMenuItem.Text = "补登";
+            this.补登ToolStripMenuItem.Click += new System.EventHandler(this.补登ToolStripMenuItem_Click);
+            // 
+            // 邮箱ToolStripMenuItem1
+            // 
+            this.邮箱ToolStripMenuItem1.Name = "邮箱ToolStripMenuItem1";
+            this.邮箱ToolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
+            this.邮箱ToolStripMenuItem1.Text = "邮箱";
+            this.邮箱ToolStripMenuItem1.Click += new System.EventHandler(this.邮箱ToolStripMenuItem1_Click);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -259,7 +368,7 @@
             this.toolStripProgressBar1,
             this.toolStripLabel1,
             this.toolStripLabel2});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 602);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 559);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(486, 25);
             this.toolStrip1.TabIndex = 14;
@@ -333,42 +442,51 @@
             this.label5.TabIndex = 24;
             this.label5.Text = "出勤/应出勤\r\n工作时间\r\n迟到\r\n出差(天)\r\n加班";
             // 
-            // listView1
+            // listView_log
             // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.listView_log.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
-            this.columnHeader2,
-            this.columnHeader3});
-            this.listView1.GridLines = true;
-            this.listView1.Location = new System.Drawing.Point(12, 441);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(462, 107);
-            this.listView1.TabIndex = 25;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.View = System.Windows.Forms.View.Details;
-            this.listView1.VirtualMode = true;
+            this.columnHeader8});
+            this.listView_log.FullRowSelect = true;
+            this.listView_log.GridLines = true;
+            this.listView_log.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.listView_log.HideSelection = false;
+            this.listView_log.Location = new System.Drawing.Point(12, 440);
+            this.listView_log.MultiSelect = false;
+            this.listView_log.Name = "listView_log";
+            this.listView_log.Size = new System.Drawing.Size(462, 98);
+            this.listView_log.TabIndex = 25;
+            this.listView_log.UseCompatibleStateImageBehavior = false;
+            this.listView_log.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Text = "name";
-            this.columnHeader1.Width = 65;
+            this.columnHeader1.Text = "type";
+            this.columnHeader1.Width = 44;
             // 
-            // columnHeader2
+            // columnHeader8
             // 
-            this.columnHeader2.Text = "date";
-            this.columnHeader2.Width = 70;
+            this.columnHeader8.Text = "text";
+            this.columnHeader8.Width = 395;
             // 
-            // columnHeader3
+            // button1
             // 
-            this.columnHeader3.Text = "time";
-            this.columnHeader3.Width = 70;
+            this.button1.Location = new System.Drawing.Point(399, 290);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 26;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Visible = false;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // CheckingIn
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(486, 627);
-            this.Controls.Add(this.listView1);
+            this.ClientSize = new System.Drawing.Size(486, 584);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.listView_log);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label1);
@@ -428,10 +546,22 @@
         private System.Windows.Forms.ToolStripMenuItem 邮箱ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 向全体发送ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 向当前用户发送ToolStripMenuItem;
-        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ListView listView_log;
         private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader columnHeader8;
+        private System.Windows.Forms.ToolStripMenuItem 读取加班文件ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 读取外出文件ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 读取出差文件ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 读取补登文件ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 查看ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 班次ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 加班ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 出差ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 外出ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 补登ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 邮箱ToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem 清空OA数据ToolStripMenuItem;
+        private System.Windows.Forms.Button button1;
     }
 }
 
