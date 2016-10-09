@@ -16,7 +16,7 @@ namespace CheckingIn
             if (comboBox_name.Items.Count > 0)
                 comboBox_name.SelectedIndex = 0;
 
-            dataGridView1.DataSource = CheckingIn.inst.OAdt;
+            dataGridView1.DataSource = DB.OAdt;
 
         }
 
@@ -34,17 +34,17 @@ namespace CheckingIn
 
 
 
-            var nr = CheckingIn.inst.OAdt.NewRow();
-            nr["no"] = CheckingIn.inst.OAdt.Rows.Count + 1;
+            var nr = DB.OAdt.NewRow();
+            nr["no"] = DB.OAdt.Rows.Count + 1;
             nr["name"] = name;
             nr["start"] = s;
             nr["end"] = e.AddMinutes(1);
             nr["reason"] = r;
-            CheckingIn.inst.OAdt.Rows.Add(nr);
+            DB.OAdt.Rows.Add(nr);
 
             //写到数据库
 
-            CheckingIn.inst.OaAdd(name, s, e.AddMinutes(1), r);
+            DB.OaAdd(name, s, e.AddMinutes(1), r);
 
 
         }

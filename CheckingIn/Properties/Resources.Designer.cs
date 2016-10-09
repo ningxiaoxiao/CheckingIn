@@ -59,22 +59,5 @@ namespace CheckingIn.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   查找类似 &lt;html lang=&quot;en&quot;&gt;
-        ///
-        ///&lt;head&gt;
-        ///  &lt;meta charset=&quot;utf-8&quot; /&gt;
-        ///  &lt;title&gt;Table Style&lt;/title&gt;
-        ///  &lt;meta name=&quot;viewport&quot; content=&quot;initial-scale=1.0; maximum-scale=1.0; width=device-width;&quot;&gt;
-        ///&lt;/head&gt;
-        ///
-        ///&lt;body&gt; 的本地化字符串。
-        /// </summary>
-        public static string htmlhead {
-            get {
-                return ResourceManager.GetString("htmlhead", resourceCulture);
-            }
-        }
     }
 }
