@@ -33,10 +33,7 @@ namespace CheckingIn
         /// </summary>
         Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
 
-        /// <summary>
-        /// 有人出勤的日期
-        /// </summary>
-        Dictionary<DateTime, bool> dates = new Dictionary<DateTime, bool>();
+
 
         private DataTable _alldates, _allnames;
 
@@ -98,112 +95,107 @@ namespace CheckingIn
 
         private void OpenDataFile()
         {
-            try
+
+            _openedFleName = openFileDialog1.FileName;
+            var dt = ExcelToDs(openFileDialog1.FileName, "123");
+
+            //进行遍历处理 生成新的表
+            foreach (DataRow i in dt.Tables[0].Rows)
             {
-                _openedFleName = openFileDialog1.FileName;
-                var dt = ExcelToDs(openFileDialog1.FileName, "123");
+                //读出时间
+                var time = DateTime.Parse(i["日期时间"].ToString());
 
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                //如果 时间是 05:00前的 就把日期算到前一天上面去
+                TimeSpan tt;
+                if (time.TimeOfDay < new TimeSpan(5, 0, 0))
                 {
-                    //读出时间
-                    var time = DateTime.Parse(i["日期时间"].ToString());
+                    time = time.AddDays(-1);
+                    tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
 
-                    //如果 时间是 05:00前的 就把日期算到前一天上面去
-                    TimeSpan tt;
-                    if (time.TimeOfDay < new TimeSpan(5, 0, 0))
-                    {
-                        time = time.AddDays(-1);
-                        tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
-
-                        DB.Warn(i["姓名"].ToString(), time, "凌晨打卡");
-                    }
-                    else
-                    {
-                        tt = time.TimeOfDay;
-                    }
-                    //增加新记录
-                    DB.xlsadd(i["姓名"].ToString(), time.Date, tt);
-
+                    DB.Warn(i["姓名"].ToString(), time, "凌晨打卡");
                 }
-
-                //把OA数据加入进去
-                foreach (DataRow i in DB.OAdt.Rows)
+                else
                 {
-                    switch (i["reason"].ToString())
-                    {
-                        case "加班":
-                        case "外出":
-                            DB.xlsadd(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"] + "start");
-                            DB.xlsadd(i["name"].ToString(), (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, i["reason"] + "end");
-                            break;
-                        case "补登":
-
-                            DB.xlsadd(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"].ToString());
-
-                            break;
-                        case "出差":
-                            //出差期间,每天自动增加一个上班打卡 和下班打卡
-                            var s = (DateTime)i["start"];
-                            var ee = (DateTime)i["end"];
-
-                            //去掉时间
-                            s = s.Date;
-                            ee = ee.Date;
-                            //得到出差几天
-                            var days = ee - s;
-
-                            for (int d = 0; d <= days.Days; d++)
-                            {
-                                DB.xlsadd(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 9, 30, 0), i["reason"].ToString());
-                                DB.xlsadd(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 18, 30, 0));
-                            }
-
-                            break;
-                        case "请假":
-
-                            break;
-                    }
+                    tt = time.TimeOfDay;
                 }
-                //得到所有有人出勤的日期
-                var dv = new DataView(DB.Xlsdt);
-                //读出所有姓名
-                _allnames = dv.ToTable(true, "name");
-
-                //得到所有人出勤的日子
-                _alldates = dv.ToTable(true, "date");
-
-                //对每人个进行遍历
-                foreach (DataRow r in _allnames.Rows)
-                {
-                    //当前人名字
-                    var n = r["name"].ToString();
-                    comboBox1.Items.Add(n);
-                    persons.Add(n, new PersonInfo(n));
-                }
-
-
-                //对所有有人出勤的日期进行遍历
-                foreach (DataRow dater in _alldates.Rows)
-                {
-
-                    //今日日期
-                    var date = dater["date"];
-                    //判断是不是工作日
-                    //如果有30个出勤,就算工作日
-                    var dateview = new DataView(DB.Xlsdt) { RowFilter = $"date ='{date}'" }; //去重
-                    var pcount = dateview.ToTable(true, "name");
-
-                    dates.Add((DateTime)date, pcount.Rows.Count > 50);
-                }
-
-                comboBox1.SelectedIndex = 0;
+                //增加新记录
+                DB.xlsadd(i["姓名"].ToString(), time.Date, tt);
 
             }
-            catch (Exception ex)
+
+            //把OA数据加入进去
+            foreach (DataRow i in DB.OAdt.Rows)
             {
-                Log.warn(ex.ToString());
+                switch (i["reason"].ToString())
+                {
+                    case "加班":
+                    case "外出":
+                        DB.xlsadd(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"] + "start");
+                        DB.xlsadd(i["name"].ToString(), (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, i["reason"] + "end");
+                        break;
+                    case "补登":
+
+                        DB.xlsadd(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"].ToString());
+
+                        break;
+                    case "出差":
+                        //出差期间,每天自动增加一个上班打卡 和下班打卡
+                        var s = (DateTime)i["start"];
+                        var ee = (DateTime)i["end"];
+
+                        //去掉时间
+                        s = s.Date;
+                        ee = ee.Date;
+                        //得到出差几天
+                        var days = ee - s;
+
+                        for (int d = 0; d <= days.Days; d++)
+                        {
+                            DB.xlsadd(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 9, 30, 0), i["reason"].ToString());
+                            DB.xlsadd(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 18, 30, 0));
+                        }
+
+                        break;
+                    case "请假":
+
+                        break;
+                }
             }
+            //得到所有有人出勤的日期
+            var dv = new DataView(DB.Xlsdt);
+            //读出所有姓名
+            _allnames = dv.ToTable(true, "name");
+
+            //得到所有人出勤的日子
+            _alldates = dv.ToTable(true, "date");
+
+            //对每人个进行遍历
+            foreach (DataRow r in _allnames.Rows)
+            {
+                //当前人名字
+                var n = r["name"].ToString();
+                comboBox1.Items.Add(n);
+                persons.Add(n, new PersonInfo(n));
+            }
+
+
+            //对所有有人出勤的日期进行遍历
+            foreach (DataRow dater in _alldates.Rows)
+            {
+
+                //今日日期
+                var date = dater["date"];
+                //判断是不是工作日
+                //如果有30个出勤,就算工作日
+                var dateview = new DataView(DB.Xlsdt) { RowFilter = $"date ='{date}'" }; //去重
+                var pcount = dateview.ToTable(true, "name");
+
+                WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
+            }
+
+            comboBox1.SelectedIndex = 0;
+
+
         }
         private void OpenClasstimeFile()
         {
@@ -342,6 +334,7 @@ namespace CheckingIn
 
 
         }
+
         private void OpenAddCheckinFile()
         {//开始事务
             var bt = DB.BeginTransaction();
@@ -381,7 +374,7 @@ namespace CheckingIn
                         continue;
                     string c;
                     TimeSpan s, e;
-
+                    /* todo
                     GetClassTime(name, out s, out e, out c);
 
                     if (r == "上班")
@@ -391,7 +384,7 @@ namespace CheckingIn
                     else
                     {
                         st = st.Add(e);
-                    }
+                    }*/
 
                     //写到表里
 
@@ -548,45 +541,37 @@ namespace CheckingIn
 
 
             //对当前数据进行处理
-            GetData(comboBox1.Text);
+
+            var p = persons[comboBox1.Text];
+
+            p.GetData();
 
             //统计信息
 
-            label5.Text = $"{workdaycount - noworkdaycount}/{workdaycount}\r\n{allWorkTime.TotalHours.ToString(".##")}/{workdaycount * 8}\r\n{delaytime.TotalMinutes.ToString("####")}\r\n{GetOutDaysCount(comboBox1.Text)}\r\n{GetOverWorkTimeCount(comboBox1.Text).TotalHours.ToString(".##")}";
-
-
-
-
-            //在日期控件上加粗显示有数据的日期
-            var dv = new DataView(DB.Resultdt) { RowFilter = $"name = '{comboBox1.Text}'" };
+            label5.Text = $"{WorkDay.WorkCount - p.WarnDayCount}/{WorkDay.WorkCount}\r\n{p.WorkTime.TotalHours.ToString(".#")}/{WorkDay.WorkCount * 8}\r\n{p.delayTime.TotalMinutes.ToString("####")}\r\n{GetOutDaysCount(comboBox1.Text)}\r\n{GetOverWorkTimeCount(comboBox1.Text).TotalHours.ToString(".##")}";
 
             monthCalendar1.RemoveAllBoldedDates();
-            foreach (DataRowView dr in dv)
+            listView_warn.Items.Clear();
+
+            foreach (var c in p.Checks)
             {
-                monthCalendar1.AddBoldedDate((DateTime)dr.Row["date"]);
+
+                foreach (var w in c.Warns)
+                {
+                    monthCalendar1.AddBoldedDate(w.date);
+                    listView_warn.Items.Add(
+                   new ListViewItem(new[]
+                   {
+                       w.date.ToString(),
+                        w.info  })
+                   );
+                }
             }
+
             var v = monthCalendar1.BoldedDates[0];
 
             monthCalendar1.SetDate(v.AddMonths(1));
             monthCalendar1.SetDate(v);
-
-
-
-
-            //得到相关警告记录
-            dv = new DataView(DB.WarnTable) { RowFilter = $"name = '{comboBox1.Text}'", Sort = "date asc" };
-
-
-            listView_warn.Items.Clear();
-            foreach (DataRowView i in dv)
-            {
-                listView_warn.Items.Add(
-                    new ListViewItem(new[]
-                    {
-                        ((DateTime) i.Row["date"]).ToShortDateString(),
-                        i.Row["txt"].ToString()   })
-                    );
-            }
 
 
         }
@@ -608,119 +593,47 @@ namespace CheckingIn
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
-            //防空
-            if (DB.Xlsdt.Rows.Count == 0) return;
-            //得到这一天的警告数据
-            var dv = new DataView(DB.WarnTable) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
-            var warntxt = "";
-            foreach (DataRowView i in dv)
-            {
-                warntxt += i.Row["txt"] + " ";
-            }
-            if (warntxt == "")
-                warntxt = "正常";
 
-            //得到这个用户 当天的记录
-            dv = new DataView(DB.Resultdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
-            //结果记录 一天就应该是一条
-            if (dv.Count > 0)
+            var p = persons[comboBox1.Text];
+            var check = p.GetCheck(e.Start);
+
+            if (check != null)
             {
+                var warntxt = "";
+                foreach (var i in check.Warns)
+                {
+                    warntxt += i.info + " ";
+                }
+                if (warntxt == "")
+                    warntxt = "正常";
+
+
+
                 label4.Text = "";
-                label4.Text += ((DateTime)dv[0]["date"]).ToShortDateString() + "\r\n";
-                label4.Text += dv[0]["intime"] + "\r\n";
-                label4.Text += dv[0]["outtime"] + "\r\n";
-                label4.Text += dv[0]["worktime"] + "\r\n";
+                label4.Text += check.Date + "\r\n";
+                label4.Text += check.InTime + "\r\n";
+                label4.Text += check.OutTime + "\r\n";
+                label4.Text += check.WorkTime + "\r\n";
                 label4.Text += warntxt;
+
+
+
+                //原来的记录
+
+                DB.Listdt = check.sourcerec.ToTable();
+                listView2.VirtualListSize = DB.Listdt.Rows.Count;
+                listView2.Invalidate();
+
 
             }
             else
             {
-                label4.Text = monthCalendar1.SelectionStart.ToShortDateString() + "\r\n00:00:00\r\n00:00:00\r\n00:00:00\r\n" + warntxt;
-            }
-
-            //原来的记录
-            dv = new DataView(DB.Xlsdt) { RowFilter = $"name = '{comboBox1.Text}' AND date = '{e.Start}'" };
-            DB.Xlsdt = dv.ToTable();
-            listView2.VirtualListSize = DB.Xlsdt.Rows.Count;
-            listView2.Invalidate();
-
-
-
-        }
-
-
-        private void GetData(string name)
-        {
-
-            //防止重复处理
-            var ex = DB.Resultdt.Select($"name ='{name}'");
-            if (ex.Length > 0) return;
-
-
-
-
-
-
-
-            toolStripProgressBar1.Maximum = _alldates.Rows.Count;
-            toolStripProgressBar1.Value = 0;
-
-
-            //先得到这个人
-            var p = persons[name];
-
-
-            //对所有有人出勤的日期进行遍历
-            foreach (DataRow dater in _alldates.Rows)
-            {
-                toolStripProgressBar1.Value += 1;
-
-
-
-                //今日日期
-                var date = dater["date"];
-                var c = new CheckInfo(p, (DateTime)date,"","");
-
-
-                //得到这个人今天所有的打卡时间
-                var timeview = new DataView(DB.Xlsdt)
-                {
-                    RowFilter = $"name = '{name}' AND date = '{date}'",
-                    Sort = "time asc" //从小到大
-                };
-                //无打卡记录
-                if (timeview.Count == 0)
-                {
-                    c.InTime = null;
-                    c.OutTime = null;
-                    continue;
-                }
-                if (timeview.Count == 1)
-                {
-                    c.InTime = null;
-                    c.OutTime = null;
-
-                    //判断是上班,还是下班
-
-                    continue;
-                }
-
-
-                //进行记录
-                var intime = (TimeSpan)timeview[0].Row["time"];
-                var outtime = (TimeSpan)timeview[timeview.Count - 1].Row["time"];
-
-
-
-
-                TimeSpan wt;
-                NewResultRecord(name, date, intime, outtime, out wt);
-
-
-
-
+                label4.Text = monthCalendar1.SelectionStart.ToShortDateString() + "\r\n00:00:00\r\n00:00:00\r\n00:00:00\r\nnodata";
             }
         }
+
+
+
 
 
         /// <summary>
@@ -731,9 +644,9 @@ namespace CheckingIn
         private void ListView2_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
             e.Item = new ListViewItem(new[] {
-                DB.Xlsdt.Rows[e.ItemIndex]["name"].ToString(),
-                ((DateTime)DB.Xlsdt.Rows[e.ItemIndex]["date"]).ToShortDateString(),
-                DB.Xlsdt.Rows[e.ItemIndex]["time"].ToString(),
+                DB.Listdt.Rows[e.ItemIndex]["name"].ToString(),
+                ((DateTime)DB.Listdt.Rows[e.ItemIndex]["date"]).ToShortDateString(),
+                DB.Listdt.Rows[e.ItemIndex]["time"].ToString(),
             });
         }
 
@@ -778,7 +691,8 @@ namespace CheckingIn
                 var dr = dt.NewRow();
                 dr["name"] = name;
 
-                GetData(name);
+                //GetData(name);
+                //todo
 
                 foreach (DataRow d in _alldates.Rows)
                 {
@@ -845,20 +759,20 @@ namespace CheckingIn
                 {
                     throw new Exception("邮箱地址不合法");
                 }
-
-                GetData(name);
+                var p = persons[name];
+                p.GetData();
 
                 //统计信息
                 var body = $"{name}-考勤分析报表\r\n";
 
 
-                if (GetClassTime(name) == "综合班次")
-                    body += GetHtmltr("实到/应到", $"{workdaycount - noworkdaycount}天/{workdaycount}天");
+                if (p.WorkTimeClass.isWorkTimeClass)
+                    body += GetHtmltr("工时/应到工时", $"{p.WorkTime.TotalHours.ToString(".#")}小时/{WorkDay.WorkCount * 8}小时");
                 else
-                    body += GetHtmltr("工时/应到工时", $"{allWorkTime.TotalHours.ToString(".#")}小时/{workdaycount * 8}小时");
+                    body += GetHtmltr("实到/应到", $"{p.WarnDayCount}天/{WorkDay.WorkCount}天");
 
 
-                body += GetHtmltr("迟到", delaytime.TotalMinutes.ToString("## '分钟'"));
+                body += GetHtmltr("迟到", p.delayTime.TotalMinutes.ToString("## '分钟'"));
                 body += GetHtmltr("出差", GetOutDaysCount(name).ToString("00'天'"));
                 body += GetHtmltr("加班", GetOverWorkTimeCount(name).TotalHours.ToString("00'小时'"));
 
