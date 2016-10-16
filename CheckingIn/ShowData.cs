@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Data;
+using System.Windows.Forms;
 
 namespace CheckingIn
 {
@@ -9,6 +10,7 @@ namespace CheckingIn
         {
             InitializeComponent();
             dataGridView1.DataSource = dt;
+            Text += "-"+((DataTable) dt).TableName;
         }
     }
 }

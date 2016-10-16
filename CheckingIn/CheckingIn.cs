@@ -33,7 +33,7 @@ namespace CheckingIn
         /// </summary>
         Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
 
-        
+
         private DataTable _alldates, _allnames;
 
 
@@ -165,7 +165,7 @@ namespace CheckingIn
             _allnames = dv.ToTable(true, "name");
 
             //得到所有人出勤的日子
-            _alldates = dv.ToTable(true, "date");
+            _alldates = dv.ToTable(true, "Date");
 
             //对每人个进行遍历
             foreach (DataRow r in _allnames.Rows)
@@ -182,7 +182,7 @@ namespace CheckingIn
             {
 
                 //今日日期
-                var date = dater["date"];
+                var date = dater["Date"];
                 //判断是不是工作日
                 //如果有30个出勤,就算工作日
                 var dateview = new DataView(DB.OriginalDt) { RowFilter = $"date ='{date}'" }; //去重
@@ -222,7 +222,7 @@ namespace CheckingIn
                 }
                 bt.Commit();
                 DB.Readpersondb();
-                Log.info("worktimeclass done");
+                Log.Info("worktimeclass done");
             }
             catch (Exception ex)
             {
@@ -256,7 +256,7 @@ namespace CheckingIn
                 bt.Commit();
 
                 DB.Readpersondb();
-                Log.info("mail done");
+                Log.Info("mail done");
             }
             catch (Exception ex)
             {
@@ -297,7 +297,7 @@ namespace CheckingIn
             }
             catch (Exception ex)
             {
-                Log.warn("加班写入数据库出现问题" + ex.Message);
+                Log.Warn("加班写入数据库出现问题" + ex.Message);
                 bt.Rollback();
                 throw;
             }
@@ -331,7 +331,7 @@ namespace CheckingIn
             }
             catch (Exception ex)
             {
-                Log.warn("外出写入数据库出现问题" + ex.Message);
+                Log.Warn("外出写入数据库出现问题" + ex.Message);
                 bt.Rollback();
                 throw;
             }
@@ -363,7 +363,7 @@ namespace CheckingIn
                         count[name] = count[name] + 1;
                         if (count[name] >= 4)
                         {
-                            Log.err(name + "-超出3次补登,请注意");
+                            Log.Err(name + "-超出3次补登,请注意");
                             continue;
                         }
                     }
@@ -399,7 +399,7 @@ namespace CheckingIn
             }
             catch (Exception ex)
             {
-                Log.warn("补登写入数据库出现问题" + ex.Message);
+                Log.Warn("补登写入数据库出现问题" + ex.Message);
                 bt.Rollback();
                 throw;
             }
@@ -433,7 +433,7 @@ namespace CheckingIn
             }
             catch (Exception ex)
             {
-                Log.warn("出差写入数据库出现问题" + ex.Message);
+                Log.Warn("出差写入数据库出现问题" + ex.Message);
                 bt.Rollback();
                 throw;
             }
@@ -522,17 +522,17 @@ namespace CheckingIn
 
                 foreach (var w in c.Warns)
                 {
-                    monthCalendar1.AddBoldedDate(w.date);
+                    monthCalendar1.AddBoldedDate(w.Date);
                     listView_warn.Items.Add(
                    new ListViewItem(new[]
                    {
-                       w.date.ToString(),
-                        w.info  })
+                       w.Date.ToString(),
+                        w.Info  })
                    );
                 }
             }
 
-            var v = monthCalendar1.BoldedDates[0];
+            var v = monthCalendar1.BoldedDates.Length > 0 ? monthCalendar1.BoldedDates[0] : monthCalendar1.SelectionStart;
 
             monthCalendar1.SetDate(v.AddMonths(1));
             monthCalendar1.SetDate(v);
@@ -557,6 +557,7 @@ namespace CheckingIn
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
+            if(comboBox1.Text=="")return;
 
             var p = persons[comboBox1.Text];
             var check = p.GetCheck(e.Start);
@@ -566,7 +567,7 @@ namespace CheckingIn
                 var warntxt = "";
                 foreach (var i in check.Warns)
                 {
-                    warntxt += i.info + " ";
+                    warntxt += i.Info + " ";
                 }
                 if (warntxt == "")
                     warntxt = "正常";
@@ -584,7 +585,7 @@ namespace CheckingIn
 
                 //原来的记录
 
-                DB.OriginalListDt = check.sourcerec.ToTable();
+                DB.OriginalListDt = check.Sourcerec.ToTable();
                 listView2.VirtualListSize = DB.OriginalListDt.Rows.Count;
                 listView2.Invalidate();
 
@@ -609,7 +610,7 @@ namespace CheckingIn
         {
             e.Item = new ListViewItem(new[] {
                 DB.OriginalListDt.Rows[e.ItemIndex]["name"].ToString(),
-                ((DateTime)DB.OriginalListDt.Rows[e.ItemIndex]["date"]).ToShortDateString(),
+                ((DateTime)DB.OriginalListDt.Rows[e.ItemIndex]["Date"]).ToShortDateString(),
                 DB.OriginalListDt.Rows[e.ItemIndex]["time"].ToString(),
             });
         }
@@ -643,7 +644,7 @@ namespace CheckingIn
             dt.Columns.Add("name");
             foreach (DataRow d in _alldates.Rows)
             {
-                dt.Columns.Add(((DateTime)d["date"]).Day.ToString());
+                dt.Columns.Add(((DateTime)d["Date"]).Day.ToString());
             }
 
             //对每人个进行遍历
@@ -661,7 +662,7 @@ namespace CheckingIn
                 foreach (DataRow d in _alldates.Rows)
                 {
                     //得到这一天的警告数据
-                    var dv = new DataView(DB.WarnDt) { RowFilter = $"name = '{name}' AND date = '{d["date"]}'" };
+                    var dv = new DataView(DB.WarnDt) { RowFilter = $"name = '{name}' AND date = '{d["Date"]}'" };
                     var warntxt = "";
                     foreach (DataRowView i in dv)
                     {
@@ -670,7 +671,7 @@ namespace CheckingIn
                     if (warntxt == "")
                         warntxt = "正常";
 
-                    dr[((DateTime)d["date"]).Day.ToString()] = warntxt;
+                    dr[((DateTime)d["Date"]).Day.ToString()] = warntxt;
                 }
 
                 dt.Rows.Add(dr);
@@ -732,7 +733,7 @@ namespace CheckingIn
                 var body = $"{p.Name}-考勤分析报表\r\n";
 
 
-                if (p.WorkTimeClass.isWorkTimeClass)
+                if (p.WorkTimeClass.IsWorkTimeClass)
                     body += GetHtmltr("工时/应到工时", $"{p.WorkTime.TotalHours.ToString(".#")}小时/{WorkDay.WorkCount * 8}小时");
                 else
                     body += GetHtmltr("实到/应到", $"{p.WarnDayCount}天/{WorkDay.WorkCount}天");
@@ -747,11 +748,11 @@ namespace CheckingIn
 
 
                 //得到所有警告信息
-                var dv = new DataView(DB.WarnDt) { RowFilter = $"name = '{p.Name}'", Sort = "date asc" };
+                var dv = new DataView(DB.WarnDt) { RowFilter = $"name = '{p.Name}'", Sort = "Date asc" };
 
                 foreach (DataRowView i in dv)
                 {
-                    body += $"{((DateTime)i.Row["date"]).ToShortDateString()}-{i.Row["txt"]}\r\n";
+                    body += $"{((DateTime)i.Row["Date"]).ToShortDateString()}-{i.Row["txt"]}\r\n";
                 }
                 //所有结果数据
                 body += "\r\n\r\n所有记录信息\r\n";
@@ -763,7 +764,7 @@ namespace CheckingIn
                            <tr><td class="text-left">出差</td><td class="text-left">99天</td></tr>
                      */
 
-                    body += $"{((DateTime)i.Row["date"]).ToShortDateString()} \t {i.Row["intime"]} \t {i.Row["outtime"]}\r\n";
+                    body += $"{((DateTime)i.Row["Date"]).ToShortDateString()} \t {i.Row["intime"]} \t {i.Row["outtime"]}\r\n";
                 }
 
 
@@ -786,7 +787,7 @@ namespace CheckingIn
             catch (Exception ex)
             {
 
-                Log.err("发送邮件-" + ex.Message);
+                Log.Err("发送邮件-" + ex.Message);
             }
 
         }

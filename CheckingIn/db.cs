@@ -46,7 +46,7 @@ namespace CheckingIn
         {
             var rr = DB.Resultdt.NewRow();
             rr["name"] = name;
-            rr["date"] = dt;
+            rr["Date"] = dt;
             rr["intime"] = intime;
             rr["outtime"] = outtime;
             var wt = (TimeSpan)outtime - (TimeSpan)intime;
@@ -54,7 +54,7 @@ namespace CheckingIn
             worktime = wt;
             DB.Resultdt.Rows.Add(rr);
 
-            Insertdb("result", new[] { "name", "date", "intime", "outtime", "worktime" }, new[] { name, dt, intime, outtime, wt });
+            Insertdb("result", new[] { "name", "Date", "intime", "outtime", "worktime" }, new[] { name, dt, intime, outtime, wt });
         }
         public static TimeSpan GetOverWorkTimeCount(string name)
         {
@@ -120,7 +120,7 @@ namespace CheckingIn
             Resultdt = new DataTable();
 
             Resultdt.Columns.Add("name", typeof(string));
-            Resultdt.Columns.Add("date", typeof(DateTime));
+            Resultdt.Columns.Add("Date", typeof(DateTime));
             Resultdt.Columns.Add("intime", typeof(TimeSpan));
             Resultdt.Columns.Add("outtime", typeof(TimeSpan));
             Resultdt.Columns.Add("worktime", typeof(TimeSpan));
@@ -129,7 +129,7 @@ namespace CheckingIn
             //警告表
             WarnDt = new DataTable();
             WarnDt.Columns.Add("name", typeof(string));
-            WarnDt.Columns.Add("date", typeof(DateTime));
+            WarnDt.Columns.Add("Date", typeof(DateTime));
             WarnDt.Columns.Add("txt", typeof(string));
 
 
@@ -137,7 +137,7 @@ namespace CheckingIn
 
             OriginalDt = new DataTable();
             OriginalDt.Columns.Add("name", typeof(string));
-            OriginalDt.Columns.Add("date", typeof(DateTime));
+            OriginalDt.Columns.Add("Date", typeof(DateTime));
             OriginalDt.Columns.Add("time", typeof(TimeSpan));
 
 
@@ -153,9 +153,9 @@ namespace CheckingIn
         private static void CreatSqlTable()
         {
             Cmd("create table person (name varchar(20) primary key , mail varchar(50),worktimeclass varchar(20))");
-            Cmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time)");
-            Cmd("create table warn (name varchar(20), date date,txt varchar(20))");
-            Cmd("create table original (name varchar(20), date date,time time)");
+            Cmd("create table result (name varchar(20), Date Date,intime time,outtime time,worktime time)");
+            Cmd("create table Warn (name varchar(20), Date Date,txt varchar(20))");
+            Cmd("create table original (name varchar(20), Date Date,time time)");
             Cmd("create table oa (no integer primary key,name varchar(20), start datetime,end datatime,reason varchar(20))");
         }
         private static void CheckSqlFile()
@@ -212,7 +212,7 @@ namespace CheckingIn
 
             var r = OriginalDt.NewRow();
             r["name"] = name;
-            r["date"] = date.Date;
+            r["Date"] = date.Date;
             r["time"] = t;
             OriginalDt.Rows.Add(r);
 
@@ -221,7 +221,7 @@ namespace CheckingIn
                 AddWarn(name, date, rs);
             }
 
-            // Insertdb("original", new[] { "name", "date", "time" }, new object[] { name, date, t });
+            // Insertdb("original", new[] { "name", "Date", "time" }, new object[] { name, Date, t });
 
         }
         /// <summary>
@@ -235,11 +235,11 @@ namespace CheckingIn
 
             var wr = WarnDt.NewRow();
             wr["name"] = name;
-            wr["date"] = ((DateTime)dt).Date;
+            wr["Date"] = ((DateTime)dt).Date;
             wr["txt"] = t;
             WarnDt.Rows.Add(wr);
 
-            // Insertdb("warn", new[] { "name", "date", "txt" }, new object[] { name, ((DateTime)dt).Date, t });
+            // Insertdb("Warn", new[] { "name", "Date", "txt" }, new object[] { name, ((DateTime)dt).Date, t });
 
         }
 

@@ -7,33 +7,33 @@ namespace CheckingIn
 {
     public static class Log
     {
-        private static ILog logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        static ListView _ls;
+        private static ILog _logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static ListView _ls;
 
         public static void Creat(ListView ls)
         {
             _ls = ls;
         }
-        public static void info(object o)
+        public static void Info(object o)
         {
-            info(o.ToString());
+            Info(o.ToString());
         }
-        public static void info(string str)
+        public static void Info(string str)
         {
-            logger.Info(str);
-            log("info", str, Color.Black);
+            _logger.Info(str);
+            AddListItem("Info", str, Color.Black);
         }
-        public static void warn(string str)
+        public static void Warn(string str)
         {
-            logger.Warn(str);
-            log("warn", str, Color.Orange);
+            _logger.Warn(str);
+            AddListItem("Warn", str, Color.Orange);
         }
-        public static void err(string str)
+        public static void Err(string str)
         {
-            logger.Error(str);
-            log("err", str, Color.Red);
+            _logger.Error(str);
+            AddListItem("err", str, Color.Red);
         }
-        private static void log(string lx, string nr, Color c)
+        private static void AddListItem(string lx, string nr, Color c)
         {
 
             if (_ls.Items.Count > 1000)
