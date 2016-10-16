@@ -13,21 +13,76 @@ namespace CheckingIn
         /// 处理后的表格
         /// </summary>
         public static DataTable Resultdt;
+
+        public static DataTable Persons;
         /// <summary>
         /// 原始表格
         /// </summary>
-        public static DataTable Xlsdt;
+        public static DataTable OriginalDt;
 
-        public static DataTable Listdt;
+        public static DataTable OriginalListDt;
 
-        public static DataTable OAdt;
+        public static DataTable OaDt;
 
-        public static DataTable WarnTable;
+        public static DataTable WarnDt;
 
         private static SQLiteConnection _db;
 
-        public static Dictionary<string, string> _classTime = new Dictionary<string, string>();
-        public static Dictionary<string, string> _mail = new Dictionary<string, string>();
+        public static void Creat()
+        {
+            CreatDataTable();
+            CheckSqlFile();
+
+            Readoa();
+            Readpersondb();
+        }
+
+        public static void Readpersondb()
+        {
+            Persons = GetSql("select * from person");
+        }
+
+        public static void ResultDtAdd(string name, object dt, object intime, object outtime, out TimeSpan worktime)
+        {
+            var rr = DB.Resultdt.NewRow();
+            rr["name"] = name;
+            rr["date"] = dt;
+            rr["intime"] = intime;
+            rr["outtime"] = outtime;
+            var wt = (TimeSpan)outtime - (TimeSpan)intime;
+            rr["worktime"] = wt;
+            worktime = wt;
+            DB.Resultdt.Rows.Add(rr);
+
+            Insertdb("result", new[] { "name", "date", "intime", "outtime", "worktime" }, new[] { name, dt, intime, outtime, wt });
+        }
+        public static TimeSpan GetOverWorkTimeCount(string name)
+        {
+            var t = new TimeSpan();
+            var dv = new DataView(DB.OaDt) { RowFilter = $"name = '{name}' and reason ='加班'" };
+            foreach (DataRowView dr in dv)
+            {
+                var s = (DateTime)dr.Row["start"];
+                var ee = (DateTime)dr.Row["end"];
+                t += ee - s;
+            }
+            return t;
+        }
+        public static int GetOutDaysCount(string name)
+        {
+            var t = new TimeSpan();
+            var dv = new DataView(DB.OaDt) { RowFilter = $"name = '{name}' and reason ='出差'" };
+            if (dv.Count == 0)
+                return 0;
+            foreach (DataRowView dr in dv)
+            {
+                var s = (DateTime)dr.Row["start"];
+                var ee = (DateTime)dr.Row["end"];
+                t += ee - s;
+            }
+            return t.Days + 1;
+        }
+
         public static void Insertdb(string tablename, string[] k, object[] v)
         {
 
@@ -37,17 +92,30 @@ namespace CheckingIn
                 names += i + ",";
             }
 
+            var vs = "";
+            foreach (var i in v)
+            {
+                vs += "'" + i + "',";
+            }
 
-            DB.dbcmd($"insert into {tablename} ({names.Substring(0, names.Length - 1)}) values ({v})");
+            var s = $"insert into {tablename} ({names.Substring(0, names.Length - 1)}) values ({vs.Substring(0, vs.Length - 1)})";
+
+            Cmd(s);
         }
-        public static void Opendb()
+        private static void Opendb()
         {
             _db = new SQLiteConnection("Data Source=db.db");
             _db.Open();
         }
 
-        public static void InstTable()
+        private static void CreatDataTable()
         {
+            Persons = new DataTable();
+
+            Persons.Columns.Add("name", typeof(string));
+            Persons.Columns.Add("mail", typeof(string));
+            Persons.Columns.Add("worktimeclass", typeof(string));
+
             //结果表
             Resultdt = new DataTable();
 
@@ -59,48 +127,45 @@ namespace CheckingIn
 
 
             //警告表
-            WarnTable = new DataTable();
-            WarnTable.Columns.Add("name", typeof(string));
-            WarnTable.Columns.Add("date", typeof(DateTime));
-            WarnTable.Columns.Add("txt", typeof(string));
+            WarnDt = new DataTable();
+            WarnDt.Columns.Add("name", typeof(string));
+            WarnDt.Columns.Add("date", typeof(DateTime));
+            WarnDt.Columns.Add("txt", typeof(string));
 
 
             //二次处理的表
 
-            Xlsdt = new DataTable();
-
-            Xlsdt.Columns.Add("name", typeof(string));
-            Xlsdt.Columns.Add("date", typeof(DateTime));
-            Xlsdt.Columns.Add("time", typeof(TimeSpan));
+            OriginalDt = new DataTable();
+            OriginalDt.Columns.Add("name", typeof(string));
+            OriginalDt.Columns.Add("date", typeof(DateTime));
+            OriginalDt.Columns.Add("time", typeof(TimeSpan));
 
 
             //OA表
-            OAdt = new DataTable();
-            OAdt.Columns.Add("no", typeof(int));
-            OAdt.Columns.Add("name", typeof(string));
-            OAdt.Columns.Add("start", typeof(DateTime));
-            OAdt.Columns.Add("end", typeof(DateTime));
-            OAdt.Columns.Add("reason", typeof(string));
+            OaDt = new DataTable();
+            OaDt.Columns.Add("no", typeof(int));
+            OaDt.Columns.Add("name", typeof(string));
+            OaDt.Columns.Add("start", typeof(DateTime));
+            OaDt.Columns.Add("end", typeof(DateTime));
+            OaDt.Columns.Add("reason", typeof(string));
 
         }
-        public static void NewdbTable()
+        private static void CreatSqlTable()
         {
-            dbcmd("create table mail (name varchar(20), mail varchar(50))");
-            dbcmd("create table classtime (name varchar(20), Classname varchar(20))");
-            dbcmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time)");
-            dbcmd("create table warn (name varchar(20), date date,txt varchar(20))");
-            dbcmd("create table xls (name varchar(20), date date,time time)");
-            dbcmd("create table oa (no integer primary key,name varchar(20), start datetime,end datatime,reason varchar(20))");
-
+            Cmd("create table person (name varchar(20) primary key , mail varchar(50),worktimeclass varchar(20))");
+            Cmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time)");
+            Cmd("create table warn (name varchar(20), date date,txt varchar(20))");
+            Cmd("create table original (name varchar(20), date date,time time)");
+            Cmd("create table oa (no integer primary key,name varchar(20), start datetime,end datatime,reason varchar(20))");
         }
-        public static void Checkdbfile()
+        private static void CheckSqlFile()
         {
             if (!File.Exists("db.db"))
             {
                 SQLiteConnection.CreateFile("db.db");
 
                 Opendb();
-                NewdbTable();
+                CreatSqlTable();
             }
             else
             {
@@ -108,47 +173,16 @@ namespace CheckingIn
             }
 
         }
-        public static void Readoa()
+        private static void Readoa()
         {
             var sql = "select * from oa order by no asc";
             var command = new SQLiteCommand(sql, _db);
             var reader = command.ExecuteReader();
-            OAdt.Clear();
-            OAdt.Load(reader);
+            OaDt.Clear();
+            OaDt.Load(reader);
         }
 
-        public static void Readmaildb()
-        {
-            var sql = "select * from mail";
-            var command = new SQLiteCommand(sql, _db);
-            var reader = command.ExecuteReader();
-
-            while (reader.Read())
-            {
-                var name = reader["name"].ToString();
-                var m = reader["mail"].ToString();
-
-                if (!_mail.ContainsKey(name))
-                    _mail.Add(name, m);
-            }
-
-        }
-
-        public static void ReadClassTimeFormDB()
-        {
-            //从表中得到数据
-
-            var sql = "select * from classtime";
-            var command = new SQLiteCommand(sql, _db);
-            var reader = command.ExecuteReader();
-
-            while (reader.Read())
-            {
-                _classTime.Add(reader["name"].ToString(), reader["Classname"].ToString());
-            }
-
-        }
-        public static int dbcmd(string cmd, SQLiteTransaction tran = null)
+        public static int Cmd(string cmd, SQLiteTransaction tran = null)
         {
 
             var command = new SQLiteCommand(cmd, _db);
@@ -160,11 +194,10 @@ namespace CheckingIn
             return command.ExecuteNonQuery();
         }
 
-
         public static void OaAdd(string name, DateTime s, DateTime e, string r)
         {
             var sql = $"insert into oa (name,start,end,reason) values ('{name}','{s.ToString("s")}','{e.ToString("s")}','{r}')";
-            var ex = dbcmd(sql);
+            var ex = Cmd(sql);
         }
 
         /// <summary>
@@ -174,18 +207,21 @@ namespace CheckingIn
         /// <param name="date"></param>
         /// <param name="t"></param>
         /// <param name="rs"></param>
-        public static void xlsadd(string name, DateTime date, TimeSpan t, string rs = null)
+        public static void AddOriginal(string name, DateTime date, TimeSpan t, string rs = null)
         {
-            var r = Xlsdt.NewRow();
+
+            var r = OriginalDt.NewRow();
             r["name"] = name;
             r["date"] = date.Date;
             r["time"] = t;
-            Xlsdt.Rows.Add(r);
+            OriginalDt.Rows.Add(r);
 
             if (rs != null)
             {
-                Warn(name, date, rs);
+                AddWarn(name, date, rs);
             }
+
+            // Insertdb("original", new[] { "name", "date", "time" }, new object[] { name, date, t });
 
         }
         /// <summary>
@@ -194,13 +230,17 @@ namespace CheckingIn
         /// <param name="name"></param>
         /// <param name="dt"></param>
         /// <param name="t"></param>
-        public static void Warn(string name, object dt, string t)
+        public static void AddWarn(string name, object dt, string t)
         {
-            var wr = WarnTable.NewRow();
+
+            var wr = WarnDt.NewRow();
             wr["name"] = name;
             wr["date"] = ((DateTime)dt).Date;
             wr["txt"] = t;
-            WarnTable.Rows.Add(wr);
+            WarnDt.Rows.Add(wr);
+
+            // Insertdb("warn", new[] { "name", "date", "txt" }, new object[] { name, ((DateTime)dt).Date, t });
+
         }
 
         public static void Close()

@@ -10,17 +10,19 @@ namespace CheckingIn
     {
 
         //总属性
-        public string name;
+        public string Name;
+
+        public string Mail;
 
         /// <summary>
         /// 可用假期
         /// </summary>
-        public TimeSpan holidays;
+        public TimeSpan Holidays;
 
         /// <summary>
         /// 可调休时间/加班时间
         /// </summary>
-        public TimeSpan overtime;
+        public TimeSpan OverWorkTime;
 
 
 
@@ -36,10 +38,9 @@ namespace CheckingIn
         /// <summary>
         /// 迟到早退时间
         /// </summary>
-        public TimeSpan delayTime = TimeSpan.Zero;
+        public TimeSpan DelayTime = TimeSpan.Zero;
 
 
-        private int _warnDayCount = -1;
         /// <summary>
         /// 异常天数
         /// </summary>
@@ -66,10 +67,11 @@ namespace CheckingIn
         /// </summary>
         public TimeSpan WorkTime = TimeSpan.Zero;
 
+
         /// <summary>
         /// 工作时间班次
         /// </summary>
-        public WorkTimeClassInfo WorkTimeClass { get; }
+        public WorkTimeClassInfo WorkTimeClass;
 
         public List<CheckInfo> Checks = new List<CheckInfo>();
 
@@ -77,10 +79,23 @@ namespace CheckingIn
 
         public PersonInfo(string n)
         {
-            name = n;
+            Name = n;
+            //从db中得到相关信息
+            var dv = new DataView(DB.Persons) { RowFilter = $"name ='{Name}'" };
+            if (dv.Count == 0)
+            {
+                Mail = null;
+                WorkTimeClass = null;
+            }
+            else
+            {
+                Mail = dv[0]["mail"].ToString();
 
 
-            WorkTimeClass = GetWorkTimeClass(n);
+
+                WorkTimeClass = new WorkTimeClassInfo(dv[0]["worktimeclass"].ToString());
+            }
+
         }
 
         public void AddCheck(CheckInfo c)
@@ -88,7 +103,6 @@ namespace CheckingIn
             Checks.Add(c);
         }
 
-        private bool _geted = false;
         //处理这个人的数据
         public void GetData()
         {
@@ -102,9 +116,9 @@ namespace CheckingIn
 
 
                 //得到这个人今天所有的打卡时间
-                var timeview = new DataView(DB.Xlsdt)
+                var timeview = new DataView(DB.OriginalDt)
                 {
-                    RowFilter = $"name = '{name}' AND date = '{date}'",
+                    RowFilter = $"name = '{Name}' AND date = '{date}'",
                     Sort = "time asc" //从小到大
                 };
                 c.sourcerec = timeview;
@@ -141,38 +155,34 @@ namespace CheckingIn
 
         }
 
-        private WorkTimeClassInfo GetWorkTimeClass(string name)
-        {
-            var cn = "早班";
-            try
-            {
-                cn = DB._classTime[name];
-            }
-            catch (Exception)
-            {
 
-                Log.warn(name + "-不在班次表中");
-            }
-
-            return new WorkTimeClassInfo(cn);
-
-        }
-
-
-        public CheckInfo GetCheck(DateTime start)
+        public CheckInfo GetCheck(WorkDay d)
         {
 
             foreach (var c in Checks)
             {
-                if (c.Date == start)
+                if (c.Date == d)
                     return c;
             }
             return null;
         }
-    }
+        public override string ToString()
+        {
+            return Name;
+        }
 
-    public struct WorkTimeClassInfo
+        private int _warnDayCount = -1;
+        private bool _geted = false;
+    }
+    /// <summary>
+    /// 工作班次信息
+    /// </summary>
+    public class WorkTimeClassInfo
     {
+        public string ClassName;
+        public CheckTime InTime;
+        public CheckTime OutTime;
+        public bool isWorkTimeClass => ClassName == "综合班次";
         public WorkTimeClassInfo(string n)
         {
             ClassName = n;
@@ -204,19 +214,19 @@ namespace CheckingIn
                     break;
             }
         }
-        public string ClassName;
-        public CheckTime InTime;
-        public CheckTime OutTime;
-        public bool isWorkTimeClass => ClassName == "综合班次";
     }
 
     public struct WarnInfo
     {
+        public WorkDay date;
+        public string info;
+        public WarnInfoType type;
         public WarnInfo(WorkDay d, string i, WarnInfoType t)
         {
             date = d;
             info = i;
             type = t;
+            
         }
         public WarnInfo(WorkDay d, string i)
         {
@@ -224,9 +234,6 @@ namespace CheckingIn
             info = i;
             type = WarnInfoType.warn;
         }
-        public WorkDay date;
-        public string info;
-        public WarnInfoType type;
     }
 
     /// <summary>
@@ -234,6 +241,7 @@ namespace CheckingIn
     /// </summary>
     public class CheckTime
     {
+        public TimeSpan Time { get; set; }
         public CheckTime(TimeSpan t)
         {
             Time = t;
@@ -243,24 +251,7 @@ namespace CheckingIn
         {
             Time = TimeSpan.Parse(t);
         }
-        public TimeSpan Time { get; set; }
-        /*
-        public static bool operator ==(CheckTime a, CheckTime b)
-        {
 
-            if (a == null && b == null)
-                return true;
-            if (a == null || b == null)
-                return true;
-            return a.Time == b.Time;
-
-        }*/
-
-        /*
-        public static bool operator !=(CheckTime a, CheckTime b)
-        {
-            return !(a == b);
-        }*/
         public static bool operator >(CheckTime a, CheckTime b)
         {
             try
@@ -374,7 +365,7 @@ namespace CheckingIn
                 //不是工作日直接返回
                 if (!Date.IsWorkDay) return _warns;
                 //使用弹性工作制                                                      
-                if (Person.WorkTimeClass.isWorkTimeClass)return _warns;
+                if (Person.WorkTimeClass.isWorkTimeClass) return _warns;
 
                 //都是空且,还是上班
                 if (InTime == null && OutTime == null && Date.IsWorkDay)
@@ -395,7 +386,7 @@ namespace CheckingIn
                     return _warns;
                 }
 
-               
+
 
 
 
@@ -404,7 +395,7 @@ namespace CheckingIn
 
                     var k = (TimeSpan)(InTime - Person.WorkTimeClass.InTime);
 
-                    Person.delayTime += k;
+                    Person.DelayTime += k;
 
                     _warns.Add(new WarnInfo(Date, $"迟到{k.TotalMinutes.ToString("####")}分钟"));
                 }
@@ -415,7 +406,7 @@ namespace CheckingIn
                 {
                     var k = (TimeSpan)(Person.WorkTimeClass.OutTime - OutTime);
 
-                    Person.delayTime += k;
+                    Person.DelayTime += k;
 
                     _warns.Add(new WarnInfo(Date, $"早退{k.TotalMinutes.ToString("####")}分钟"));
                 }
@@ -472,20 +463,30 @@ namespace CheckingIn
             }
         }
 
+        public bool IsWorkDay => AllDays[_date];
         private DateTime _date;
 
         WorkDay(DateTime a)
         {
-            _date = a;
+            _date = a.Date;
         }
-        public bool IsWorkDay => AllDays[_date];
         public static implicit operator WorkDay(DateTime a)
         {
             return new WorkDay(a);
         }
         public static implicit operator DateTime(WorkDay a)
         {
-            return a._date;
+            return a._date.Date;
+        }
+
+        public static bool operator ==(WorkDay a, WorkDay b)
+        {
+            return a._date == b._date;
+        }
+
+        public static bool operator !=(WorkDay a, WorkDay b)
+        {
+            return !(a == b);
         }
 
         public override string ToString()

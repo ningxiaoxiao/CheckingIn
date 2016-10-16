@@ -11,12 +11,13 @@ namespace CheckingIn
             InitializeComponent();
 
             var cm = new object[CheckingIn.inst.comboBox1.Items.Count];
+
             CheckingIn.inst.comboBox1.Items.CopyTo(cm, 0);
             comboBox_name.Items.AddRange(cm);
             if (comboBox_name.Items.Count > 0)
                 comboBox_name.SelectedIndex = 0;
 
-            dataGridView1.DataSource = DB.OAdt;
+            dataGridView1.DataSource = DB.OaDt;
 
         }
 
@@ -34,13 +35,13 @@ namespace CheckingIn
 
 
 
-            var nr = DB.OAdt.NewRow();
-            nr["no"] = DB.OAdt.Rows.Count + 1;
+            var nr = DB.OaDt.NewRow();
+            nr["no"] = DB.OaDt.Rows.Count + 1;
             nr["name"] = name;
             nr["start"] = s;
             nr["end"] = e.AddMinutes(1);
             nr["reason"] = r;
-            DB.OAdt.Rows.Add(nr);
+            DB.OaDt.Rows.Add(nr);
 
             //写到数据库
 
