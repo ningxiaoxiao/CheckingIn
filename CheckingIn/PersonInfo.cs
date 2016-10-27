@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using LitJson;
 
 namespace CheckingIn
 {
@@ -15,12 +16,12 @@ namespace CheckingIn
         /// <summary>
         /// 可用假期
         /// </summary>
-        public TimeSpan holidays;
+        public TimeSpan holidays = TimeSpan.Zero;
 
         /// <summary>
         /// 可调休时间/加班时间
         /// </summary>
-        public TimeSpan overtime;
+        public TimeSpan overtime = TimeSpan.Zero;
 
 
 
@@ -72,9 +73,10 @@ namespace CheckingIn
         public WorkTimeClassInfo WorkTimeClass { get; }
 
         public List<CheckInfo> Checks = new List<CheckInfo>();
+        public List<WarnInfo> Warns = new List<WarnInfo>();
 
 
-
+        private bool _geted = false;
         public PersonInfo(string n)
         {
             name = n;
@@ -86,9 +88,9 @@ namespace CheckingIn
         public void AddCheck(CheckInfo c)
         {
             Checks.Add(c);
+            Warns.AddRange(c.Warns);
         }
 
-        private bool _geted = false;
         //处理这个人的数据
         public void GetData()
         {
@@ -140,6 +142,97 @@ namespace CheckingIn
             _geted = true;
 
         }
+
+        public string FormatStr(object o, string end = "")
+        {
+            var s = o.ToString();
+            if (s == "")
+                s = "0";
+            return s + end;
+
+        }
+
+        public string FormatStr(int i, string end = "")
+        {
+            return FormatStr(i.ToString(), end);
+        }
+
+        public string FormatStr(double i, string end = "")
+        {
+            return FormatStr(i.ToString("###.##"), end);
+        }
+
+
+        public string GetJson()
+        {
+            var j = new JsonData();
+
+            var js = new JsonWriter();
+            var csjs = new JsonWriter();
+            try
+            {
+                var profile = new JsonData();
+
+                //profile["姓名"] = name;
+                profile["未休时间"] = FormatStr(holidays.TotalHours, "小时");
+                profile["调补休"] = "未接入";
+                profile["扣薪假期"] = "未接入";
+                //profile["未休时间"] = "未接入";
+                profile["出差"] = holidays > TimeSpan.Zero ? holidays.TotalHours.ToString("#### '小时'") : "0小时";
+                profile["迟到早退"] = FormatStr(delayTime.TotalMinutes, "分钟");
+                profile["异常天数"] = WarnDayCount > 0 ? WarnDayCount.ToString("### '天'") : "0天";
+                if (WorkTimeClass.isWorkTimeClass)
+                    profile["工作时间"] = FormatStr(WorkTime.TotalHours) + "/" + WorkDay.WorkCount * 8 + "小时";
+                else
+                    profile["工作天数"] = FormatStr(WorkDayCount) + "/" + WorkDay.WorkCount + "天";
+
+                j["profile"] = profile;
+
+
+
+                js.WriteArrayStart();
+                csjs.WriteArrayStart();
+
+                foreach (var c in Checks)
+                {
+                    foreach (var w in c.Warns)
+                    {
+                        js.WriteObjectStart();
+                        js.WritePropertyName("date");
+                        js.Write(w.date.ToString());
+                        js.WritePropertyName("info");
+                        js.Write(w.info);
+                        js.WriteObjectEnd();
+                    }
+
+                    csjs.WriteObjectStart();
+
+                    csjs.WritePropertyName("date");
+                    csjs.Write(c.Date.ToString());
+
+                    csjs.WritePropertyName("intime");
+                    csjs.Write(c.InTime != null ? c.InTime.ToString() : "");
+
+                    csjs.WritePropertyName("outtime");
+                    csjs.Write(c.OutTime != null ? c.OutTime.ToString() : "");
+
+                    csjs.WriteObjectEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            csjs.WriteArrayEnd();
+            js.WriteArrayEnd();
+            j["warns"] = js.ToString();
+            j["data"] = csjs.ToString();
+
+            return j.ToJson();
+
+        }
+
 
         private WorkTimeClassInfo GetWorkTimeClass(string name)
         {
@@ -374,7 +467,7 @@ namespace CheckingIn
                 //不是工作日直接返回
                 if (!Date.IsWorkDay) return _warns;
                 //使用弹性工作制                                                      
-                if (Person.WorkTimeClass.isWorkTimeClass)return _warns;
+                if (Person.WorkTimeClass.isWorkTimeClass) return _warns;
 
                 //都是空且,还是上班
                 if (InTime == null && OutTime == null && Date.IsWorkDay)
@@ -395,7 +488,7 @@ namespace CheckingIn
                     return _warns;
                 }
 
-               
+
 
 
 

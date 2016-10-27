@@ -7,7 +7,7 @@ namespace CheckingIn
 {
     public static class Log
     {
-        private static ILog logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static ILog logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         static ListView _ls;
 
         public static void Creat(ListView ls)

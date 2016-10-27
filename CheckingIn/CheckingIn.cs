@@ -7,7 +7,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Data.SQLite;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
@@ -27,17 +26,9 @@ namespace CheckingIn
         private const string Smtppassword = "123qweASD";
 
 
-
-        /// <summary>
-        /// 全公司的人
-        /// </summary>
-        Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
-
-
-
         private DataTable _alldates, _allnames;
 
-
+        private HttpSever http;
         public CheckingIn()
         {
             inst = this;
@@ -54,8 +45,10 @@ namespace CheckingIn
             DB.Readoa();
             DB.ReadClassTimeFormDB();
             DB.Readmaildb();
-
             Log.Creat(listView_log);
+            http = new HttpSever();
+
+
 
         }
 
@@ -175,7 +168,7 @@ namespace CheckingIn
                 //当前人名字
                 var n = r["name"].ToString();
                 comboBox1.Items.Add(n);
-                persons.Add(n, new PersonInfo(n));
+                DB.persons.Add(n, new PersonInfo(n));
             }
 
 
@@ -542,7 +535,7 @@ namespace CheckingIn
 
             //对当前数据进行处理
 
-            var p = persons[comboBox1.Text];
+            var p = DB.persons[comboBox1.Text];
 
             p.GetData();
 
@@ -573,6 +566,7 @@ namespace CheckingIn
             monthCalendar1.SetDate(v.AddMonths(1));
             monthCalendar1.SetDate(v);
 
+            webBrowser1.Navigate("http://127.0.0.1:8080/?name=" + p.name);
 
         }
 
@@ -594,7 +588,7 @@ namespace CheckingIn
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
 
-            var p = persons[comboBox1.Text];
+            var p = DB.persons[comboBox1.Text];
             var check = p.GetCheck(e.Start);
 
             if (check != null)
@@ -759,7 +753,7 @@ namespace CheckingIn
                 {
                     throw new Exception("邮箱地址不合法");
                 }
-                var p = persons[name];
+                var p = DB.persons[name];
                 p.GetData();
 
                 //统计信息

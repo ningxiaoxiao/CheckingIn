@@ -26,6 +26,11 @@ namespace CheckingIn
 
         private static SQLiteConnection _db;
 
+        /// <summary>
+        /// 全公司的人
+        /// </summary>
+        public static Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
+
         public static Dictionary<string, string> _classTime = new Dictionary<string, string>();
         public static Dictionary<string, string> _mail = new Dictionary<string, string>();
         public static void Insertdb(string tablename, string[] k, object[] v)

@@ -9,10 +9,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CheckingIn</RootNamespace>
     <AssemblyName>CheckingIn</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -36,25 +37,62 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.0.0\lib\net40\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.0.0\lib\net40\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="LitJson, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\LitJson.0.7.0\lib\LitJson.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.5\lib\net20-full\log4net.dll</HintPath>
+      <HintPath>..\packages\log4net.2.0.5\lib\net40-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SuperSocket.Common, Version=1.6.5.0, Culture=neutral, PublicKeyToken=6c80000676988ebb, processorArchitecture=MSIL">
+      <HintPath>..\packages\SuperSocket.1.6.5\lib\net40\SuperSocket.Common.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SuperSocket.Facility, Version=1.6.5.0, Culture=neutral, PublicKeyToken=6c80000676988ebb, processorArchitecture=MSIL">
+      <HintPath>..\packages\SuperSocket.1.6.5\lib\net40\SuperSocket.Facility.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SuperSocket.SocketBase, Version=1.6.5.0, Culture=neutral, PublicKeyToken=6c80000676988ebb, processorArchitecture=MSIL">
+      <HintPath>..\packages\SuperSocket.1.6.5\lib\net40\SuperSocket.SocketBase.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SuperSocket.SocketEngine, Version=1.6.5.0, Culture=neutral, PublicKeyToken=6c80000676988ebb, processorArchitecture=MSIL">
+      <HintPath>..\packages\SuperSocket.Engine.1.6.5.1\lib\net40\SuperSocket.SocketEngine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SuperSocket.SocketService, Version=1.6.5.0, Culture=neutral, PublicKeyToken=6c80000676988ebb, processorArchitecture=MSIL">
+      <HintPath>..\packages\SuperSocket.Engine.1.6.5.1\lib\net40\SuperSocket.SocketService.exe</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.103.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.Core.1.0.103\lib\net20\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\packages\System.Data.SQLite.Core.1.0.103\lib\net40\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Data.SQLite.EF6, Version=1.0.103.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.EF6.1.0.103\lib\net40\System.Data.SQLite.EF6.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Data.SQLite.Linq, Version=1.0.103.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.103\lib\net20\System.Data.SQLite.Linq.dll</HintPath>
+      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.103\lib\net40\System.Data.SQLite.Linq.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CheckingIn.cs">
@@ -64,6 +102,7 @@
       <DependentUpon>CheckingIn.cs</DependentUpon>
     </Compile>
     <Compile Include="db.cs" />
+    <Compile Include="HttpServer.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="oadata.cs">
       <SubType>Form</SubType>
@@ -122,12 +161,12 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\System.Data.SQLite.Core.1.0.103\build\net20\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.103\build\net20\System.Data.SQLite.Core.targets')" />
+  <Import Project="..\packages\System.Data.SQLite.Core.1.0.103\build\net40\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.103\build\net40\System.Data.SQLite.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.103\build\net20\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.103\build\net20\System.Data.SQLite.Core.targets'))" />
+    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.103\build\net40\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.103\build\net40\System.Data.SQLite.Core.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -75,6 +75,7 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.button1 = new System.Windows.Forms.Button();
+            this.webBrowser1 = new System.Windows.Forms.WebBrowser();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -87,7 +88,7 @@
             // 
             this.comboBox1.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(14, 28);
+            this.comboBox1.Location = new System.Drawing.Point(12, 28);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(77, 20);
             this.comboBox1.TabIndex = 3;
@@ -98,7 +99,7 @@
             // 
             this.monthCalendar1.BackColor = System.Drawing.Color.Salmon;
             this.monthCalendar1.ForeColor = System.Drawing.Color.Red;
-            this.monthCalendar1.Location = new System.Drawing.Point(254, 32);
+            this.monthCalendar1.Location = new System.Drawing.Point(686, 39);
             this.monthCalendar1.Name = "monthCalendar1";
             this.monthCalendar1.ShowToday = false;
             this.monthCalendar1.ShowTodayCircle = false;
@@ -114,7 +115,7 @@
             this.columnHeader7,
             this.columnHeader6});
             this.listView2.GridLines = true;
-            this.listView2.Location = new System.Drawing.Point(12, 318);
+            this.listView2.Location = new System.Drawing.Point(444, 325);
             this.listView2.Name = "listView2";
             this.listView2.Size = new System.Drawing.Size(462, 107);
             this.listView2.TabIndex = 9;
@@ -140,7 +141,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 301);
+            this.label2.Location = new System.Drawing.Point(444, 308);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 12);
             this.label2.TabIndex = 11;
@@ -155,7 +156,7 @@
             this.listView_warn.GridLines = true;
             this.listView_warn.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listView_warn.HideSelection = false;
-            this.listView_warn.Location = new System.Drawing.Point(12, 146);
+            this.listView_warn.Location = new System.Drawing.Point(444, 153);
             this.listView_warn.MultiSelect = false;
             this.listView_warn.Name = "listView_warn";
             this.listView_warn.Size = new System.Drawing.Size(239, 145);
@@ -184,7 +185,7 @@
             this.查看ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(486, 25);
+            this.menuStrip1.Size = new System.Drawing.Size(951, 25);
             this.menuStrip1.TabIndex = 13;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -370,7 +371,7 @@
             this.toolStripLabel2});
             this.toolStrip1.Location = new System.Drawing.Point(0, 559);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(486, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(951, 25);
             this.toolStrip1.TabIndex = 14;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -394,7 +395,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(311, 218);
+            this.label6.Location = new System.Drawing.Point(743, 225);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(53, 60);
@@ -405,7 +406,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(43, 63);
+            this.label3.Location = new System.Drawing.Point(475, 70);
             this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(71, 60);
@@ -416,7 +417,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(17, 131);
+            this.label1.Location = new System.Drawing.Point(449, 138);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(53, 12);
             this.label1.TabIndex = 22;
@@ -425,7 +426,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(368, 218);
+            this.label4.Location = new System.Drawing.Point(800, 225);
             this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 60);
@@ -435,7 +436,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(118, 63);
+            this.label5.Location = new System.Drawing.Point(550, 70);
             this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(71, 60);
@@ -451,7 +452,7 @@
             this.listView_log.GridLines = true;
             this.listView_log.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listView_log.HideSelection = false;
-            this.listView_log.Location = new System.Drawing.Point(12, 440);
+            this.listView_log.Location = new System.Drawing.Point(444, 447);
             this.listView_log.MultiSelect = false;
             this.listView_log.Name = "listView_log";
             this.listView_log.Size = new System.Drawing.Size(462, 98);
@@ -471,7 +472,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(399, 290);
+            this.button1.Location = new System.Drawing.Point(831, 297);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 26;
@@ -480,11 +481,20 @@
             this.button1.Visible = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // webBrowser1
+            // 
+            this.webBrowser1.Location = new System.Drawing.Point(12, 54);
+            this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
+            this.webBrowser1.Name = "webBrowser1";
+            this.webBrowser1.Size = new System.Drawing.Size(381, 494);
+            this.webBrowser1.TabIndex = 27;
+            // 
             // CheckingIn
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(486, 584);
+            this.ClientSize = new System.Drawing.Size(951, 584);
+            this.Controls.Add(this.webBrowser1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.listView_log);
             this.Controls.Add(this.label5);
@@ -562,6 +572,7 @@
         private System.Windows.Forms.ToolStripMenuItem 邮箱ToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem 清空OA数据ToolStripMenuItem;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.WebBrowser webBrowser1;
     }
 }
 
