@@ -28,14 +28,10 @@ namespace CheckingIn
 
 
 
-        /// <summary>
-        /// 全公司的人
-        /// </summary>
-        Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
 
 
         private DataTable _alldates, _allnames;
-
+        private HttpSever http;
 
         public CheckingIn()
         {
@@ -45,13 +41,15 @@ namespace CheckingIn
             InitializeComponent();
 
             openFileDialog1.FileOk += OpenFileDialog1_FileOk;
-            listView2.RetrieveVirtualItem += ListView2_RetrieveVirtualItem;
+
 
             DB.Creat();
 
 
 
             Log.Creat(listView_log);
+
+            http = new HttpSever();
 
         }
 
@@ -93,7 +91,12 @@ namespace CheckingIn
         {
 
             _openedFleName = openFileDialog1.FileName;
-            var dt = ExcelToDs(openFileDialog1.FileName, "123");
+            var dt = ExcelToDs(openFileDialog1.FileName);
+
+            DB.OriginalDt.Clear();
+            DB.Resultdt.Clear();
+
+            DB.persons.Clear();
 
             //进行遍历处理 生成新的表
             foreach (DataRow i in dt.Tables[0].Rows)
@@ -107,8 +110,6 @@ namespace CheckingIn
                 {
                     time = time.AddDays(-1);
                     tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
-
-                    DB.AddWarn(i["姓名"].ToString(), time, "凌晨打卡");
                 }
                 else
                 {
@@ -117,46 +118,6 @@ namespace CheckingIn
                 //增加新记录
                 DB.AddOriginal(i["姓名"].ToString(), time.Date, tt);
 
-            }
-
-
-            //把OA数据加入进去
-            foreach (DataRow i in DB.OaDt.Rows)
-            {
-                switch (i["reason"].ToString())
-                {
-                    case "加班":
-                    case "外出":
-                        DB.AddOriginal(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"] + "start");
-                        DB.AddOriginal(i["name"].ToString(), (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, i["reason"] + "end");
-                        break;
-                    case "补登":
-
-                        DB.AddOriginal(i["name"].ToString(), (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, i["reason"].ToString());
-
-                        break;
-                    case "出差":
-                        //出差期间,每天自动增加一个上班打卡 和下班打卡
-                        var s = (DateTime)i["start"];
-                        var ee = (DateTime)i["end"];
-
-                        //去掉时间
-                        s = s.Date;
-                        ee = ee.Date;
-                        //得到出差几天
-                        var days = ee - s;
-
-                        for (int d = 0; d <= days.Days; d++)
-                        {
-                            DB.AddOriginal(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 9, 30, 0), i["reason"].ToString());
-                            DB.AddOriginal(i["name"].ToString(), s + new TimeSpan(d, 0, 0, 0), new TimeSpan(0, 18, 30, 0));
-                        }
-
-                        break;
-                    case "请假":
-
-                        break;
-                }
             }
 
             //得到所有有人出勤的日期
@@ -173,7 +134,7 @@ namespace CheckingIn
                 //当前人名字
                 var n = r["name"].ToString();
                 comboBox1.Items.Add(n);
-                persons.Add(n, new PersonInfo(n));
+                DB.persons.Add(n, new PersonInfo(n));
             }
 
 
@@ -191,6 +152,100 @@ namespace CheckingIn
                 WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
             }
 
+            //把OA数据加入进去
+            foreach (DataRow i in DB.OaDt.Rows)
+            {
+                var reason = i["reason"].ToString();
+                var name = i["name"].ToString();
+
+                if (!DB.persons.ContainsKey(name))
+                    DB.persons.Add(name, new PersonInfo(name));
+                var p = DB.persons[name];//得到人
+                switch (reason)
+                {
+                    case "加班":
+                        //直接计算时间
+
+
+                        var p1 = DB.persons[name];
+
+                        var st1 = (DateTime)i["start"];
+                        var et1 = (DateTime)i["end"];
+
+                        //直接计算
+                        p1.OverWorkTime += et1 - st1;
+                        //模拟两次打卡
+
+                        DB.AddOriginal(name, st1.Date, st1.TimeOfDay, reason + "开始");
+                        DB.AddOriginal(name, et1.Date, et1.TimeOfDay, reason + "结束");
+
+                        break;
+                    case "外出":
+
+
+                        var st = (DateTime)i["start"];
+                        var et = (DateTime)i["end"];
+
+
+
+                        DB.AddOriginal(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason + "开始");
+                        DB.AddOriginal(name, (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, reason + "结束");
+
+                        var ds = (int)(et - st).TotalDays;//得到相隔天数
+
+
+                        for (var j = 0; j < ds; j++)
+                        {
+                            var c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)p.WorkTimeClass.InTime;//上班时间
+
+                            if (c > st && c < et)//如果在相隔时间内,加一次打卡
+                                DB.AddOriginal(name, c.Date, c.TimeOfDay, reason);
+
+                            c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)p.WorkTimeClass.OutTime;
+
+                            if (c > st && c < et)//
+                                DB.AddOriginal(name, c.Date, c.TimeOfDay, reason);
+
+                        }
+
+
+                        break;
+                    case "补登":
+
+                        DB.AddOriginal(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason);
+
+                        break;
+                    case "出差":
+                        //出差期间,每天自动增加一个上班打卡 和下班打卡
+                        var s = (DateTime)i["start"];
+                        var ee = (DateTime)i["end"];
+
+                        //先增加开始和结束
+                        DB.AddOriginal(name, s , (TimeSpan)p.WorkTimeClass.InTime, reason + "开始");
+                        DB.AddOriginal(name, ee , (TimeSpan)p.WorkTimeClass.OutTime, reason + "结束");
+
+                        //去掉时间
+                        s = s.Date;
+                        ee = ee.Date;
+
+                        //得到出差几天
+                        var days = ee - s;
+
+                        for (var d = 0; d <= days.Days; d++)
+                        {
+                            DB.AddOriginal(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.InTime, reason );
+                            DB.AddOriginal(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.OutTime, reason );
+                        }
+
+                        break;
+                    case "请假":
+
+                        break;
+                }
+            }
+
+
+
             comboBox1.SelectedIndex = 0;
 
 
@@ -203,7 +258,7 @@ namespace CheckingIn
             try
             {
                 _openedFleName = openFileDialog1.FileName;
-                var dt = ExcelToDs(openFileDialog1.FileName, "Sheet1");
+                var dt = ExcelToDs(openFileDialog1.FileName);
 
                 //开始事务
 
@@ -215,7 +270,7 @@ namespace CheckingIn
                     //读出时间
                     var classname = i["对应时段"].ToString();
                     //写到表里
-                    var dv = new DataView(DB.Persons) { RowFilter = $"name='{name}'" };
+                    var dv = new DataView(DB.PersonInfos) { RowFilter = $"name='{name}'" };
                     DB.Cmd(dv.Count > 0
                         ? $"update person set worktimeclass='{classname}' where name='{name}'"
                         : $"insert into person (name,worktimeclass) values ('{name}','{classname}')", bt);
@@ -234,7 +289,7 @@ namespace CheckingIn
         {
             _openedFleName = openFileDialog1.FileName;
 
-            var dt = ExcelToDs(openFileDialog1.FileName, "Sheet1");
+            var dt = ExcelToDs(openFileDialog1.FileName);
 
             var bt = DB.BeginTransaction();
 
@@ -248,7 +303,7 @@ namespace CheckingIn
                     //读出时间
                     var mail = i["邮箱"].ToString();
                     //写到表里
-                    var dv = new DataView(DB.Persons) { RowFilter = $"name='{name}'" };
+                    var dv = new DataView(DB.PersonInfos) { RowFilter = $"name='{name}'" };
                     DB.Cmd(dv.Count > 0
                         ? $"update person set mail='{mail}' where name='{name}'"
                         : $"insert into person (name,mail) values ('{name}','{mail}')", bt);
@@ -274,7 +329,7 @@ namespace CheckingIn
             {
                 _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName, "Sheet1");
+                var dt = ExcelToDs(openFileDialog1.FileName);
                 //开始事务
 
 
@@ -287,13 +342,21 @@ namespace CheckingIn
                     var d = i["天"].ToString();
                     var h = i["小时"].ToString();
 
+                    if (se < st)
+                    {
+                        Log.Err(name + "-非法单据,加班线束小于加班开始");
+                        continue;
+                    }
+
                     //写到表里
+
 
                     if (st.Month == monthCalendar1.SelectionStart.Month)
                         DB.OaAdd(name, st, se, "加班");
 
                 }
                 bt.Commit();
+                DB.Readoa();
             }
             catch (Exception ex)
             {
@@ -311,7 +374,7 @@ namespace CheckingIn
             {
                 _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName, "Sheet1");
+                var dt = ExcelToDs(openFileDialog1.FileName);
                 //开始事务
 
 
@@ -322,12 +385,20 @@ namespace CheckingIn
                     var st = DateTime.Parse(i["外出时间"].ToString());
                     var se = DateTime.Parse(i["实际返回"].ToString());
 
+                    if (se < st)
+                    {
+                        Log.Err(name + "-非法单据,返回时间小于开始时间");
+                        continue;
+                    }
+
+
                     //写到表里
                     if (st.Month == monthCalendar1.SelectionStart.Month)
                         DB.OaAdd(name, st, se, "外出");
 
                 }
                 bt.Commit();
+                DB.Readoa();
             }
             catch (Exception ex)
             {
@@ -346,7 +417,7 @@ namespace CheckingIn
             {
                 _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName, "Sheet1");
+                var dt = ExcelToDs(openFileDialog1.FileName);
 
 
                 var count = new Dictionary<string, int>();
@@ -357,6 +428,12 @@ namespace CheckingIn
 
 
                     var name = i["姓名"].ToString();
+
+                    //月份不对.不处理
+                    var st = DateTime.Parse(i["打卡异常时间"].ToString());
+                    var r = i["上班或下班打卡异常"].ToString();
+                    if (st.Month != monthCalendar1.SelectionStart.Month)//月份不对
+                        continue;
 
                     if (count.ContainsKey(name))
                     {
@@ -372,10 +449,7 @@ namespace CheckingIn
                         count.Add(name, 1);
                     }
 
-                    var st = DateTime.Parse(i["打卡异常时间"].ToString());
-                    var r = i["上班或下班打卡异常"].ToString();
-                    if (st.Month != monthCalendar1.SelectionStart.Month)//月份不对
-                        continue;
+                    
                     string c;
                     TimeSpan s, e;
                     /* todo
@@ -396,6 +470,7 @@ namespace CheckingIn
                 }
 
                 bt.Commit();
+                DB.Readoa();
             }
             catch (Exception ex)
             {
@@ -413,7 +488,7 @@ namespace CheckingIn
             {
                 _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName, "Sheet1");
+                var dt = ExcelToDs(openFileDialog1.FileName);
 
 
 
@@ -444,16 +519,19 @@ namespace CheckingIn
 
 
 
-        public DataSet ExcelToDs(string path, string tablename)
+        public DataSet ExcelToDs(string path)
         {
-            //todo 修正表名的问题
+
             var strConn = "Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + path + ";" + "Extended Properties=Excel 8.0;";
             var conn = new OleDbConnection(strConn);
             conn.Open();
             var strExcel = "";
             OleDbDataAdapter myCommand = null;
             DataSet ds = null;
-            strExcel = $"select * from [{tablename}$]";
+            var dt = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+            var tableName = dt.Rows[0][2].ToString().Trim();
+
+            strExcel = $"select * from [{tableName}]";
             myCommand = new OleDbDataAdapter(strExcel, strConn);
             ds = new DataSet();
             myCommand.Fill(ds);
@@ -506,13 +584,17 @@ namespace CheckingIn
 
             //对当前数据进行处理
 
-            var p = persons[comboBox1.Text];
+            var p = DB.persons[comboBox1.Text];
 
             p.GetData();
 
             //统计信息
 
-            label5.Text = $"{WorkDay.WorkCount - p.WarnDayCount}/{WorkDay.WorkCount}\r\n{p.WorkTime.TotalHours.ToString(".#")}/{WorkDay.WorkCount * 8}\r\n{p.DelayTime.TotalMinutes.ToString("####")}\r\n{p.Travel}\r\n{p.WorkTime.TotalHours.ToString(".##")}";
+            label5.Text = $"{WorkDay.WorkCount - p.WarnDayCount}/{WorkDay.WorkCount}\r\n" +
+                          $"{p.WorkTime.TotalHours.ToString(".#")}/{WorkDay.WorkCount * 8}\r\n" +
+                          $"{p.DelayTime.TotalMinutes.ToString("####")}\r\n" +
+                          $"{p.Travel}\r\n" +
+                          $"{p.OverWorkTime.TotalHours.ToString(".##")}";
 
             monthCalendar1.RemoveAllBoldedDates();
             listView_warn.Items.Clear();
@@ -537,9 +619,28 @@ namespace CheckingIn
             monthCalendar1.SetDate(v.AddMonths(1));
             monthCalendar1.SetDate(v);
 
+            //得到oa数据
+            oa_dataGridView2.DataSource = DB.GetSql("select * from oa where name ='" + p.Name + "'");
 
         }
-
+        /// </summary>
+        /// <param name="excelFileName"></param>
+        /// <returns></returns>
+        private string GetExcelFirstTableName(string excelFileName)
+        {
+            string tableName = null;
+            if (File.Exists(excelFileName))
+            {
+                using (OleDbConnection conn = new OleDbConnection("Provider=Microsoft.Jet." +
+                  "OLEDB.4.0;Extended Properties=\"Excel 8.0\";Data Source=" + excelFileName))
+                {
+                    conn.Open();
+                    DataTable dt = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+                    tableName = dt.Rows[0][2].ToString().Trim();
+                }
+            }
+            return tableName;
+        }
         private void listView_warn_SelectedIndexChanged(object sender, EventArgs e)
         {
             //得到日期
@@ -557,9 +658,9 @@ namespace CheckingIn
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
-            if(comboBox1.Text=="")return;
+            if (comboBox1.Text == "") return;
 
-            var p = persons[comboBox1.Text];
+            var p = DB.persons[comboBox1.Text];
             var check = p.GetCheck(e.Start);
 
             if (check != null)
@@ -585,9 +686,7 @@ namespace CheckingIn
 
                 //原来的记录
 
-                DB.OriginalListDt = check.Sourcerec.ToTable();
-                listView2.VirtualListSize = DB.OriginalListDt.Rows.Count;
-                listView2.Invalidate();
+                dataGridView1.DataSource = check.Sourcerec.ToTable();
 
 
             }
@@ -601,19 +700,6 @@ namespace CheckingIn
 
 
 
-        /// <summary>
-        /// 原始表
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ListView2_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
-        {
-            e.Item = new ListViewItem(new[] {
-                DB.OriginalListDt.Rows[e.ItemIndex]["name"].ToString(),
-                ((DateTime)DB.OriginalListDt.Rows[e.ItemIndex]["Date"]).ToShortDateString(),
-                DB.OriginalListDt.Rows[e.ItemIndex]["time"].ToString(),
-            });
-        }
 
         private void 打开文件ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -635,6 +721,8 @@ namespace CheckingIn
 
         private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            throw new NotImplementedException();
+            /*
             //从结果进行遍历
             if (_alldates.Rows.Count == 0)
                 return;
@@ -682,7 +770,7 @@ namespace CheckingIn
             }
 
             WriteExcel(dt, "test.xls");
-
+            */
         }
 
         private void 读取班次表ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -706,11 +794,7 @@ namespace CheckingIn
         {
             var r = new ResourceManager("htmlhead", Assembly.GetExecutingAssembly());
 
-
-
-
             var e = "</body>";
-
 
             return b + e;
         }
@@ -732,43 +816,9 @@ namespace CheckingIn
                 //统计信息
                 var body = $"{p.Name}-考勤分析报表\r\n";
 
-
-                if (p.WorkTimeClass.IsWorkTimeClass)
-                    body += GetHtmltr("工时/应到工时", $"{p.WorkTime.TotalHours.ToString(".#")}小时/{WorkDay.WorkCount * 8}小时");
-                else
-                    body += GetHtmltr("实到/应到", $"{p.WarnDayCount}天/{WorkDay.WorkCount}天");
+                body += p.GetText();
 
 
-                body += GetHtmltr("迟到", p.DelayTime.TotalMinutes.ToString("## '分钟'"));
-                body += GetHtmltr("出差", p.Travel.TotalDays.ToString("00'天'"));
-                body += GetHtmltr("加班", p.OverWorkTime.TotalHours.ToString("00'小时'"));
-
-
-                body += "<h2>(请假暂时没有接入系统)</h2>";
-
-
-                //得到所有警告信息
-                var dv = new DataView(DB.WarnDt) { RowFilter = $"name = '{p.Name}'", Sort = "Date asc" };
-
-                foreach (DataRowView i in dv)
-                {
-                    body += $"{((DateTime)i.Row["Date"]).ToShortDateString()}-{i.Row["txt"]}\r\n";
-                }
-                //所有结果数据
-                body += "\r\n\r\n所有记录信息\r\n";
-                body += "日期\t上班时间\t下班时间\r\n";
-                dv = new DataView(DB.Resultdt) { RowFilter = $"name = '{p.Name}'" };
-                foreach (DataRowView i in dv)
-                {
-                    /*
-                           <tr><td class="text-left">出差</td><td class="text-left">99天</td></tr>
-                     */
-
-                    body += $"{((DateTime)i.Row["Date"]).ToShortDateString()} \t {i.Row["intime"]} \t {i.Row["outtime"]}\r\n";
-                }
-
-
-                body = GetHtml(body);
                 //发出去
 
                 var smtp = new SmtpClient()
@@ -783,6 +833,7 @@ namespace CheckingIn
 
 
                 smtp.Send(Smtpusername, p.Mail, $"{p.Name}-考勤分析报表", body);
+                Log.Info(p.Name + "-send mall done");
             }
             catch (Exception ex)
             {
@@ -797,7 +848,7 @@ namespace CheckingIn
 
             var k = 0;
             //对每人个进行遍历
-            foreach (var p in persons)
+            foreach (var p in DB.persons)
             {
                 Sendmail(p.Value);
                 k++;
@@ -809,7 +860,7 @@ namespace CheckingIn
 
         private void 向当前用户发送ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Sendmail(persons[comboBox1.Text]);
+            Sendmail(DB.persons[comboBox1.Text]);
         }
 
         private void 读取加班文件ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -837,12 +888,7 @@ namespace CheckingIn
             openFileDialog1.ShowDialog();
         }
 
-        private void 班次ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var sql = "select * from worktimeclass";
-            var k = new ShowData(DB.GetSql(sql));
-            k.Show();
-        }
+
 
         private void 加班ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -874,14 +920,6 @@ namespace CheckingIn
             k.Show();
         }
 
-        private void 邮箱ToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            var sql = "select * from mail";
-            var k = new ShowData(DB.GetSql(sql));
-            k.Show();
-        }
-
-
 
         private void comboBox1_TextUpdate(object sender, EventArgs e)
         {
@@ -896,7 +934,7 @@ namespace CheckingIn
 
         private void 个人信息表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var s = new ShowData(DB.Persons);
+            var s = new ShowData(DB.PersonInfos);
             s.Show();
         }
 
@@ -918,17 +956,16 @@ namespace CheckingIn
             s.Show();
         }
 
-        private void 警告表ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var s = new ShowData(DB.WarnDt);
-            s.Show();
-        }
-
         private void 删除文件ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DB.Close();
             File.Delete("db.db");
             DB.Creat();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://127.0.0.1:8080?name=" + comboBox1.Text);
         }
 
         private void button1_Click(object sender, EventArgs e)

@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.Linq;
+using LitJson;
 
 namespace CheckingIn
 {
@@ -34,12 +38,12 @@ namespace CheckingIn
         /// <summary>
         /// 可用假期
         /// </summary>
-        public TimeSpan Holidays;
+        public TimeSpan Holidays = TimeSpan.Zero;
 
         /// <summary>
         /// 可调休时间/加班时间
         /// </summary>
-        public TimeSpan OverWorkTime;
+        public TimeSpan OverWorkTime = TimeSpan.Zero;
 
         //当月属性
 
@@ -73,7 +77,7 @@ namespace CheckingIn
         {
             Name = n;
             //从db中得到相关信息
-            var dv = new DataView(DB.Persons) { RowFilter = $"name ='{Name}'" };
+            var dv = new DataView(DB.PersonInfos) { RowFilter = $"name ='{Name}'" };
             if (dv.Count == 0)
             {
                 Mail = null;
@@ -96,7 +100,7 @@ namespace CheckingIn
                     Log.Warn(n + "-worktimeclass err");
 
             }
-
+            
         }
 
         public void AddCheck(CheckInfo c)
@@ -104,8 +108,6 @@ namespace CheckingIn
             Checks.Add(c);
             WorkTime += c.WorkTime;
         }
-
-
 
 
         //处理这个人的数据
@@ -126,8 +128,17 @@ namespace CheckingIn
                     RowFilter = $"name = '{Name}' AND date = '{date}'",
                     Sort = "time asc" //从小到大
                 };
-                c.Sourcerec = timeview;
 
+                c.Sourcerec = timeview;
+                foreach (DataRowView t in timeview)
+                {
+                    var r = t["info"].ToString();
+                    if (!c.Info.Contains(r))
+                    {
+                        c.Info += r + " ";
+                    }
+
+                }
                 switch (timeview.Count)
                 {
                     case 0:
@@ -142,10 +153,13 @@ namespace CheckingIn
 
                         var t = (TimeSpan)timeview[0].Row["time"];
 
-                        if (t > WorkTimeClass.InTime)
+                        if (t > WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
                             c.OutTime = t;
                         else
                             c.InTime = t;
+
+
+
                         if (WorkTimeClass.IsWorkTimeClass)
                             Log.Info(Name + "-单次打卡");
                         break;
@@ -160,13 +174,136 @@ namespace CheckingIn
             _geted = true;
 
         }
+        public string FormatStr(object o, string end = "")
+        {
+            var s = o.ToString();
+            if (s == "")
+                s = "0";
+            return s + end;
 
+        }
+
+        public string FormatStr(int i, string end = "")
+        {
+            return FormatStr(i.ToString(), end);
+        }
+
+        public string FormatStr(double i, string end = "")
+        {
+            return FormatStr(i.ToString("###.##"), end);
+        }
+
+
+        public JsonData GetJson()
+        {
+            var j = new JsonData();
+
+            var js = new JsonWriter();
+            var csjs = new JsonWriter();
+            try
+            {
+                var profile = new JsonData();
+
+                //profile["姓名"] = name;
+                profile["未休时间"] = FormatStr(Holidays.TotalHours, "小时");
+                profile["调补休"] = "未接入";
+                profile["扣薪假期"] = "未接入";
+                //profile["未休时间"] = "未接入";
+                profile["出差"] = Holidays > TimeSpan.Zero ? Holidays.TotalHours.ToString("#### '小时'") : "0小时";
+                profile["迟到早退"] = FormatStr(DelayTime.TotalMinutes, "分钟");
+                profile["异常天数"] = WarnDayCount > 0 ? WarnDayCount.ToString("### '天'") : "0天";
+                if (WorkTimeClass.IsWorkTimeClass)
+                    profile["工作时间"] = FormatStr(WorkTime.TotalHours) + "/" + WorkDay.WorkCount * 8 + "小时";
+                else
+                    profile["工作天数"] = FormatStr(WorkDayCount) + "/" + WorkDay.WorkCount + "天";
+
+                profile["工作班次"] = WorkTimeClass.ToString();
+
+                j["profile"] = profile;
+
+
+
+                js.WriteArrayStart();
+                csjs.WriteArrayStart();
+
+                //sort
+                Checks.Sort((x, y) =>
+                {
+                    if ((DateTime)x.Date > y.Date)
+                        return 1;
+                    return 0;
+                });
+
+                foreach (var c in Checks)
+                {
+                    foreach (var w in c.Warns)
+                    {
+                        js.WriteObjectStart();
+                        js.WritePropertyName("date");
+                        js.Write(w.Date.ToString());
+                        js.WritePropertyName("info");
+                        js.Write(w.Info);
+                        js.WriteObjectEnd();
+                    }
+
+                    csjs.WriteObjectStart();
+
+                    csjs.WritePropertyName("date");
+                    csjs.Write(c.Date.ToString());
+
+                    csjs.WritePropertyName("intime");
+                    csjs.Write(c.InTime?.ToString() ?? "");
+
+                    csjs.WritePropertyName("outtime");
+                    csjs.Write(c.OutTime?.ToString() ?? "");
+
+                    csjs.WritePropertyName("info");
+                    csjs.Write(c.Info);
+
+                    csjs.WriteObjectEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            csjs.WriteArrayEnd();
+            js.WriteArrayEnd();
+            j["warns"] = js.ToString();
+            j["data"] = csjs.ToString();
+
+            return j;
+
+        }
+
+      
+
+        public string GetText()
+        {
+            var j = GetJson();
+
+            var p = (IDictionary)j[0];
+            var r = p.Keys.Cast<object>().Aggregate("综合信息\r\n", (current, k) => current + (k + " - " + p[k] + "\r\n"));
+
+            r += "\r\n异常信息\r\n";
+
+            var w = JsonMapper.ToObject(j[1].ToString());
+            r = w.Cast<JsonData>().Aggregate(r, (current, d) => current + (d[0] + " - " + d[1] + "\r\n"));
+
+            r += "\r\n原始信息\r\n";
+            var ds = JsonMapper.ToObject(j[2].ToString());
+
+            r = ds.Cast<JsonData>().Aggregate(r, (current, djd) => current + (djd[0] + " - " + (djd[1].ToString() == "" ? "notfind" : djd[1]) + " - " + (djd[2].ToString() == "" ? "notfind" : djd[2]) + djd[3] + "\r\n"));
+
+            return r;
+        }
         public CheckInfo GetCheck(WorkDay d)
         {
 
             foreach (var c in Checks)
             {
-                if (c.Date == d)
+                if (c.Date == (DateTime)d)
                     return c;
             }
             return null;
@@ -222,6 +359,10 @@ namespace CheckingIn
 
         public static WorkTimeClassInfo Default = new WorkTimeClassInfo("早班");
 
+        public override string ToString()
+        {
+            return ClassName;
+        }
     }
 
     public struct WarnInfo
@@ -396,27 +537,37 @@ namespace CheckingIn
 
 
 
-
+                var k = TimeSpan.Zero;
 
                 if (InTime > Person.WorkTimeClass.InTime)
                 {
 
-                    var k = (TimeSpan)(InTime - Person.WorkTimeClass.InTime);
+                    k = (TimeSpan)(InTime - Person.WorkTimeClass.InTime);
 
-                    Person.DelayTime += k;
+                    if (k > new TimeSpan(0, 0, 30, 0))//每天30分钟机动时间
+                    {
 
-                    _warns.Add(new WarnInfo(Date, $"迟到{k.TotalMinutes.ToString("####")}分钟"));
+                        var dt = k - new TimeSpan(0, 0, 30, 0);
+
+                        Person.DelayTime += dt;
+                        _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("####.#")}分钟"));
+
+                        k = new TimeSpan(0, 0, 30, 0);
+
+
+                    }
+
+
                 }
 
+                var shoudout = Person.WorkTimeClass.OutTime + k;
 
-
-                if (OutTime < Person.WorkTimeClass.OutTime)
+                if (OutTime < shoudout)
                 {
-                    var k = (TimeSpan)(Person.WorkTimeClass.OutTime - OutTime);
-
+                    k = (TimeSpan)(shoudout - OutTime);
                     Person.DelayTime += k;
 
-                    _warns.Add(new WarnInfo(Date, $"早退{k.TotalMinutes.ToString("####")}分钟"));
+                    _warns.Add(new WarnInfo(Date, $"早退{k.TotalMinutes.ToString("####.#")}分钟"));
                 }
 
                 return _warns;
@@ -427,17 +578,17 @@ namespace CheckingIn
 
         public bool HaveWarn => Warns.Count > 0;
 
-
+        public string Info;
         public DataView Sourcerec;
 
-        public CheckInfo(PersonInfo p, WorkDay d, CheckTime it, CheckTime ot)
+        public CheckInfo(PersonInfo p, WorkDay d, CheckTime it, CheckTime ot, string info = "")
         {
             Person = p;
             Date = d;
 
             InTime = it;
             OutTime = ot;
-
+            Info = info;
         }
         public CheckInfo(PersonInfo p, WorkDay d)
             : this(p, d, null, null)
@@ -487,7 +638,7 @@ namespace CheckingIn
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == GetType() && Equals((WorkDay) obj);
+            return obj.GetType() == GetType() && Equals((WorkDay)obj);
         }
 
         public override int GetHashCode()
@@ -503,7 +654,7 @@ namespace CheckingIn
         {
             return a._date.Date;
         }
-
+        /*
         public static bool operator ==(WorkDay a, WorkDay b)
         {
             if (a == null)
@@ -516,7 +667,7 @@ namespace CheckingIn
         public static bool operator !=(WorkDay a, WorkDay b)
         {
             return !(a == b);
-        }
+        }*/
 
         public override string ToString()
         {

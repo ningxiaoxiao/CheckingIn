@@ -14,7 +14,7 @@ namespace CheckingIn
         /// </summary>
         public static DataTable Resultdt;
 
-        public static DataTable Persons;
+        public static DataTable PersonInfos;
         /// <summary>
         /// 原始表格
         /// </summary>
@@ -24,9 +24,13 @@ namespace CheckingIn
 
         public static DataTable OaDt;
 
-        public static DataTable WarnDt;
-
         private static SQLiteConnection _db;
+
+        /// <summary>
+        /// 全公司的人
+        /// </summary>
+        public static Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
+
 
         public static void Creat()
         {
@@ -39,7 +43,7 @@ namespace CheckingIn
 
         public static void Readpersondb()
         {
-            Persons = GetSql("select * from person");
+            PersonInfos = GetSql("select * from person");
         }
 
         public static void ResultDtAdd(string name, object dt, object intime, object outtime, out TimeSpan worktime)
@@ -110,11 +114,11 @@ namespace CheckingIn
 
         private static void CreatDataTable()
         {
-            Persons = new DataTable();
+            PersonInfos = new DataTable();
 
-            Persons.Columns.Add("name", typeof(string));
-            Persons.Columns.Add("mail", typeof(string));
-            Persons.Columns.Add("worktimeclass", typeof(string));
+            PersonInfos.Columns.Add("name", typeof(string));
+            PersonInfos.Columns.Add("mail", typeof(string));
+            PersonInfos.Columns.Add("worktimeclass", typeof(string));
 
             //结果表
             Resultdt = new DataTable();
@@ -126,11 +130,6 @@ namespace CheckingIn
             Resultdt.Columns.Add("worktime", typeof(TimeSpan));
 
 
-            //警告表
-            WarnDt = new DataTable();
-            WarnDt.Columns.Add("name", typeof(string));
-            WarnDt.Columns.Add("Date", typeof(DateTime));
-            WarnDt.Columns.Add("txt", typeof(string));
 
 
             //二次处理的表
@@ -139,24 +138,19 @@ namespace CheckingIn
             OriginalDt.Columns.Add("name", typeof(string));
             OriginalDt.Columns.Add("Date", typeof(DateTime));
             OriginalDt.Columns.Add("time", typeof(TimeSpan));
+            OriginalDt.Columns.Add("info", typeof(string));
 
 
-            //OA表
-            OaDt = new DataTable();
-            OaDt.Columns.Add("no", typeof(int));
-            OaDt.Columns.Add("name", typeof(string));
-            OaDt.Columns.Add("start", typeof(DateTime));
-            OaDt.Columns.Add("end", typeof(DateTime));
-            OaDt.Columns.Add("reason", typeof(string));
+
 
         }
         private static void CreatSqlTable()
         {
             Cmd("create table person (name varchar(20) primary key , mail varchar(50),worktimeclass varchar(20))");
-            Cmd("create table result (name varchar(20), Date Date,intime time,outtime time,worktime time)");
-            Cmd("create table Warn (name varchar(20), Date Date,txt varchar(20))");
-            Cmd("create table original (name varchar(20), Date Date,time time)");
-            Cmd("create table oa (no integer primary key,name varchar(20), start datetime,end datatime,reason varchar(20))");
+            Cmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time)");
+            Cmd("create table warn (name varchar(20), date date,txt varchar(20))");
+            Cmd("create table original (name varchar(20), date date,time time,info varchar(20))");
+            Cmd("create table oa (no integer primary key,name varchar(20), start datetime,end datetime,reason varchar(20))");
         }
         private static void CheckSqlFile()
         {
@@ -173,13 +167,17 @@ namespace CheckingIn
             }
 
         }
-        private static void Readoa()
+        public static void Readoa()
         {
             var sql = "select * from oa order by no asc";
+            /*
             var command = new SQLiteCommand(sql, _db);
             var reader = command.ExecuteReader();
             OaDt.Clear();
             OaDt.Load(reader);
+            */
+            OaDt = GetSql(sql);
+
         }
 
         public static int Cmd(string cmd, SQLiteTransaction tran = null)
@@ -214,34 +212,14 @@ namespace CheckingIn
             r["name"] = name;
             r["Date"] = date.Date;
             r["time"] = t;
+            r["info"] = rs;
             OriginalDt.Rows.Add(r);
 
-            if (rs != null)
-            {
-                AddWarn(name, date, rs);
-            }
 
             // Insertdb("original", new[] { "name", "Date", "time" }, new object[] { name, Date, t });
 
         }
-        /// <summary>
-        /// 异常警告增加
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="dt"></param>
-        /// <param name="t"></param>
-        public static void AddWarn(string name, object dt, string t)
-        {
 
-            var wr = WarnDt.NewRow();
-            wr["name"] = name;
-            wr["Date"] = ((DateTime)dt).Date;
-            wr["txt"] = t;
-            WarnDt.Rows.Add(wr);
-
-            // Insertdb("Warn", new[] { "name", "Date", "txt" }, new object[] { name, ((DateTime)dt).Date, t });
-
-        }
 
         public static void Close()
         {

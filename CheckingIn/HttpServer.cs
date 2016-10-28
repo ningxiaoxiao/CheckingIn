@@ -27,15 +27,15 @@ namespace CheckingIn
             _server = new HttpAppServer();
 
             if (!_server.Setup(_config))
-                Log.info("http setup err");
+                Log.Info("http setup err");
 
             _server.NewRequestReceived += Server_NewRequestReceived;
             _server.NewSessionConnected += Server_NewSessionConnected;
             _server.SessionClosed += Server_SessionClosed;
             if (_server.Start())
-                Log.info("httpserver.started");
+                Log.Info("httpserver.started");
             else
-                Log.info("http start err");
+                Log.Info("http start err");
 
         }
 
@@ -81,7 +81,8 @@ namespace CheckingIn
 
                 var p = DB.persons[name];
                 p.GetData();
-                filestring = p.GetJson();
+
+                filestring = (p.GetJson()).ToJson();
             }
 
 
@@ -202,7 +203,7 @@ namespace CheckingIn
 
     public class HttpAppServer : AppServer<HttpSession, HttpRequsetInfo>
     {
-        public ILog Loger = Log.logger;
+        public ILog Loger = Log._logger;
         public Encoding TextEncoding = Encoding.UTF8;
         public HttpAppServer()
             : base(new DefaultReceiveFilterFactory<HttpReceiveFilter, HttpRequsetInfo>())
