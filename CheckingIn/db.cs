@@ -170,23 +170,18 @@ namespace CheckingIn
         public static void Readoa()
         {
             var sql = "select * from oa order by no asc";
-            /*
-            var command = new SQLiteCommand(sql, _db);
-            var reader = command.ExecuteReader();
-            OaDt.Clear();
-            OaDt.Load(reader);
-            */
             OaDt = GetSql(sql);
 
         }
+        private static SQLiteTransaction _tran;
 
-        public static int Cmd(string cmd, SQLiteTransaction tran = null)
+        public static int Cmd(string cmd)
         {
 
             var command = new SQLiteCommand(cmd, _db);
-            if (tran != null)
+            if (_tran != null)
             {
-                command.Transaction = tran;
+                command.Transaction = _tran;
             }
 
             return command.ExecuteNonQuery();
@@ -234,9 +229,20 @@ namespace CheckingIn
             return dt;
         }
 
-        public static SQLiteTransaction BeginTransaction()
+        public static void BeginTransaction()
         {
-            return _db.BeginTransaction();
+            _tran = _db.BeginTransaction();
+        }
+
+        public static void Commit()
+        {
+            _tran.Commit();
+            _tran = null;
+        }
+        public static void Rollback()
+        {
+            _tran.Rollback();
+            _tran = null;
         }
     }
 }

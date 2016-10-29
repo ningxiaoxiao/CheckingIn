@@ -60,6 +60,9 @@ namespace CheckingIn
         /// <param name="e"></param>
         private void OpenFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
+
+
+
             switch (openFileDialog1.Title)
             {
                 case "选择考勤器原始文件":
@@ -67,22 +70,27 @@ namespace CheckingIn
                     t.Start();
                     break;
                 case "选择班次文件":
-                    OpenWorkTimeClassFile();
+                    OpenWorkTimeClassFile(openFileDialog1.FileName);
                     break;
                 case "选择邮箱文件":
-                    OpenMailFile();
+                    OpenMailFile(openFileDialog1.FileName);
                     break;
-                case "选择加班文件":
-                    OpenOverworkFile();
-                    break;
-                case "选择外出文件":
-                    OpenOutFile();
-                    break;
-                case "选择出差文件":
-                    OpenOutworkFile();
-                    break;
-                case "选择补登文件":
-                    OpenAddCheckinFile();
+                case "选择OA文件":
+
+                    foreach (var item in openFileDialog1.FileNames)
+                    {
+                        if (item.Contains("加班"))
+                            OpenOverworkFile(item);
+                        else if (item.Contains("外出"))
+                            OpenOutFile(item);
+                        else if (item.Contains("出差"))
+                            OpenOutworkFile(item);
+                        else if (item.Contains("考勤异常"))
+                            OpenAddCheckinFile(item);
+                        else
+                            Log.Err("未知文件-" + item);
+
+                    }
                     break;
             }
         }
@@ -172,8 +180,7 @@ namespace CheckingIn
                         var st1 = (DateTime)i["start"];
                         var et1 = (DateTime)i["end"];
 
-                        //直接计算
-                        p1.OverWorkTime += et1 - st1;
+                     
                         //模拟两次打卡
 
                         DB.AddOriginal(name, st1.Date, st1.TimeOfDay, reason + "开始");
@@ -221,8 +228,8 @@ namespace CheckingIn
                         var ee = (DateTime)i["end"];
 
                         //先增加开始和结束
-                        DB.AddOriginal(name, s , (TimeSpan)p.WorkTimeClass.InTime, reason + "开始");
-                        DB.AddOriginal(name, ee , (TimeSpan)p.WorkTimeClass.OutTime, reason + "结束");
+                        DB.AddOriginal(name, s, (TimeSpan)p.WorkTimeClass.InTime, reason + "开始");
+                        DB.AddOriginal(name, ee, (TimeSpan)p.WorkTimeClass.OutTime, reason + "结束");
 
                         //去掉时间
                         s = s.Date;
@@ -233,8 +240,8 @@ namespace CheckingIn
 
                         for (var d = 0; d <= days.Days; d++)
                         {
-                            DB.AddOriginal(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.InTime, reason );
-                            DB.AddOriginal(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.OutTime, reason );
+                            DB.AddOriginal(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.InTime, reason);
+                            DB.AddOriginal(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.OutTime, reason);
                         }
 
                         break;
@@ -245,20 +252,20 @@ namespace CheckingIn
             }
 
 
-
+            Log.Info("read data file done");
             comboBox1.SelectedIndex = 0;
+
 
 
         }
 
-        private void OpenWorkTimeClassFile()
+        private void OpenWorkTimeClassFile(string path)
         {
-            var bt = DB.BeginTransaction();
+            DB.BeginTransaction();
 
             try
             {
-                _openedFleName = openFileDialog1.FileName;
-                var dt = ExcelToDs(openFileDialog1.FileName);
+                var dt = ExcelToDs(path);
 
                 //开始事务
 
@@ -273,25 +280,23 @@ namespace CheckingIn
                     var dv = new DataView(DB.PersonInfos) { RowFilter = $"name='{name}'" };
                     DB.Cmd(dv.Count > 0
                         ? $"update person set worktimeclass='{classname}' where name='{name}'"
-                        : $"insert into person (name,worktimeclass) values ('{name}','{classname}')", bt);
+                        : $"insert into person (name,worktimeclass) values ('{name}','{classname}')");
                 }
-                bt.Commit();
+                DB.Commit();
                 DB.Readpersondb();
                 Log.Info("worktimeclass done");
             }
             catch (Exception ex)
             {
-                bt.Rollback();
+                DB.Rollback();
                 throw ex;
             }
         }
-        private void OpenMailFile()
+        private void OpenMailFile(string path)
         {
-            _openedFleName = openFileDialog1.FileName;
+            var dt = ExcelToDs(path);
 
-            var dt = ExcelToDs(openFileDialog1.FileName);
-
-            var bt = DB.BeginTransaction();
+            DB.BeginTransaction();
 
             try
             {
@@ -306,30 +311,30 @@ namespace CheckingIn
                     var dv = new DataView(DB.PersonInfos) { RowFilter = $"name='{name}'" };
                     DB.Cmd(dv.Count > 0
                         ? $"update person set mail='{mail}' where name='{name}'"
-                        : $"insert into person (name,mail) values ('{name}','{mail}')", bt);
+                        : $"insert into person (name,mail) values ('{name}','{mail}')");
                 }
-                bt.Commit();
+                DB.Commit();
 
                 DB.Readpersondb();
                 Log.Info("mail done");
             }
             catch (Exception ex)
             {
-                bt.Rollback();
+                DB.Rollback();
 
                 throw ex;
             }
         }
 
 
-        private void OpenOverworkFile()
+        private void OpenOverworkFile(string path)
         {
-            var bt = DB.BeginTransaction();
+            DB.BeginTransaction();
             try
             {
-                _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName);
+
+                var dt = ExcelToDs(path);
                 //开始事务
 
 
@@ -355,26 +360,27 @@ namespace CheckingIn
                         DB.OaAdd(name, st, se, "加班");
 
                 }
-                bt.Commit();
+                DB.Commit();
                 DB.Readoa();
+                Log.Info(path + "-read done");
             }
             catch (Exception ex)
             {
-                Log.Warn("加班写入数据库出现问题" + ex.Message);
-                bt.Rollback();
+                Log.Err("加班写入数据库出现问题" + ex.Message);
+                DB.Rollback();
                 throw;
             }
 
 
         }
-        private void OpenOutFile()
+        private void OpenOutFile(string path)
         {
-            var bt = DB.BeginTransaction();
+            DB.BeginTransaction();
             try
             {
-                _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName);
+
+                var dt = ExcelToDs(path);
                 //开始事务
 
 
@@ -397,27 +403,28 @@ namespace CheckingIn
                         DB.OaAdd(name, st, se, "外出");
 
                 }
-                bt.Commit();
+                DB.Commit();
                 DB.Readoa();
+                Log.Info(path + "-read done");
             }
             catch (Exception ex)
             {
-                Log.Warn("外出写入数据库出现问题" + ex.Message);
-                bt.Rollback();
+                Log.Err("外出写入数据库出现问题" + ex.Message);
+                DB.Rollback();
                 throw;
             }
 
 
         }
 
-        private void OpenAddCheckinFile()
+        private void OpenAddCheckinFile(string path)
         {//开始事务
-            var bt = DB.BeginTransaction();
+            DB.BeginTransaction();
             try
             {
-                _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName);
+
+                var dt = ExcelToDs(path);
 
 
                 var count = new Dictionary<string, int>();
@@ -429,10 +436,12 @@ namespace CheckingIn
 
                     var name = i["姓名"].ToString();
 
-                    //月份不对.不处理
+
                     var st = DateTime.Parse(i["打卡异常时间"].ToString());
                     var r = i["上班或下班打卡异常"].ToString();
-                    if (st.Month != monthCalendar1.SelectionStart.Month)//月份不对
+
+                    //月份不对.不处理
+                    if (st.Month != monthCalendar1.SelectionStart.Month)
                         continue;
 
                     if (count.ContainsKey(name))
@@ -440,7 +449,7 @@ namespace CheckingIn
                         count[name] = count[name] + 1;
                         if (count[name] >= 4)
                         {
-                            Log.Err(name + "-超出3次补登,请注意");
+                            Log.Warn(name + "-超出3次补登,请注意");
                             continue;
                         }
                     }
@@ -449,46 +458,35 @@ namespace CheckingIn
                         count.Add(name, 1);
                     }
 
-                    
-                    string c;
-                    TimeSpan s, e;
-                    /* todo
-                    GetClassTime(Name, out s, out e, out c);
 
-                    if (r == "上班")
-                    {
-                        st = st.Add(s);
-                    }
-                    else
-                    {
-                        st = st.Add(e);
-                    }*/
+
 
                     //写到表里
 
                     DB.OaAdd(name, st, st, "补登");
                 }
 
-                bt.Commit();
+                DB.Commit();
                 DB.Readoa();
+                Log.Info(path + "-read done");
             }
             catch (Exception ex)
             {
                 Log.Warn("补登写入数据库出现问题" + ex.Message);
-                bt.Rollback();
+                DB.Rollback();
                 throw;
             }
 
 
         }
-        private void OpenOutworkFile()
+        private void OpenOutworkFile(string path)
         {//开始事务
-            var bt = DB.BeginTransaction();
+            DB.BeginTransaction();
             try
             {
-                _openedFleName = openFileDialog1.FileName;
 
-                var dt = ExcelToDs(openFileDialog1.FileName);
+
+                var dt = ExcelToDs(path);
 
 
 
@@ -504,12 +502,14 @@ namespace CheckingIn
                         DB.OaAdd(name, st, se, "出差");
                 }
 
-                bt.Commit();
+                DB.Commit();
+                DB.Readoa();
+                Log.Info(path + "-read done");
             }
             catch (Exception ex)
             {
                 Log.Warn("出差写入数据库出现问题" + ex.Message);
-                bt.Rollback();
+                DB.Rollback();
                 throw;
             }
 
@@ -863,33 +863,6 @@ namespace CheckingIn
             Sendmail(DB.persons[comboBox1.Text]);
         }
 
-        private void 读取加班文件ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.Title = "选择加班文件";
-            openFileDialog1.ShowDialog();
-        }
-
-        private void 读取外出文件ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.Title = "选择外出文件";
-            openFileDialog1.ShowDialog();
-        }
-
-
-        private void 读取出差文件ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.Title = "选择出差文件";
-            openFileDialog1.ShowDialog();
-        }
-
-        private void 读取补登文件ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.Title = "选择补登文件";
-            openFileDialog1.ShowDialog();
-        }
-
-
-
         private void 加班ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var sql = "select * from oa where reason ='加班'";
@@ -952,6 +925,7 @@ namespace CheckingIn
 
         private void oa表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DB.Readoa();
             var s = new ShowData(DB.OaDt);
             s.Show();
         }
@@ -966,6 +940,12 @@ namespace CheckingIn
         private void button2_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start("http://127.0.0.1:8080?name=" + comboBox1.Text);
+        }
+
+        private void readoafileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.Title = "选择OA文件";
+            openFileDialog1.ShowDialog();
         }
 
         private void button1_Click(object sender, EventArgs e)

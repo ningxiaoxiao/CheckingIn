@@ -23,34 +23,18 @@ namespace CheckingIn
 
         private void button_add_Click(object sender, EventArgs e)
         {
-            //写到表里
-            AddRecord(comboBox_name.Text, dateTimePicker_start.Value, dateTimePicker_end.Value, _curReason);
-        }
 
-        private void AddRecord(string name, DateTime s, DateTime e, string r)
-        {
             //数据合法性
-            if (name == "" || s > e)
+            if (comboBox_name.Text == "" || dateTimePicker_start.Value > dateTimePicker_end.Value)
                 return;
 
 
-
-            var nr = DB.OaDt.NewRow();
-            nr["no"] = DB.OaDt.Rows.Count + 1;
-            nr["name"] = name;
-            nr["start"] = s;
-            nr["end"] = e.AddMinutes(1);
-            nr["reason"] = r;
-            DB.OaDt.Rows.Add(nr);
-
-            //写到数据库
-
-            DB.OaAdd(name, s, e.AddMinutes(1), r);
+            //写到表里
 
 
+
+            DB.OaAdd(comboBox_name.Text, dateTimePicker_start.Value, dateTimePicker_end.Value.AddMinutes(1), _curReason);
         }
-
-
 
         private void radioButton1_Click(object sender, EventArgs e)
         {

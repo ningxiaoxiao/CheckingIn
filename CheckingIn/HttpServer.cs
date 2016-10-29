@@ -58,32 +58,24 @@ namespace CheckingIn
             var fileallpath = _filepath + requestInfo.URL;
 
             var filestring = "ERR:no file " + requestInfo.URL;
-            try
+
+            //把文件读出来 发送过去
+            if (File.Exists(fileallpath))
             {
-                //把文件读出来 发送过去
-                if (File.Exists(fileallpath))
-                {
-                    var sr = new StreamReader(File.OpenRead(fileallpath));
-                    filestring = sr.ReadToEnd();
-                    sr.Close();
-                }
-                else
-                {
-                    throw new Exception();
-                }
+                var sr = new StreamReader(File.OpenRead(fileallpath));
+                filestring = sr.ReadToEnd();
+                sr.Close();
             }
-            catch (Exception)
+            else if (requestInfo.parameter.Count > 0)
             {
-                //没有文件的.应该就是命令了
-                
-
                 var name = requestInfo.parameter["name"];
-
+                if (name == "") return;
                 var p = DB.persons[name];
                 p.GetData();
 
                 filestring = (p.GetJson()).ToJson();
             }
+
 
 
 
@@ -174,7 +166,7 @@ namespace CheckingIn
                 foreach (var i in pss)
                 {
                     var kv = i.Split('=');
-                    hr.parameter.Add(kv[0], HttpUtility.UrlDecode(kv[1],Encoding.UTF8));
+                    hr.parameter.Add(kv[0], HttpUtility.UrlDecode(kv[1], Encoding.UTF8));
                 }
 
             }

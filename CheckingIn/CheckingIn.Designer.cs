@@ -44,10 +44,6 @@
             this.oA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.增加ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.清空OA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.读取加班文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.读取外出文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.读取出差文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.读取补登文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.邮箱ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向全体发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向当前用户发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,6 +76,7 @@
             this.oa_dataGridView2 = new System.Windows.Forms.DataGridView();
             this.label7 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
+            this.readoafileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -89,6 +86,7 @@
             // openFileDialog1
             // 
             this.openFileDialog1.Filter = "表格文件|*.xls";
+            this.openFileDialog1.Multiselect = true;
             // 
             // comboBox1
             // 
@@ -210,10 +208,7 @@
             this.oA数据ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.增加ToolStripMenuItem,
             this.清空OA数据ToolStripMenuItem,
-            this.读取加班文件ToolStripMenuItem,
-            this.读取外出文件ToolStripMenuItem,
-            this.读取出差文件ToolStripMenuItem,
-            this.读取补登文件ToolStripMenuItem});
+            this.readoafileToolStripMenuItem});
             this.oA数据ToolStripMenuItem.Name = "oA数据ToolStripMenuItem";
             this.oA数据ToolStripMenuItem.Size = new System.Drawing.Size(62, 21);
             this.oA数据ToolStripMenuItem.Text = "OA数据";
@@ -221,44 +216,16 @@
             // 增加ToolStripMenuItem
             // 
             this.增加ToolStripMenuItem.Name = "增加ToolStripMenuItem";
-            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.增加ToolStripMenuItem.Text = "增加";
             this.增加ToolStripMenuItem.Click += new System.EventHandler(this.增加ToolStripMenuItem_Click);
             // 
             // 清空OA数据ToolStripMenuItem
             // 
             this.清空OA数据ToolStripMenuItem.Name = "清空OA数据ToolStripMenuItem";
-            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.清空OA数据ToolStripMenuItem.Text = "清空OA数据";
             this.清空OA数据ToolStripMenuItem.Click += new System.EventHandler(this.清空OA数据ToolStripMenuItem_Click);
-            // 
-            // 读取加班文件ToolStripMenuItem
-            // 
-            this.读取加班文件ToolStripMenuItem.Name = "读取加班文件ToolStripMenuItem";
-            this.读取加班文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.读取加班文件ToolStripMenuItem.Text = "读取加班文件";
-            this.读取加班文件ToolStripMenuItem.Click += new System.EventHandler(this.读取加班文件ToolStripMenuItem_Click);
-            // 
-            // 读取外出文件ToolStripMenuItem
-            // 
-            this.读取外出文件ToolStripMenuItem.Name = "读取外出文件ToolStripMenuItem";
-            this.读取外出文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.读取外出文件ToolStripMenuItem.Text = "读取外出文件";
-            this.读取外出文件ToolStripMenuItem.Click += new System.EventHandler(this.读取外出文件ToolStripMenuItem_Click);
-            // 
-            // 读取出差文件ToolStripMenuItem
-            // 
-            this.读取出差文件ToolStripMenuItem.Name = "读取出差文件ToolStripMenuItem";
-            this.读取出差文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.读取出差文件ToolStripMenuItem.Text = "读取出差文件";
-            this.读取出差文件ToolStripMenuItem.Click += new System.EventHandler(this.读取出差文件ToolStripMenuItem_Click);
-            // 
-            // 读取补登文件ToolStripMenuItem
-            // 
-            this.读取补登文件ToolStripMenuItem.Name = "读取补登文件ToolStripMenuItem";
-            this.读取补登文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.读取补登文件ToolStripMenuItem.Text = "读取补登文件";
-            this.读取补登文件ToolStripMenuItem.Click += new System.EventHandler(this.读取补登文件ToolStripMenuItem_Click);
             // 
             // 邮箱ToolStripMenuItem
             // 
@@ -532,6 +499,13 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
+            // readoafileToolStripMenuItem
+            // 
+            this.readoafileToolStripMenuItem.Name = "readoafileToolStripMenuItem";
+            this.readoafileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.readoafileToolStripMenuItem.Text = "读取OA文件";
+            this.readoafileToolStripMenuItem.Click += new System.EventHandler(this.readoafileToolStripMenuItem_Click);
+            // 
             // CheckingIn
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -602,10 +576,6 @@
         private System.Windows.Forms.ListView listView_log;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader8;
-        private System.Windows.Forms.ToolStripMenuItem 读取加班文件ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 读取外出文件ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 读取出差文件ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 读取补登文件ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 查看ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 加班ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 出差ToolStripMenuItem;
@@ -624,6 +594,7 @@
         private System.Windows.Forms.DataGridView oa_dataGridView2;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.ToolStripMenuItem readoafileToolStripMenuItem;
     }
 }
 

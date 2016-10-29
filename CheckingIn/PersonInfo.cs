@@ -40,18 +40,61 @@ namespace CheckingIn
         /// </summary>
         public TimeSpan Holidays = TimeSpan.Zero;
 
+        private TimeSpan _overWorkTime = new TimeSpan(-1);
         /// <summary>
-        /// 可调休时间/加班时间
+        /// 加班时间
         /// </summary>
-        public TimeSpan OverWorkTime = TimeSpan.Zero;
+        public TimeSpan OverWorkTime
+        {
+            get
+            {
+                if (_overWorkTime >= TimeSpan.Zero) return _overWorkTime;
+
+
+                var dv = new DataView(DB.OaDt) { RowFilter = "name='" + Name + "' and reason = '加班'" };
+                //所有数据应该已经合法
+                _overWorkTime = TimeSpan.Zero;
+
+                foreach (DataRowView item in dv)
+                {
+                    var s = (DateTime)item["start"];
+                    var e = (DateTime)item["end"];
+
+
+                    _overWorkTime += e - s;
+                }
+
+                return _overWorkTime;
+            }
+        }
 
         //当月属性
 
-
+        private TimeSpan _travel = new TimeSpan(-1);
         /// <summary>
         /// 出差天数
         /// </summary>
-        public TimeSpan Travel = TimeSpan.Zero;
+        public TimeSpan Travel
+        {
+            get
+            {
+                if (_travel >= TimeSpan.Zero) return _travel;
+
+                //找出所有出差
+                var dv = new DataView(DB.OaDt) { RowFilter = "name='" + Name + "' and reason = '出差'" };
+                //所有数据应该已经合法
+                _travel = TimeSpan.Zero;
+                foreach (DataRowView item in dv)
+                {
+                    var s = (DateTime)item["start"];
+                    var e = (DateTime)item["end"];
+
+
+                    _travel += e.Date.AddDays(1) - s.Date;
+                }
+                return _travel;
+            }
+        }
         /// <summary>
         /// 迟到早退时间
         /// </summary>
@@ -82,7 +125,7 @@ namespace CheckingIn
             {
                 Mail = null;
                 WorkTimeClass = WorkTimeClassInfo.Default;
-                Log.Warn(n + "-无法得到个人信息");
+                Log.Err(n + "-无法得到个人信息");
             }
             else
             {
@@ -95,12 +138,12 @@ namespace CheckingIn
                 WorkTimeClass = new WorkTimeClassInfo(wtc);
 
                 if (Mail == "")
-                    Log.Warn(n + "-mail err");
+                    Log.Err(n + "-mail err");
                 if (wtc == "")
-                    Log.Warn(n + "-worktimeclass err");
+                    Log.Err(n + "-worktimeclass err");
 
             }
-            
+
         }
 
         public void AddCheck(CheckInfo c)
@@ -174,24 +217,6 @@ namespace CheckingIn
             _geted = true;
 
         }
-        public string FormatStr(object o, string end = "")
-        {
-            var s = o.ToString();
-            if (s == "")
-                s = "0";
-            return s + end;
-
-        }
-
-        public string FormatStr(int i, string end = "")
-        {
-            return FormatStr(i.ToString(), end);
-        }
-
-        public string FormatStr(double i, string end = "")
-        {
-            return FormatStr(i.ToString("###.##"), end);
-        }
 
 
         public JsonData GetJson()
@@ -202,37 +227,12 @@ namespace CheckingIn
             var csjs = new JsonWriter();
             try
             {
-                var profile = new JsonData();
-
-                //profile["姓名"] = name;
-                profile["未休时间"] = FormatStr(Holidays.TotalHours, "小时");
-                profile["调补休"] = "未接入";
-                profile["扣薪假期"] = "未接入";
-                //profile["未休时间"] = "未接入";
-                profile["出差"] = Holidays > TimeSpan.Zero ? Holidays.TotalHours.ToString("#### '小时'") : "0小时";
-                profile["迟到早退"] = FormatStr(DelayTime.TotalMinutes, "分钟");
-                profile["异常天数"] = WarnDayCount > 0 ? WarnDayCount.ToString("### '天'") : "0天";
-                if (WorkTimeClass.IsWorkTimeClass)
-                    profile["工作时间"] = FormatStr(WorkTime.TotalHours) + "/" + WorkDay.WorkCount * 8 + "小时";
-                else
-                    profile["工作天数"] = FormatStr(WorkDayCount) + "/" + WorkDay.WorkCount + "天";
-
-                profile["工作班次"] = WorkTimeClass.ToString();
-
-                j["profile"] = profile;
-
-
 
                 js.WriteArrayStart();
                 csjs.WriteArrayStart();
 
                 //sort
-                Checks.Sort((x, y) =>
-                {
-                    if ((DateTime)x.Date > y.Date)
-                        return 1;
-                    return 0;
-                });
+                Checks.Sort();
 
                 foreach (var c in Checks)
                 {
@@ -270,6 +270,35 @@ namespace CheckingIn
 
             csjs.WriteArrayEnd();
             js.WriteArrayEnd();
+
+            var profile = new JsonData();
+
+            profile["姓名"] = Name;
+            profile["剩余假期"] = Holidays.TotalHours.ToString("0.#") + "小时";
+            profile["工作班次"] = WorkTimeClass.ToString();
+
+
+            if (WorkTimeClass.IsWorkTimeClass)
+                profile["工作时间"] = WorkTime.TotalHours.ToString("0.#") + "/" + WorkDay.WorkCount * 8 + "小时";
+            else
+            {
+                profile["工作天数"] = WorkDayCount.ToString("0") + "/" + WorkDay.WorkCount + "天";
+                profile["异常天数"] = WarnDayCount.ToString("0 '天'");
+                profile["迟到早退"] = DelayTime.TotalMinutes.ToString("0.# '分钟'");
+            }
+               
+            profile["使用调休假期"] = "未接入";
+            profile["使用扣薪假期"] = "未接入";
+            profile["加班"] = OverWorkTime.TotalHours.ToString("0.# '小时'");
+            profile["出差"] = Travel.TotalDays.ToString("0.# '天'");
+
+         
+
+
+            j["profile"] = profile;
+
+
+
             j["warns"] = js.ToString();
             j["data"] = csjs.ToString();
 
@@ -277,7 +306,6 @@ namespace CheckingIn
 
         }
 
-      
 
         public string GetText()
         {
@@ -476,7 +504,7 @@ namespace CheckingIn
     /// <summary>
     /// 打卡记录
     /// </summary>
-    public class CheckInfo
+    public class CheckInfo : IComparable<CheckInfo>
     {
         public PersonInfo Person;
 
@@ -550,7 +578,7 @@ namespace CheckingIn
                         var dt = k - new TimeSpan(0, 0, 30, 0);
 
                         Person.DelayTime += dt;
-                        _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("####.#")}分钟"));
+                        _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("0.#")}分钟"));
 
                         k = new TimeSpan(0, 0, 30, 0);
 
@@ -567,7 +595,7 @@ namespace CheckingIn
                     k = (TimeSpan)(shoudout - OutTime);
                     Person.DelayTime += k;
 
-                    _warns.Add(new WarnInfo(Date, $"早退{k.TotalMinutes.ToString("####.#")}分钟"));
+                    _warns.Add(new WarnInfo(Date, $"早退{k.TotalMinutes.ToString("0.#")}分钟"));
                 }
 
                 return _warns;
@@ -596,9 +624,15 @@ namespace CheckingIn
 
         }
 
+
+
+        public int CompareTo(CheckInfo other)
+        {
+            return Date.CompareTo(other.Date);
+        }
     }
 
-    public class WorkDay
+    public class WorkDay : IComparable<WorkDay>
     {
         /// <summary>
         /// 有人出勤的日期
@@ -672,6 +706,12 @@ namespace CheckingIn
         public override string ToString()
         {
             return _date.ToShortDateString();
+        }
+
+
+        public int CompareTo(WorkDay other)
+        {
+            return _date.CompareTo(other._date);
         }
     }
 
