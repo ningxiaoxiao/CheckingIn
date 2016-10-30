@@ -12,7 +12,7 @@ namespace CheckingIn
         /// <summary>
         /// 处理后的表格
         /// </summary>
-        public static DataTable Resultdt;
+        public static DataTable ChecksDT;
 
         public static DataTable PersonInfos;
         /// <summary>
@@ -62,13 +62,14 @@ namespace CheckingIn
             var _allnames = dv.ToTable(true, "name");
 
             //得到所有人出勤的日子
-            var _alldates = dv.ToTable(true, "Date");
+            var _alldates = dv.ToTable(true, "date");
 
             //对所有有人出勤的日期进行遍历
+            WorkDay.AllDays.Clear();
             foreach (DataRow dater in _alldates.Rows)
             {
                 //今日日期
-                var date = dater["Date"];
+                var date = dater["date"];
                 //判断是不是工作日
                 //如果有30个出勤,就算工作日
                 var dateview = new DataView(DB.OriginalDt) { RowFilter = $"date ='{date}'" }; //去重
@@ -77,14 +78,16 @@ namespace CheckingIn
                 WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
             }
 
-            //对每人个进行遍历
+            //生成所有人
+            persons.Clear();
+            CheckingIn.inst.comboBox1.Items.Clear();
             foreach (DataRow r in _allnames.Rows)
             {
-                //当前人名字
                 var n = r["name"].ToString();
-                DB.persons.Add(n, new PersonInfo(n));
 
+                persons.Add(n, new PersonInfo(n));
                 CheckingIn.inst.comboBox1.Items.Add(n);
+
             }
             if (CheckingIn.inst.comboBox1.Items.Count > 0)
                 CheckingIn.inst.comboBox1.SelectedIndex = 0;
@@ -99,9 +102,15 @@ namespace CheckingIn
             Log.Info("Readoa done");
             //todo 处理oa表
         }
+
+        internal static void DelOrigina()
+        {
+            Cmd("delete  from original");
+            Log.Info("delete original");
+        }
+
         public static void ResultDtAdd(string name, object dt, object intime, object outtime, string worktime, string info)
         {
-            Insertdb("result", new[] { "name", "Date", "intime", "outtime", "worktime", "info" }, new[] { name, dt, intime, outtime, worktime, info });
         }
         public static TimeSpan GetOverWorkTimeCount(string name)
         {
@@ -158,20 +167,21 @@ namespace CheckingIn
         private static void CreatDataTable()
         {
             //结果表
-            Resultdt = new DataTable();
+            ChecksDT = new DataTable();
 
-            Resultdt.Columns.Add("name", typeof(string));
-            Resultdt.Columns.Add("Date", typeof(DateTime));
-            Resultdt.Columns.Add("intime", typeof(TimeSpan));
-            Resultdt.Columns.Add("outtime", typeof(TimeSpan));
-            Resultdt.Columns.Add("worktime", typeof(TimeSpan));
+            ChecksDT.Columns.Add("name", typeof(string));
+            ChecksDT.Columns.Add("date", typeof(DateTime));
+            ChecksDT.Columns.Add("intime", typeof(TimeSpan));
+            ChecksDT.Columns.Add("outtime", typeof(TimeSpan));
+            ChecksDT.Columns.Add("worktime", typeof(TimeSpan));
+            ChecksDT.Columns.Add("info", typeof(string));
 
 
             //原始数据表  //可以按这样的数据进行转换
 
             OriginalDt = new DataTable();
             OriginalDt.Columns.Add("name", typeof(string));
-            OriginalDt.Columns.Add("Date", typeof(DateTime));
+            OriginalDt.Columns.Add("date", typeof(DateTime));
             OriginalDt.Columns.Add("time", typeof(TimeSpan));
             OriginalDt.Columns.Add("info", typeof(string));
 
@@ -182,7 +192,7 @@ namespace CheckingIn
         private static void CreatSqlTable()
         {
             Cmd("create table person (name varchar(20) primary key , mail varchar(50),worktimeclass varchar(20))");
-            Cmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time,info varchar(20))");
+            Cmd("create table checks (name varchar(20), date date,intime INTEGER,outtime INTEGER,worktime INTEGER,info varchar(20))");
             Cmd("create table warn (name varchar(20), date date,txt varchar(20))");
             Cmd("create table original (name varchar(20), date datetime,time INTEGER,info varchar(20))");
             Cmd("create table oa (no integer primary key,name varchar(20), start datetime,end datetime,reason varchar(20))");
@@ -216,6 +226,13 @@ namespace CheckingIn
             }
 
             return command.ExecuteNonQuery();
+        }
+        public static void ChecksAdd(CheckInfo c)
+        {
+            Insertdb("checks",
+                new[] { "name", "Date", "intime", "outtime", "worktime", "info" },
+                new object[] { c.Person.Name, c.Date.ToString("s"), c.InTime.Ticks, c.OutTime.Ticks, c.WorkTime.Ticks, c.Info });
+
         }
 
         public static void OaAdd(string name, DateTime s, DateTime e, string r)

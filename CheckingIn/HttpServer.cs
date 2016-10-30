@@ -126,6 +126,11 @@ namespace CheckingIn
             session.Close();
 
         }
+
+        internal void Close()
+        {
+            _server.Stop();
+        }
     }
 
 

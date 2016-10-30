@@ -115,6 +115,7 @@
     <Compile Include="ShowData.Designer.cs">
       <DependentUpon>ShowData.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToStringHelper.cs" />
     <EmbeddedResource Include="CheckingIn.resx">
       <DependentUpon>CheckingIn.cs</DependentUpon>
       <SubType>Designer</SubType>

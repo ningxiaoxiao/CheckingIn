@@ -7,7 +7,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Data.SQLite;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
@@ -17,8 +16,6 @@ namespace CheckingIn
 {
     public partial class CheckingIn : Form
     {
-
-
         private string _openedFleName;
         public static CheckingIn inst;
 
@@ -47,8 +44,6 @@ namespace CheckingIn
 
             var t = new Thread(DB.Creat);
             t.Start();
-                
-            //DB.Creat();
 
 
             http = new HttpSever();
@@ -103,16 +98,15 @@ namespace CheckingIn
             _openedFleName = openFileDialog1.FileName;
             var dt = ExcelToDs(openFileDialog1.FileName);
 
-            DB.OriginalDt.Clear();
-            DB.Resultdt.Clear();
-            DB.persons.Clear();
+            DB.DelOrigina();
+
 
             ReadFileToSql(dt);
 
             ReadOaToSql();
 
             Log.Info("read data file done");
-            comboBox1.SelectedIndex = 0;
+
 
 
 
@@ -673,9 +667,9 @@ namespace CheckingIn
 
                 label4.Text = "";
                 label4.Text += check.Date + "\r\n";
-                label4.Text += check.InTime + "\r\n";
-                label4.Text += check.OutTime + "\r\n";
-                label4.Text += check.WorkTime + "\r\n";
+                label4.Text += check.InTime.ToMyString() + "\r\n";
+                label4.Text += check.OutTime.ToMyString() + "\r\n";
+                label4.Text += check.WorkTime.ToMyString() + "\r\n";
                 label4.Text += warntxt;
 
 
@@ -713,6 +707,7 @@ namespace CheckingIn
         private void CheckingIn_FormClosed(object sender, FormClosedEventArgs e)
         {
             DB.Close();
+            http.Close();
         }
 
         private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -909,7 +904,7 @@ namespace CheckingIn
 
         private void 结果表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var s = new ShowData(DB.Resultdt);
+            var s = new ShowData(DB.ChecksDT);
             s.Show();
         }
 
