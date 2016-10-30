@@ -11,6 +11,12 @@ namespace CheckingIn
     public class PersonInfo
     {
 
+        private DataTable _checks;
+        private DataTable _warns;
+        private DataTable _oas;
+        private DataTable _rec;
+
+
         /// <summary>
         /// 异常天数
         /// </summary>
@@ -119,6 +125,9 @@ namespace CheckingIn
         public PersonInfo(string n)
         {
             Name = n;
+            //todo 从DB中得到相关数据
+
+
             //从db中得到相关信息
             var dv = new DataView(DB.PersonInfos) { RowFilter = $"name ='{Name}'" };
             if (dv.Count == 0)
@@ -173,6 +182,7 @@ namespace CheckingIn
                 };
 
                 c.Sourcerec = timeview;
+                //合成信息
                 foreach (DataRowView t in timeview)
                 {
                     var r = t["info"].ToString();
@@ -182,20 +192,18 @@ namespace CheckingIn
                     }
 
                 }
+
+                //得到上下班时间
                 switch (timeview.Count)
                 {
                     case 0:
-                        c.InTime = null;
-                        c.OutTime = null;
                         break;
                     case 1:
-                        c.InTime = null;
-                        c.OutTime = null;
-
                         //判断是上班,还是下班
 
                         var t = (TimeSpan)timeview[0].Row["time"];
 
+                        //大于上班时间4小时
                         if (t > WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
                             c.OutTime = t;
                         else
@@ -208,12 +216,23 @@ namespace CheckingIn
                         break;
 
                     default:
-                        c.InTime = (TimeSpan)timeview[0].Row["time"];
-                        c.OutTime = (TimeSpan)timeview[timeview.Count - 1].Row["time"];
+                        //如果大于上班时间4小时 为不合法上班时间
+                        var t1 = (TimeSpan)timeview[0].Row["time"];
+                        if (t1 < WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
+                            c.InTime = t1;
+
+
+                        //大于上班时间4小时的为合法下班时间
+                        t1 = (TimeSpan)timeview[timeview.Count - 1].Row["time"];
+
+                        if (t1 > WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
+                            c.OutTime = t1;
                         break;
                 }
                 AddCheck(c);
             }
+            //todo 写到数据库
+
             _geted = true;
 
         }
@@ -286,13 +305,13 @@ namespace CheckingIn
                 profile["异常天数"] = WarnDayCount.ToString("0 '天'");
                 profile["迟到早退"] = DelayTime.TotalMinutes.ToString("0.# '分钟'");
             }
-               
+
             profile["使用调休假期"] = "未接入";
             profile["使用扣薪假期"] = "未接入";
             profile["加班"] = OverWorkTime.TotalHours.ToString("0.# '小时'");
             profile["出差"] = Travel.TotalDays.ToString("0.# '天'");
 
-         
+
 
 
             j["profile"] = profile;
@@ -565,22 +584,24 @@ namespace CheckingIn
 
 
 
-                var k = TimeSpan.Zero;
+                var delayTime = TimeSpan.Zero;
 
                 if (InTime > Person.WorkTimeClass.InTime)
                 {
 
-                    k = (TimeSpan)(InTime - Person.WorkTimeClass.InTime);
+                    delayTime = (TimeSpan)(InTime - Person.WorkTimeClass.InTime);
 
-                    if (k > new TimeSpan(0, 0, 30, 0))//每天30分钟机动时间
+                    if (delayTime > new TimeSpan(0, 0, 30, 0))//每天30分钟机动时间
                     {
 
-                        var dt = k - new TimeSpan(0, 0, 30, 0);
+                        var dt = delayTime - new TimeSpan(0, 0, 30, 0);
+
 
                         Person.DelayTime += dt;
                         _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("0.#")}分钟"));
 
-                        k = new TimeSpan(0, 0, 30, 0);
+
+                        delayTime = new TimeSpan(0, 0, 30, 0);
 
 
                     }
@@ -588,14 +609,14 @@ namespace CheckingIn
 
                 }
 
-                var shoudout = Person.WorkTimeClass.OutTime + k;
+                var shoudout = Person.WorkTimeClass.OutTime + delayTime;
 
                 if (OutTime < shoudout)
                 {
-                    k = (TimeSpan)(shoudout - OutTime);
-                    Person.DelayTime += k;
+                    delayTime = (TimeSpan)(shoudout - OutTime);
+                    Person.DelayTime += delayTime;
 
-                    _warns.Add(new WarnInfo(Date, $"早退{k.TotalMinutes.ToString("0.#")}分钟"));
+                    _warns.Add(new WarnInfo(Date, $"早退{delayTime.TotalMinutes.ToString("0.#")}分钟"));
                 }
 
                 return _warns;

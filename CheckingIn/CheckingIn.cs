@@ -30,7 +30,7 @@ namespace CheckingIn
 
 
 
-        private DataTable _alldates, _allnames;
+        // private DataTable _alldates, _allnames;
         private HttpSever http;
 
         public CheckingIn()
@@ -42,12 +42,14 @@ namespace CheckingIn
 
             openFileDialog1.FileOk += OpenFileDialog1_FileOk;
 
-
-            DB.Creat();
-
-
-
             Log.Creat(listView_log);
+
+
+            var t = new Thread(DB.Creat);
+            t.Start();
+                
+            //DB.Creat();
+
 
             http = new HttpSever();
 
@@ -103,63 +105,60 @@ namespace CheckingIn
 
             DB.OriginalDt.Clear();
             DB.Resultdt.Clear();
-
             DB.persons.Clear();
 
-            //进行遍历处理 生成新的表
-            foreach (DataRow i in dt.Tables[0].Rows)
-            {
-                //读出时间
-                var time = DateTime.Parse(i["日期时间"].ToString());
+            ReadFileToSql(dt);
 
-                //如果 时间是 05:00前的 就把日期算到前一天上面去
-                TimeSpan tt;
-                if (time.TimeOfDay < new TimeSpan(5, 0, 0))
+            ReadOaToSql();
+
+            Log.Info("read data file done");
+            comboBox1.SelectedIndex = 0;
+
+
+
+        }
+
+        private static void ReadFileToSql(DataSet dt)
+        {
+            try
+            {
+                DB.BeginTransaction();
+                //进行遍历处理 生成新的表
+                foreach (DataRow i in dt.Tables[0].Rows)
                 {
-                    time = time.AddDays(-1);
-                    tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
+                    //读出时间
+                    var time = DateTime.Parse(i["日期时间"].ToString());
+
+                    //如果 时间是 05:00前的 就把日期算到前一天上面去
+                    TimeSpan tt;
+                    if (time.TimeOfDay < new TimeSpan(5, 0, 0))
+                    {
+                        time = time.AddDays(-1);
+                        tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
+                    }
+                    else
+                    {
+                        tt = time.TimeOfDay;
+                    }
+                    //增加新记录
+                    DB.AddOriginal(i["姓名"].ToString(), time.Date, tt);
+
                 }
-                else
-                {
-                    tt = time.TimeOfDay;
-                }
-                //增加新记录
-                DB.AddOriginal(i["姓名"].ToString(), time.Date, tt);
+                DB.Commit();
 
             }
-
-            //得到所有有人出勤的日期
-            var dv = new DataView(DB.OriginalDt);
-            //读出所有姓名
-            _allnames = dv.ToTable(true, "name");
-
-            //得到所有人出勤的日子
-            _alldates = dv.ToTable(true, "Date");
-
-            //对每人个进行遍历
-            foreach (DataRow r in _allnames.Rows)
+            catch (Exception ex)
             {
-                //当前人名字
-                var n = r["name"].ToString();
-                comboBox1.Items.Add(n);
-                DB.persons.Add(n, new PersonInfo(n));
+                DB.Rollback();
+                Log.Err("read data file -" + ex.Message);
             }
 
+            DB.ReadOriginalFormDB();
+        }
 
-            //对所有有人出勤的日期进行遍历
-            foreach (DataRow dater in _alldates.Rows)
-            {
-
-                //今日日期
-                var date = dater["Date"];
-                //判断是不是工作日
-                //如果有30个出勤,就算工作日
-                var dateview = new DataView(DB.OriginalDt) { RowFilter = $"date ='{date}'" }; //去重
-                var pcount = dateview.ToTable(true, "name");
-
-                WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
-            }
-
+        private static void ReadOaToSql()
+        {
+            //todo OA单独处理
             //把OA数据加入进去
             foreach (DataRow i in DB.OaDt.Rows)
             {
@@ -174,13 +173,12 @@ namespace CheckingIn
                     case "加班":
                         //直接计算时间
 
-
                         var p1 = DB.persons[name];
 
                         var st1 = (DateTime)i["start"];
                         var et1 = (DateTime)i["end"];
 
-                     
+
                         //模拟两次打卡
 
                         DB.AddOriginal(name, st1.Date, st1.TimeOfDay, reason + "开始");
@@ -250,13 +248,11 @@ namespace CheckingIn
                         break;
                 }
             }
+        }
 
-
-            Log.Info("read data file done");
-            comboBox1.SelectedIndex = 0;
-
-
-
+        public static void comadd(string t)
+        {
+            inst.comboBox1.Items.Add(t);
         }
 
         private void OpenWorkTimeClassFile(string path)
@@ -852,7 +848,7 @@ namespace CheckingIn
             {
                 Sendmail(p.Value);
                 k++;
-                toolStripProgressBar1.Maximum = _allnames.Rows.Count;
+                toolStripProgressBar1.Maximum = DB.persons.Count;
                 toolStripProgressBar1.Value = k;
             }
 

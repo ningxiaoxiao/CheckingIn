@@ -70,6 +70,11 @@ namespace CheckingIn
             {
                 var name = requestInfo.parameter["name"];
                 if (name == "") return;
+
+                if (!DB.persons.ContainsKey(name))
+                {
+                    DB.persons.Add(name, new PersonInfo(name));
+                }
                 var p = DB.persons[name];
                 p.GetData();
 

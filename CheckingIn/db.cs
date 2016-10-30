@@ -20,7 +20,6 @@ namespace CheckingIn
         /// </summary>
         public static DataTable OriginalDt;
 
-        public static DataTable OriginalListDt;
 
         public static DataTable OaDt;
 
@@ -39,26 +38,70 @@ namespace CheckingIn
 
             Readoa();
             Readpersondb();
+            ReadOriginalFormDB();
         }
 
         public static void Readpersondb()
         {
             PersonInfos = GetSql("select * from person");
+            Log.Info("read person done");
+        }
+        public static void ReadOriginalFormDB()
+        {
+            GetSql("select * from original", OriginalDt);
+
+            GetNamesAndDates();
+            Log.Info("ReadOriginalFormDB done");
         }
 
-        public static void ResultDtAdd(string name, object dt, object intime, object outtime, out TimeSpan worktime)
+        private static void GetNamesAndDates()
         {
-            var rr = DB.Resultdt.NewRow();
-            rr["name"] = name;
-            rr["Date"] = dt;
-            rr["intime"] = intime;
-            rr["outtime"] = outtime;
-            var wt = (TimeSpan)outtime - (TimeSpan)intime;
-            rr["worktime"] = wt;
-            worktime = wt;
-            DB.Resultdt.Rows.Add(rr);
+            //得到所有有人出勤的日期
+            var dv = new DataView(DB.OriginalDt);
+            //读出所有姓名
+            var _allnames = dv.ToTable(true, "name");
 
-            Insertdb("result", new[] { "name", "Date", "intime", "outtime", "worktime" }, new[] { name, dt, intime, outtime, wt });
+            //得到所有人出勤的日子
+            var _alldates = dv.ToTable(true, "Date");
+
+            //对所有有人出勤的日期进行遍历
+            foreach (DataRow dater in _alldates.Rows)
+            {
+                //今日日期
+                var date = dater["Date"];
+                //判断是不是工作日
+                //如果有30个出勤,就算工作日
+                var dateview = new DataView(DB.OriginalDt) { RowFilter = $"date ='{date}'" }; //去重
+                var pcount = dateview.ToTable(true, "name");
+
+                WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
+            }
+
+            //对每人个进行遍历
+            foreach (DataRow r in _allnames.Rows)
+            {
+                //当前人名字
+                var n = r["name"].ToString();
+                DB.persons.Add(n, new PersonInfo(n));
+
+                CheckingIn.inst.comboBox1.Items.Add(n);
+            }
+            if (CheckingIn.inst.comboBox1.Items.Count > 0)
+                CheckingIn.inst.comboBox1.SelectedIndex = 0;
+
+
+
+        }
+        public static void Readoa()
+        {
+            var sql = "select * from oa order by no asc";
+            OaDt = GetSql(sql);
+            Log.Info("Readoa done");
+            //todo 处理oa表
+        }
+        public static void ResultDtAdd(string name, object dt, object intime, object outtime, string worktime, string info)
+        {
+            Insertdb("result", new[] { "name", "Date", "intime", "outtime", "worktime", "info" }, new[] { name, dt, intime, outtime, worktime, info });
         }
         public static TimeSpan GetOverWorkTimeCount(string name)
         {
@@ -114,12 +157,6 @@ namespace CheckingIn
 
         private static void CreatDataTable()
         {
-            PersonInfos = new DataTable();
-
-            PersonInfos.Columns.Add("name", typeof(string));
-            PersonInfos.Columns.Add("mail", typeof(string));
-            PersonInfos.Columns.Add("worktimeclass", typeof(string));
-
             //结果表
             Resultdt = new DataTable();
 
@@ -130,9 +167,7 @@ namespace CheckingIn
             Resultdt.Columns.Add("worktime", typeof(TimeSpan));
 
 
-
-
-            //二次处理的表
+            //原始数据表  //可以按这样的数据进行转换
 
             OriginalDt = new DataTable();
             OriginalDt.Columns.Add("name", typeof(string));
@@ -141,16 +176,17 @@ namespace CheckingIn
             OriginalDt.Columns.Add("info", typeof(string));
 
 
-
+            Log.Info("CreatDataTable done");
 
         }
         private static void CreatSqlTable()
         {
             Cmd("create table person (name varchar(20) primary key , mail varchar(50),worktimeclass varchar(20))");
-            Cmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time)");
+            Cmd("create table result (name varchar(20), date date,intime time,outtime time,worktime time,info varchar(20))");
             Cmd("create table warn (name varchar(20), date date,txt varchar(20))");
-            Cmd("create table original (name varchar(20), date date,time time,info varchar(20))");
+            Cmd("create table original (name varchar(20), date datetime,time INTEGER,info varchar(20))");
             Cmd("create table oa (no integer primary key,name varchar(20), start datetime,end datetime,reason varchar(20))");
+            Log.Info("CreatSqlTable done");
         }
         private static void CheckSqlFile()
         {
@@ -167,12 +203,7 @@ namespace CheckingIn
             }
 
         }
-        public static void Readoa()
-        {
-            var sql = "select * from oa order by no asc";
-            OaDt = GetSql(sql);
 
-        }
         private static SQLiteTransaction _tran;
 
         public static int Cmd(string cmd)
@@ -200,18 +231,18 @@ namespace CheckingIn
         /// <param name="date"></param>
         /// <param name="t"></param>
         /// <param name="rs"></param>
-        public static void AddOriginal(string name, DateTime date, TimeSpan t, string rs = null)
+        public static void AddOriginal(string name, DateTime date, TimeSpan t, string rs = "")
         {
-
+            /*
             var r = OriginalDt.NewRow();
             r["name"] = name;
             r["Date"] = date.Date;
             r["time"] = t;
             r["info"] = rs;
             OriginalDt.Rows.Add(r);
+            */
 
-
-            // Insertdb("original", new[] { "name", "Date", "time" }, new object[] { name, Date, t });
+            Insertdb("original", new[] { "name", "date", "time", "info" }, new object[] { name, date.Date.ToString("s"), t.Ticks, rs });
 
         }
 
@@ -220,13 +251,25 @@ namespace CheckingIn
         {
             _db.Close();
         }
-        public static DataTable GetSql(string sql)
+        public static DataTable GetSql(string sql, DataTable sdt = null)
         {
             var command = new SQLiteCommand(sql, _db);
             var reader = command.ExecuteReader();
-            var dt = new DataTable();
-            dt.Load(reader);
-            return dt;
+
+            if (sdt == null)
+            {
+                var dt = new DataTable();
+
+                dt.Load(reader);
+                return dt;
+            }
+            else
+            {
+                sdt.Load(reader);
+                return sdt;
+            }
+
+
         }
 
         public static void BeginTransaction()
