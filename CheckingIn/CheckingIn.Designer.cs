@@ -44,6 +44,7 @@
             this.oA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.增加ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.清空OA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.readoafileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.邮箱ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向全体发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向当前用户发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,7 +77,7 @@
             this.oa_dataGridView2 = new System.Windows.Forms.DataGridView();
             this.label7 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
-            this.readoafileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.删除所有数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -216,16 +217,23 @@
             // 增加ToolStripMenuItem
             // 
             this.增加ToolStripMenuItem.Name = "增加ToolStripMenuItem";
-            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.增加ToolStripMenuItem.Text = "增加";
             this.增加ToolStripMenuItem.Click += new System.EventHandler(this.增加ToolStripMenuItem_Click);
             // 
             // 清空OA数据ToolStripMenuItem
             // 
             this.清空OA数据ToolStripMenuItem.Name = "清空OA数据ToolStripMenuItem";
-            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
             this.清空OA数据ToolStripMenuItem.Text = "清空OA数据";
             this.清空OA数据ToolStripMenuItem.Click += new System.EventHandler(this.清空OA数据ToolStripMenuItem_Click);
+            // 
+            // readoafileToolStripMenuItem
+            // 
+            this.readoafileToolStripMenuItem.Name = "readoafileToolStripMenuItem";
+            this.readoafileToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
+            this.readoafileToolStripMenuItem.Text = "读取OA文件";
+            this.readoafileToolStripMenuItem.Click += new System.EventHandler(this.readoafileToolStripMenuItem_Click);
             // 
             // 邮箱ToolStripMenuItem
             // 
@@ -330,7 +338,8 @@
             // 数据库ToolStripMenuItem
             // 
             this.数据库ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.删除文件ToolStripMenuItem});
+            this.删除文件ToolStripMenuItem,
+            this.删除所有数据ToolStripMenuItem});
             this.数据库ToolStripMenuItem.Name = "数据库ToolStripMenuItem";
             this.数据库ToolStripMenuItem.Size = new System.Drawing.Size(56, 21);
             this.数据库ToolStripMenuItem.Text = "数据库";
@@ -338,7 +347,7 @@
             // 删除文件ToolStripMenuItem
             // 
             this.删除文件ToolStripMenuItem.Name = "删除文件ToolStripMenuItem";
-            this.删除文件ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.删除文件ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.删除文件ToolStripMenuItem.Text = "删除文件";
             this.删除文件ToolStripMenuItem.Click += new System.EventHandler(this.删除文件ToolStripMenuItem_Click);
             // 
@@ -499,12 +508,12 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
-            // readoafileToolStripMenuItem
+            // 删除所有数据ToolStripMenuItem
             // 
-            this.readoafileToolStripMenuItem.Name = "readoafileToolStripMenuItem";
-            this.readoafileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.readoafileToolStripMenuItem.Text = "读取OA文件";
-            this.readoafileToolStripMenuItem.Click += new System.EventHandler(this.readoafileToolStripMenuItem_Click);
+            this.删除所有数据ToolStripMenuItem.Name = "删除所有数据ToolStripMenuItem";
+            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.删除所有数据ToolStripMenuItem.Text = "删除所有数据";
+            this.删除所有数据ToolStripMenuItem.Click += new System.EventHandler(this.删除所有数据ToolStripMenuItem_Click);
             // 
             // CheckingIn
             // 
@@ -595,6 +604,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.ToolStripMenuItem readoafileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 删除所有数据ToolStripMenuItem;
     }
 }
 

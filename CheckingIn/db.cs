@@ -10,25 +10,25 @@ namespace CheckingIn
     public static class DB
     {
         /// <summary>
-        /// 处理后的表格
+        /// 处理后的表格 check +oa
         /// </summary>
-        public static DataTable ChecksDT;
+        public static DataTable OaResults;
 
         public static DataTable PersonInfos;
         /// <summary>
-        /// 原始表格
+        /// chick 原始表格
         /// </summary>
-        public static DataTable OriginalDt;
+        public static DataTable CheckOriginalDt;
 
 
-        public static DataTable OaDt;
+        public static DataTable OaOriginaDt;
 
         private static SQLiteConnection _db;
 
         /// <summary>
         /// 全公司的人
         /// </summary>
-        public static Dictionary<string, PersonInfo> persons = new Dictionary<string, PersonInfo>();
+        public static Dictionary<string, PersonInfo> Persons = new Dictionary<string, PersonInfo>();
 
 
         public static void Creat()
@@ -37,27 +37,27 @@ namespace CheckingIn
             CheckSqlFile();
 
             Readoa();
-            Readpersondb();
-            ReadOriginalFormDB();
+            ReadPersonDb();
+            ReadOriginalFormDb();
         }
 
-        public static void Readpersondb()
+        public static void ReadPersonDb()
         {
             PersonInfos = GetSql("select * from person");
             Log.Info("read person done");
         }
-        public static void ReadOriginalFormDB()
-        {
-            GetSql("select * from original", OriginalDt);
 
-            GetNamesAndDates();
-            Log.Info("ReadOriginalFormDB done");
+        internal static void DelOrigina()
+        {
+            Cmd("delete  from original");
+            ReadOriginalFormDb();
+            Log.Info("delete original");
         }
-
-        private static void GetNamesAndDates()
+        public static void ReadOriginalFormDb()
         {
+            GetSql("select * from original", CheckOriginalDt);
             //得到所有有人出勤的日期
-            var dv = new DataView(DB.OriginalDt);
+            var dv = new DataView(DB.CheckOriginalDt);
             //读出所有姓名
             var _allnames = dv.ToTable(true, "name");
 
@@ -72,73 +72,121 @@ namespace CheckingIn
                 var date = dater["date"];
                 //判断是不是工作日
                 //如果有30个出勤,就算工作日
-                var dateview = new DataView(DB.OriginalDt) { RowFilter = $"date ='{date}'" }; //去重
+                var dateview = new DataView(DB.CheckOriginalDt) { RowFilter = $"date ='{date}'" }; //去重
                 var pcount = dateview.ToTable(true, "name");
 
                 WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
             }
 
             //生成所有人
-            persons.Clear();
+            Persons.Clear();
             CheckingIn.inst.comboBox1.Items.Clear();
             foreach (DataRow r in _allnames.Rows)
             {
                 var n = r["name"].ToString();
 
-                persons.Add(n, new PersonInfo(n));
+                Persons.Add(n, new PersonInfo(n));
                 CheckingIn.inst.comboBox1.Items.Add(n);
 
             }
             if (CheckingIn.inst.comboBox1.Items.Count > 0)
                 CheckingIn.inst.comboBox1.SelectedIndex = 0;
 
-
-
+            Log.Info("ReadOriginalFormDb done");
         }
+
         public static void Readoa()
         {
-            var sql = "select * from oa order by no asc";
-            OaDt = GetSql(sql);
+            OaOriginaDt = GetSql("select * from oa order by no asc");
+            OaResults.Clear();
+            //读出原始OA数据
+            foreach (DataRow i in DB.OaOriginaDt.Rows)
+            {
+                var reason = i["reason"].ToString();
+                var name = i["name"].ToString();
+
+                if (!DB.Persons.ContainsKey(name))
+                    DB.Persons.Add(name, new PersonInfo(name));
+                var p = DB.Persons[name];//得到人
+                switch (reason)
+                {
+                    case "加班":
+                        //直接计算时间
+
+                        var st1 = (DateTime)i["start"];
+                        var et1 = (DateTime)i["end"];
+
+                        //模拟两次打卡
+
+                        DB.OaResultAdd(name, st1.Date, st1.TimeOfDay, reason + "开始");
+                        DB.OaResultAdd(name, et1.Date, et1.TimeOfDay, reason + "结束");
+
+                        break;
+                    case "外出":
+
+                        var st = (DateTime)i["start"];
+                        var et = (DateTime)i["end"];
+
+
+                        DB.OaResultAdd(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason + "开始");
+                        DB.OaResultAdd(name, (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, reason + "结束");
+
+                        var ds = (int)(et - st).TotalDays;//得到相隔天数
+
+
+                        for (var j = 0; j < ds; j++)
+                        {
+                            var c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)p.WorkTimeClass.InTime;//上班时间
+
+                            if (c > st && c < et)//如果在相隔时间内,加一次打卡
+                                DB.OaResultAdd(name, c.Date, c.TimeOfDay, reason);
+
+                            c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)p.WorkTimeClass.OutTime;
+
+                            if (c > st && c < et)//
+                                DB.OaResultAdd(name, c.Date, c.TimeOfDay, reason);
+
+                        }
+
+
+                        break;
+                    case "补登":
+
+                        DB.OaResultAdd(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason);
+
+                        break;
+                    case "出差":
+                        //出差期间,每天自动增加一个上班打卡 和下班打卡
+                        var s = (DateTime)i["start"];
+                        var ee = (DateTime)i["end"];
+
+                        //先增加开始和结束
+                        DB.OaResultAdd(name, s, (TimeSpan)p.WorkTimeClass.InTime, reason + "开始");
+                        DB.OaResultAdd(name, ee, (TimeSpan)p.WorkTimeClass.OutTime, reason + "结束");
+
+                        //去掉时间
+                        s = s.Date;
+                        ee = ee.Date;
+
+                        //得到出差几天
+                        var days = ee - s;
+
+                        for (var d = 0; d <= days.Days; d++)
+                        {
+                            DB.OaResultAdd(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.InTime, reason);
+                            DB.OaResultAdd(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.OutTime, reason);
+                        }
+
+                        break;
+                    case "请假":
+
+                        break;
+                }
+            }
             Log.Info("Readoa done");
-            //todo 处理oa表
         }
 
-        internal static void DelOrigina()
-        {
-            Cmd("delete  from original");
-            Log.Info("delete original");
-        }
-
-        public static void ResultDtAdd(string name, object dt, object intime, object outtime, string worktime, string info)
-        {
-        }
-        public static TimeSpan GetOverWorkTimeCount(string name)
-        {
-            var t = new TimeSpan();
-            var dv = new DataView(DB.OaDt) { RowFilter = $"name = '{name}' and reason ='加班'" };
-            foreach (DataRowView dr in dv)
-            {
-                var s = (DateTime)dr.Row["start"];
-                var ee = (DateTime)dr.Row["end"];
-                t += ee - s;
-            }
-            return t;
-        }
-        public static int GetOutDaysCount(string name)
-        {
-            var t = new TimeSpan();
-            var dv = new DataView(DB.OaDt) { RowFilter = $"name = '{name}' and reason ='出差'" };
-            if (dv.Count == 0)
-                return 0;
-            foreach (DataRowView dr in dv)
-            {
-                var s = (DateTime)dr.Row["start"];
-                var ee = (DateTime)dr.Row["end"];
-                t += ee - s;
-            }
-            return t.Days + 1;
-        }
-
+        
         public static void Insertdb(string tablename, string[] k, object[] v)
         {
 
@@ -167,23 +215,20 @@ namespace CheckingIn
         private static void CreatDataTable()
         {
             //结果表
-            ChecksDT = new DataTable();
-
-            ChecksDT.Columns.Add("name", typeof(string));
-            ChecksDT.Columns.Add("date", typeof(DateTime));
-            ChecksDT.Columns.Add("intime", typeof(TimeSpan));
-            ChecksDT.Columns.Add("outtime", typeof(TimeSpan));
-            ChecksDT.Columns.Add("worktime", typeof(TimeSpan));
-            ChecksDT.Columns.Add("info", typeof(string));
+            OaResults = new DataTable();
+            OaResults.Columns.Add("name", typeof(string));
+            OaResults.Columns.Add("date", typeof(DateTime));
+            OaResults.Columns.Add("time", typeof(TimeSpan));
+            OaResults.Columns.Add("info", typeof(string));
 
 
             //原始数据表  //可以按这样的数据进行转换
 
-            OriginalDt = new DataTable();
-            OriginalDt.Columns.Add("name", typeof(string));
-            OriginalDt.Columns.Add("date", typeof(DateTime));
-            OriginalDt.Columns.Add("time", typeof(TimeSpan));
-            OriginalDt.Columns.Add("info", typeof(string));
+            CheckOriginalDt = new DataTable();
+            CheckOriginalDt.Columns.Add("name", typeof(string));
+            CheckOriginalDt.Columns.Add("date", typeof(DateTime));
+            CheckOriginalDt.Columns.Add("time", typeof(TimeSpan));
+            CheckOriginalDt.Columns.Add("info", typeof(string));
 
 
             Log.Info("CreatDataTable done");
@@ -227,18 +272,23 @@ namespace CheckingIn
 
             return command.ExecuteNonQuery();
         }
-        public static void ChecksAdd(CheckInfo c)
-        {
-            Insertdb("checks",
-                new[] { "name", "Date", "intime", "outtime", "worktime", "info" },
-                new object[] { c.Person.Name, c.Date.ToString("s"), c.InTime.Ticks, c.OutTime.Ticks, c.WorkTime.Ticks, c.Info });
 
-        }
 
-        public static void OaAdd(string name, DateTime s, DateTime e, string r)
+
+        public static void OaOriginaAdd(string name, DateTime s, DateTime e, string r)
         {
             var sql = $"insert into oa (name,start,end,reason) values ('{name}','{s.ToString("s")}','{e.ToString("s")}','{r}')";
             var ex = Cmd(sql);
+        }
+
+        public static void OaResultAdd(string name, DateTime date, TimeSpan t, string i)
+        {
+            var r = OaResults.NewRow();
+            r["name"] = name;
+            r["date"] = date;
+            r["time"] = t;
+            r["info"] = i;
+            OaResults.Rows.Add(r);
         }
 
         /// <summary>
@@ -248,21 +298,11 @@ namespace CheckingIn
         /// <param name="date"></param>
         /// <param name="t"></param>
         /// <param name="rs"></param>
-        public static void AddOriginal(string name, DateTime date, TimeSpan t, string rs = "")
+        public static void AddCheckOriginal(string name, DateTime date, TimeSpan t, string rs)
         {
-            /*
-            var r = OriginalDt.NewRow();
-            r["name"] = name;
-            r["Date"] = date.Date;
-            r["time"] = t;
-            r["info"] = rs;
-            OriginalDt.Rows.Add(r);
-            */
 
             Insertdb("original", new[] { "name", "date", "time", "info" }, new object[] { name, date.Date.ToString("s"), t.Ticks, rs });
-
         }
-
 
         public static void Close()
         {

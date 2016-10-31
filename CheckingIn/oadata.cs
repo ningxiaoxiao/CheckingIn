@@ -17,7 +17,7 @@ namespace CheckingIn
             if (comboBox_name.Items.Count > 0)
                 comboBox_name.SelectedIndex = 0;
 
-            dataGridView1.DataSource = DB.OaDt;
+            dataGridView1.DataSource = DB.OaOriginaDt;
 
         }
 
@@ -33,7 +33,7 @@ namespace CheckingIn
 
 
 
-            DB.OaAdd(comboBox_name.Text, dateTimePicker_start.Value, dateTimePicker_end.Value.AddMinutes(1), _curReason);
+            DB.OaOriginaAdd(comboBox_name.Text, dateTimePicker_start.Value, dateTimePicker_end.Value.AddMinutes(1), _curReason);
         }
 
         private void radioButton1_Click(object sender, EventArgs e)

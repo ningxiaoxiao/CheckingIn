@@ -65,7 +65,7 @@ namespace CheckingIn
                 if (_overWorkTime >= TimeSpan.Zero) return _overWorkTime;
 
 
-                var dv = new DataView(DB.OaDt) { RowFilter = "name='" + Name + "' and reason = '加班'" };
+                var dv = new DataView(DB.OaOriginaDt) { RowFilter = "name='" + Name + "' and reason = '加班'" };
                 //所有数据应该已经合法
                 _overWorkTime = TimeSpan.Zero;
 
@@ -95,7 +95,7 @@ namespace CheckingIn
                 if (_travel >= TimeSpan.Zero) return _travel;
 
                 //找出所有出差
-                var dv = new DataView(DB.OaDt) { RowFilter = "name='" + Name + "' and reason = '出差'" };
+                var dv = new DataView(DB.OaOriginaDt) { RowFilter = "name='" + Name + "' and reason = '出差'" };
                 //所有数据应该已经合法
                 _travel = TimeSpan.Zero;
                 foreach (DataRowView item in dv)
@@ -171,6 +171,7 @@ namespace CheckingIn
         {
             if (_geted) return;
 
+
             foreach (var i in WorkDay.AllDays)
             {
                 //今日日期
@@ -179,33 +180,41 @@ namespace CheckingIn
 
 
                 //得到这个人今天所有的打卡时间
-                var timeview = new DataView(DB.OriginalDt)
+                var chckedata = new DataView(DB.CheckOriginalDt)
+                {
+                    RowFilter = $"name = '{Name}' AND date = '{date}'",
+                };
+
+                var oadata = new DataView(DB.OaResults)
+                {
+                    RowFilter = $"name = '{Name}' AND date = '{date}'",
+                };
+
+                var datadt = new DataTable();
+                datadt.Load(chckedata.ToTable().CreateDataReader());
+                datadt.Load(oadata.ToTable().CreateDataReader());
+
+                var data = new DataView(datadt)
                 {
                     RowFilter = $"name = '{Name}' AND date = '{date}'",
                     Sort = "time asc" //从小到大
                 };
-
-                c.Sourcerec = timeview;
+                c.Sourcerec = data;
                 //合成信息
-                foreach (DataRowView t in timeview)
+                foreach (var r in from DataRowView t in data select t["info"].ToString() into r where !c.Info.Contains(r) select r)
                 {
-                    var r = t["info"].ToString();
-                    if (!c.Info.Contains(r))
-                    {
-                        c.Info += r + " ";
-                    }
-
+                    c.Info += r + " ";
                 }
 
                 //得到上下班时间
-                switch (timeview.Count)
+                switch (data.Count)
                 {
                     case 0:
-                        break;
+                        continue;
                     case 1:
                         //判断是上班,还是下班
 
-                        var t = (TimeSpan)timeview[0].Row["time"];
+                        var t = (TimeSpan)data[0].Row["time"];
 
 
                         if (WorkTimeClass.IsWorkTimeClass)
@@ -224,8 +233,8 @@ namespace CheckingIn
                         break;
 
                     default:
-                        var t1 = (TimeSpan)timeview[0].Row["time"];
-                        var t2 = (TimeSpan)timeview[timeview.Count - 1].Row["time"];
+                        var t1 = (TimeSpan)data[0].Row["time"];
+                        var t2 = (TimeSpan)data[data.Count - 1].Row["time"];
 
                         //综合工时直接计算
                         if (WorkTimeClass.IsWorkTimeClass)
@@ -235,17 +244,17 @@ namespace CheckingIn
                             break;
                         }
 
-                        //如果大于上班时间4小时 为不合法上班时间
+                        //如果大于上班时间2小时 为不合法上班时间
 
 
-                        if (t1 < WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
-                            c.InTime = t1;
+                        // if (t1 < WorkTimeClass.InTime + new TimeSpan(0, 2, 0, 0))
+                        c.InTime = t1;
 
-                        //大于上班时间4小时的为合法下班时间
+                        //大于上班时间2小时的为合法下班时间
 
 
-                        if (t2 > WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
-                            c.OutTime = t2;
+                        // if (t2 > WorkTimeClass.InTime + new TimeSpan(0, 2, 0, 0))
+                        c.OutTime = t2;
                         break;
                 }
                 AddCheck(c);
@@ -542,11 +551,15 @@ namespace CheckingIn
                     {
 
                         var dt = delayTime - new TimeSpan(0, 0, 30, 0);
-
-
-                        Person.DelayTime += dt;
-                        _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("0.#")}分钟"));
-
+                        if (dt.TotalMinutes < 120)
+                        {
+                            Person.DelayTime += dt;
+                            _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("0.#")}分钟"));
+                        }
+                        else
+                        {
+                            _warns.Add(new WarnInfo(Date, "上班未打卡"));
+                        }
 
                         delayTime = new TimeSpan(0, 0, 30, 0);
 
@@ -561,9 +574,18 @@ namespace CheckingIn
                 if (OutTime < shoudout)
                 {
                     delayTime = shoudout - OutTime;
-                    Person.DelayTime += delayTime;
 
-                    _warns.Add(new WarnInfo(Date, $"早退{delayTime.TotalMinutes.ToString("0.#")}分钟"));
+
+                    if (delayTime.TotalMinutes < 120)
+                    {
+                        Person.DelayTime += delayTime;
+                        _warns.Add(new WarnInfo(Date, $"早退{delayTime.TotalMinutes.ToString("0.#")}分钟"));
+
+                    }
+                    else
+                        _warns.Add(new WarnInfo(Date, "下班未打卡"));
+
+
                 }
 
                 return _warns;

@@ -71,11 +71,11 @@ namespace CheckingIn
                 var name = requestInfo.parameter["name"];
                 if (name == "") return;
 
-                if (!DB.persons.ContainsKey(name))
+                if (!DB.Persons.ContainsKey(name))
                 {
-                    DB.persons.Add(name, new PersonInfo(name));
+                    DB.Persons.Add(name, new PersonInfo(name));
                 }
-                var p = DB.persons[name];
+                var p = DB.Persons[name];
                 p.GetData();
 
                 filestring = (p.GetJson()).ToJson();
