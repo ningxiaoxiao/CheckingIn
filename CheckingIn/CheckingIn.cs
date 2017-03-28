@@ -16,7 +16,7 @@ namespace CheckingIn
 {
     public partial class CheckingIn : Form
     {
-     
+
         public static CheckingIn inst;
 
 
@@ -91,12 +91,11 @@ namespace CheckingIn
                     DB.Readoa();
                     break;
             }
+
         }
 
         private void OpenDataFile()
         {
-
-        
             var dt = ExcelToDs(openFileDialog1.FileName);
 
             DB.DelOrigina();
@@ -128,12 +127,12 @@ namespace CheckingIn
             catch (Exception ex)
             {
                 DB.Rollback();
-                Log.Err("read data file -" + ex.Message);
+                Log.Err("读取考勤器文件出错." + ex.Message);
             }
 
             DB.ReadOriginalFormDb();
 
-            Log.Info("read data file done");
+            Log.Info("读取考勤器文件完成");
 
 
 
@@ -247,7 +246,7 @@ namespace CheckingIn
 
                 }
                 DB.Commit();
-                
+
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -290,7 +289,7 @@ namespace CheckingIn
 
                 }
                 DB.Commit();
-       
+
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -354,7 +353,7 @@ namespace CheckingIn
                 }
 
                 DB.Commit();
-              
+
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -598,7 +597,7 @@ namespace CheckingIn
         }
 
 
-        private void 打开文件ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void 打开考勤器文件ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             openFileDialog1.Title = "选择考勤器原始文件";
             openFileDialog1.ShowDialog();

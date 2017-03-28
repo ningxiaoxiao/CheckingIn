@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq;
 using LitJson;
 
@@ -11,13 +10,6 @@ namespace CheckingIn
 
     public class PersonInfo
     {
-
-        private DataTable _checks;
-        private DataTable _warns;
-        private DataTable _oas;
-        private DataTable _rec;
-
-
 
         //总属性
         public string Name;
@@ -29,7 +21,36 @@ namespace CheckingIn
         /// </summary>
         public WorkTimeClassInfo WorkTimeClass;
 
-        private int _warnDayCount = -1;
+        /// <summary>
+        /// 可用假期
+        /// </summary>
+        public TimeSpan Holidays = TimeSpan.Zero;
+
+        /// <summary>
+        /// 出差天数
+        /// </summary>
+        public TimeSpan Travel
+        {
+            get
+            {
+                if (_travel >= TimeSpan.Zero) return _travel;
+
+                //找出所有出差
+                var dv = new DataView(DB.OaOriginaDt) { RowFilter = "name='" + Name + "' and reason = '出差'" };
+                //所有数据应该已经合法
+                _travel = TimeSpan.Zero;
+                foreach (DataRowView item in dv)
+                {
+                    var s = (DateTime)item["start"];
+                    var e = (DateTime)item["end"];
+
+
+                    _travel += e.Date.AddDays(1) - s.Date;
+                }
+                return _travel;
+            }
+        }
+
         /// <summary>
         /// 异常天数
         /// </summary>
@@ -50,10 +71,27 @@ namespace CheckingIn
         }
 
         /// <summary>
-        /// 可用假期
+        /// 迟到早退时间
         /// </summary>
-        public TimeSpan Holidays = TimeSpan.Zero;
+        public TimeSpan DelayTime = TimeSpan.Zero;
 
+
+        public int WorkDayCount => WorkDay.WorkCount - WarnDayCount;
+
+        /// <summary>
+        /// 工作时间
+        /// </summary>
+        public TimeSpan WorkTime = TimeSpan.Zero;
+
+
+        public List<CheckInfo> Checks = new List<CheckInfo>();
+
+        private DataTable _checks;
+        private DataTable _warns;
+        private DataTable _oas;
+        private DataTable _rec;
+
+        private int _warnDayCount = -1;
         private TimeSpan _overWorkTime = new TimeSpan(-1);
         /// <summary>
         /// 加班时间
@@ -85,47 +123,6 @@ namespace CheckingIn
         //当月属性
 
         private TimeSpan _travel = new TimeSpan(-1);
-        /// <summary>
-        /// 出差天数
-        /// </summary>
-        public TimeSpan Travel
-        {
-            get
-            {
-                if (_travel >= TimeSpan.Zero) return _travel;
-
-                //找出所有出差
-                var dv = new DataView(DB.OaOriginaDt) { RowFilter = "name='" + Name + "' and reason = '出差'" };
-                //所有数据应该已经合法
-                _travel = TimeSpan.Zero;
-                foreach (DataRowView item in dv)
-                {
-                    var s = (DateTime)item["start"];
-                    var e = (DateTime)item["end"];
-
-
-                    _travel += e.Date.AddDays(1) - s.Date;
-                }
-                return _travel;
-            }
-        }
-
-        /// <summary>
-        /// 迟到早退时间
-        /// </summary>
-        public TimeSpan DelayTime = TimeSpan.Zero;
-
-
-        public int WorkDayCount => WorkDay.WorkCount - WarnDayCount;
-
-        /// <summary>
-        /// 工作时间
-        /// </summary>
-        public TimeSpan WorkTime = TimeSpan.Zero;
-
-
-        public List<CheckInfo> Checks = new List<CheckInfo>();
-
         public PersonInfo(string n)
         {
             Name = n;
@@ -142,7 +139,6 @@ namespace CheckingIn
             }
             else
             {
-
                 Mail = dv[0]["mail"].ToString();
 
 

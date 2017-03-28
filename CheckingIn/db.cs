@@ -57,7 +57,7 @@ namespace CheckingIn
         {
             GetSql("select * from original", CheckOriginalDt);
             //得到所有有人出勤的日期
-            var dv = new DataView(DB.CheckOriginalDt);
+            var dv = new DataView(CheckOriginalDt);
             //读出所有姓名
             var _allnames = dv.ToTable(true, "name");
 
@@ -72,7 +72,7 @@ namespace CheckingIn
                 var date = dater["date"];
                 //判断是不是工作日
                 //如果有30个出勤,就算工作日
-                var dateview = new DataView(DB.CheckOriginalDt) { RowFilter = $"date ='{date}'" }; //去重
+                var dateview = new DataView(CheckOriginalDt) { RowFilter = $"date ='{date}'" }; //去重
                 var pcount = dateview.ToTable(true, "name");
 
                 WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
@@ -147,8 +147,6 @@ namespace CheckingIn
                                 DB.OaResultAdd(name, c.Date, c.TimeOfDay, reason);
 
                         }
-
-
                         break;
                     case "补登":
 

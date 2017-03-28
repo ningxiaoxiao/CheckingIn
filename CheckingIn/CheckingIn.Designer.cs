@@ -38,9 +38,11 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.打开文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.输出文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.读取班次表ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.读取邮箱表ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.输出文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.oA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.增加ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.readoafileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,7 +80,6 @@
             this.oa_dataGridView2 = new System.Windows.Forms.DataGridView();
             this.label7 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -170,10 +171,11 @@
             // 
             this.文件ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.打开文件ToolStripMenuItem,
-            this.输出文件ToolStripMenuItem,
             this.toolStripMenuItem2,
             this.读取班次表ToolStripMenuItem,
-            this.读取邮箱表ToolStripMenuItem});
+            this.读取邮箱表ToolStripMenuItem,
+            this.toolStripMenuItem3,
+            this.输出文件ToolStripMenuItem});
             this.文件ToolStripMenuItem.Name = "文件ToolStripMenuItem";
             this.文件ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
             this.文件ToolStripMenuItem.Text = "文件";
@@ -181,30 +183,40 @@
             // 打开文件ToolStripMenuItem
             // 
             this.打开文件ToolStripMenuItem.Name = "打开文件ToolStripMenuItem";
-            this.打开文件ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
-            this.打开文件ToolStripMenuItem.Text = "打开文件";
-            this.打开文件ToolStripMenuItem.Click += new System.EventHandler(this.打开文件ToolStripMenuItem_Click);
+            this.打开文件ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.打开文件ToolStripMenuItem.Text = "打开考勤器文件";
+            this.打开文件ToolStripMenuItem.Click += new System.EventHandler(this.打开考勤器文件ToolStripMenuItem_Click);
             // 
-            // 输出文件ToolStripMenuItem
+            // toolStripMenuItem2
             // 
-            this.输出文件ToolStripMenuItem.Name = "输出文件ToolStripMenuItem";
-            this.输出文件ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
-            this.输出文件ToolStripMenuItem.Text = "输出文件";
-            this.输出文件ToolStripMenuItem.Click += new System.EventHandler(this.输出文件ToolStripMenuItem_Click);
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(157, 6);
             // 
             // 读取班次表ToolStripMenuItem
             // 
             this.读取班次表ToolStripMenuItem.Name = "读取班次表ToolStripMenuItem";
-            this.读取班次表ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.读取班次表ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.读取班次表ToolStripMenuItem.Text = "读取班次表";
             this.读取班次表ToolStripMenuItem.Click += new System.EventHandler(this.读取班次表ToolStripMenuItem_Click);
             // 
             // 读取邮箱表ToolStripMenuItem
             // 
             this.读取邮箱表ToolStripMenuItem.Name = "读取邮箱表ToolStripMenuItem";
-            this.读取邮箱表ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.读取邮箱表ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             this.读取邮箱表ToolStripMenuItem.Text = "读取邮箱表";
             this.读取邮箱表ToolStripMenuItem.Click += new System.EventHandler(this.读取邮箱表ToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(157, 6);
+            // 
+            // 输出文件ToolStripMenuItem
+            // 
+            this.输出文件ToolStripMenuItem.Name = "输出文件ToolStripMenuItem";
+            this.输出文件ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.输出文件ToolStripMenuItem.Text = "输出文件";
+            this.输出文件ToolStripMenuItem.Click += new System.EventHandler(this.输出文件ToolStripMenuItem_Click);
             // 
             // oA数据ToolStripMenuItem
             // 
@@ -271,62 +283,62 @@
             // 加班ToolStripMenuItem
             // 
             this.加班ToolStripMenuItem.Name = "加班ToolStripMenuItem";
-            this.加班ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.加班ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.加班ToolStripMenuItem.Text = "加班";
             this.加班ToolStripMenuItem.Click += new System.EventHandler(this.加班ToolStripMenuItem_Click);
             // 
             // 出差ToolStripMenuItem
             // 
             this.出差ToolStripMenuItem.Name = "出差ToolStripMenuItem";
-            this.出差ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.出差ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.出差ToolStripMenuItem.Text = "出差";
             this.出差ToolStripMenuItem.Click += new System.EventHandler(this.出差ToolStripMenuItem_Click);
             // 
             // 外出ToolStripMenuItem
             // 
             this.外出ToolStripMenuItem.Name = "外出ToolStripMenuItem";
-            this.外出ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.外出ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.外出ToolStripMenuItem.Text = "外出";
             this.外出ToolStripMenuItem.Click += new System.EventHandler(this.外出ToolStripMenuItem_Click);
             // 
             // 补登ToolStripMenuItem
             // 
             this.补登ToolStripMenuItem.Name = "补登ToolStripMenuItem";
-            this.补登ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.补登ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.补登ToolStripMenuItem.Text = "补登";
             this.补登ToolStripMenuItem.Click += new System.EventHandler(this.补登ToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(133, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // 个人信息表ToolStripMenuItem
             // 
             this.个人信息表ToolStripMenuItem.Name = "个人信息表ToolStripMenuItem";
-            this.个人信息表ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.个人信息表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.个人信息表ToolStripMenuItem.Text = "个人信息表";
             this.个人信息表ToolStripMenuItem.Click += new System.EventHandler(this.个人信息表ToolStripMenuItem_Click);
             // 
             // 结果表ToolStripMenuItem
             // 
             this.结果表ToolStripMenuItem.Name = "结果表ToolStripMenuItem";
-            this.结果表ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
-            this.结果表ToolStripMenuItem.Text = "结果表";
+            this.结果表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.结果表ToolStripMenuItem.Text = "oa结果表";
             this.结果表ToolStripMenuItem.Click += new System.EventHandler(this.结果表ToolStripMenuItem_Click);
             // 
             // 原始表ToolStripMenuItem
             // 
             this.原始表ToolStripMenuItem.Name = "原始表ToolStripMenuItem";
-            this.原始表ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
-            this.原始表ToolStripMenuItem.Text = "原始表";
+            this.原始表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.原始表ToolStripMenuItem.Text = "考勤器原始表";
             this.原始表ToolStripMenuItem.Click += new System.EventHandler(this.原始表ToolStripMenuItem_Click);
             // 
             // oa表ToolStripMenuItem
             // 
             this.oa表ToolStripMenuItem.Name = "oa表ToolStripMenuItem";
-            this.oa表ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
-            this.oa表ToolStripMenuItem.Text = "oa表";
+            this.oa表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.oa表ToolStripMenuItem.Text = "oa原始表";
             this.oa表ToolStripMenuItem.Click += new System.EventHandler(this.oa表ToolStripMenuItem_Click);
             // 
             // 数据库ToolStripMenuItem
@@ -342,21 +354,21 @@
             // 删除文件ToolStripMenuItem
             // 
             this.删除文件ToolStripMenuItem.Name = "删除文件ToolStripMenuItem";
-            this.删除文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.删除文件ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.删除文件ToolStripMenuItem.Text = "删除文件";
             this.删除文件ToolStripMenuItem.Click += new System.EventHandler(this.删除文件ToolStripMenuItem_Click);
             // 
             // 删除所有数据ToolStripMenuItem
             // 
             this.删除所有数据ToolStripMenuItem.Name = "删除所有数据ToolStripMenuItem";
-            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.删除所有数据ToolStripMenuItem.Text = "删除所有数据";
             this.删除所有数据ToolStripMenuItem.Click += new System.EventHandler(this.删除所有数据ToolStripMenuItem_Click);
             // 
             // 清空OA数据ToolStripMenuItem
             // 
             this.清空OA数据ToolStripMenuItem.Name = "清空OA数据ToolStripMenuItem";
-            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.清空OA数据ToolStripMenuItem.Text = "清空OA数据";
             // 
             // toolStrip1
@@ -516,11 +528,6 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
-            // 
             // CheckingIn
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -612,6 +619,7 @@
         private System.Windows.Forms.ToolStripMenuItem 删除所有数据ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 清空OA数据ToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
     }
 }
 
