@@ -179,6 +179,11 @@ namespace CheckingIn
 
                         break;
                     case "请假":
+                        break;
+                    case "事假":
+
+                        break;
+                    case "调休":
 
                         break;
                 }

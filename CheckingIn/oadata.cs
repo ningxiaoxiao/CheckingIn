@@ -60,5 +60,10 @@ namespace CheckingIn
             if (dateTimePicker_end.Value < dateTimePicker_start.Value)
                 dateTimePicker_end.Value = dateTimePicker_start.Value;
         }
+
+        private void oadata_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            DB.Readoa();
+        }
     }
 }

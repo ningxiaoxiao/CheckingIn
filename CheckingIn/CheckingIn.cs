@@ -16,7 +16,7 @@ namespace CheckingIn
 {
     public partial class CheckingIn : Form
     {
-        private string _openedFleName;
+     
         public static CheckingIn inst;
 
 
@@ -96,7 +96,7 @@ namespace CheckingIn
         private void OpenDataFile()
         {
 
-            _openedFleName = openFileDialog1.FileName;
+        
             var dt = ExcelToDs(openFileDialog1.FileName);
 
             DB.DelOrigina();
@@ -247,7 +247,7 @@ namespace CheckingIn
 
                 }
                 DB.Commit();
-                DB.Readoa();
+                
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -290,7 +290,7 @@ namespace CheckingIn
 
                 }
                 DB.Commit();
-                DB.Readoa();
+       
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -354,7 +354,7 @@ namespace CheckingIn
                 }
 
                 DB.Commit();
-                DB.Readoa();
+              
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -390,7 +390,6 @@ namespace CheckingIn
                 }
 
                 DB.Commit();
-                DB.Readoa();
                 Log.Info(path + "-read done");
             }
             catch (Exception ex)
@@ -402,11 +401,45 @@ namespace CheckingIn
 
 
         }
+
+        private void OpenVacationFile(string path)
+        {
+            //开始事务
+            DB.BeginTransaction();
+            try
+            {
+
+
+                var dt = ExcelToDs(path);
+
+
+
+                //进行遍历处理 生成新的表
+                foreach (DataRow i in dt.Tables[0].Rows)
+                {
+                    var name = i["姓名"].ToString();
+                    var st = DateTime.Parse(i["实际开始"].ToString());
+                    var se = DateTime.Parse(i["实际结束"].ToString());
+
+                    //写到表里
+                    if (st.Month == monthCalendar1.SelectionStart.Month)
+                        DB.OaOriginaAdd(name, st, se, "出差");
+                }
+
+                DB.Commit();
+                Log.Info(path + "-read done");
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("假期写入数据库出现问题" + ex.Message);
+                DB.Rollback();
+                throw;
+            }
+        }
         #endregion
 
         public DataSet ExcelToDs(string path)
         {
-
             var strConn = "Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + path + ";" + "Extended Properties=Excel 8.0;";
             var conn = new OleDbConnection(strConn);
             conn.Open();
