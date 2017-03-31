@@ -407,11 +407,7 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-
-
                 var dt = ExcelToDs(path);
-
-
 
                 //进行遍历处理 生成新的表
                 foreach (DataRow i in dt.Tables[0].Rows)
