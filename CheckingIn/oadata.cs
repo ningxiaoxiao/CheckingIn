@@ -10,9 +10,9 @@ namespace CheckingIn
         {
             InitializeComponent();
 
-            var cm = new object[CheckingIn.inst.comboBox1.Items.Count];
+            var cm = new object[CheckingIn.Inst.comboBox1.Items.Count];
 
-            CheckingIn.inst.comboBox1.Items.CopyTo(cm, 0);
+            CheckingIn.Inst.comboBox1.Items.CopyTo(cm, 0);
             comboBox_name.Items.AddRange(cm);
             if (comboBox_name.Items.Count > 0)
                 comboBox_name.SelectedIndex = 0;

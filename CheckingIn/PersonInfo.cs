@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using LitJson;
+using LitJson2;
 
 namespace CheckingIn
 {
@@ -168,10 +168,10 @@ namespace CheckingIn
             if (_geted) return;
 
 
-            foreach (var i in WorkDay.AllDays)
+            foreach (var date in WorkDay.AllDays)
             {
                 //今日日期
-                var date = i.Key;
+
                 var c = new CheckInfo(this, date);
 
 
@@ -180,7 +180,7 @@ namespace CheckingIn
                 {
                     RowFilter = $"name = '{Name}' AND date = '{date}'",
                 };
-
+                //得到这个人今天的oa数据
                 var oadata = new DataView(DB.OaResults)
                 {
                     RowFilter = $"name = '{Name}' AND date = '{date}'",
@@ -206,7 +206,7 @@ namespace CheckingIn
                 switch (data.Count)
                 {
                     case 0:
-                        continue;
+                        break;
                     case 1:
                         //判断是上班,还是下班
 
@@ -266,53 +266,40 @@ namespace CheckingIn
         {
             var j = new JsonData();
 
-            var js = new JsonWriter();
             var csjs = new JsonWriter();
-            try
+
+            csjs.WriteArrayStart();
+
+            //sort
+            Checks.Sort();
+
+            foreach (var c in Checks)
             {
 
-                js.WriteArrayStart();
-                csjs.WriteArrayStart();
+                csjs.WriteObjectStart();
 
-                //sort
-                Checks.Sort();
+                csjs.WritePropertyName("date");
+                csjs.Write(c.Date.ToString());
 
-                foreach (var c in Checks)
-                {
-                    foreach (var w in c.Warns)
-                    {
-                        js.WriteObjectStart();
-                        js.WritePropertyName("date");
-                        js.Write(w.Date.ToString());
-                        js.WritePropertyName("info");
-                        js.Write(w.Info);
-                        js.WriteObjectEnd();
-                    }
+                csjs.WritePropertyName("intime");
+                csjs.Write(c.InTime.ToMyString());
 
-                    csjs.WriteObjectStart();
+                csjs.WritePropertyName("outtime");
+                csjs.Write(c.OutTime.ToMyString());
 
-                    csjs.WritePropertyName("date");
-                    csjs.Write(c.Date.ToString());
+                csjs.WritePropertyName("info");
+                csjs.Write(c.Info);
 
-                    csjs.WritePropertyName("intime");
-                    csjs.Write(c.InTime.ToMyString());
+                csjs.WritePropertyName("warninfo");
+                csjs.Write(c.warninfo);
 
-                    csjs.WritePropertyName("outtime");
-                    csjs.Write(c.OutTime.ToMyString());
+                csjs.WriteObjectEnd();
 
-                    csjs.WritePropertyName("info");
-                    csjs.Write(c.Info);
-
-                    csjs.WriteObjectEnd();
-                }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+
 
             csjs.WriteArrayEnd();
-            js.WriteArrayEnd();
+
 
             var profile = new JsonData();
 
@@ -340,9 +327,6 @@ namespace CheckingIn
 
             j["profile"] = profile;
 
-
-
-            j["warns"] = js.ToString();
             j["data"] = csjs.ToString();
 
             return j;
@@ -501,7 +485,7 @@ namespace CheckingIn
                 //不是工作日直接返回
                 if (!Date.IsWorkDay) return _warns;
 
-                //使用弹性工作制                                                      
+                //弹性工作制警告消息                                                      
                 if (Person.WorkTimeClass.IsWorkTimeClass)
                 {
                     if (InTime == UnKownTimeSpan && OutTime == UnKownTimeSpan)
@@ -534,7 +518,7 @@ namespace CheckingIn
                     return _warns;
                 }
 
-
+                //到这里 就是有两次合法打卡 计算迟到时间
 
                 var delayTime = TimeSpan.Zero;
 
@@ -543,10 +527,11 @@ namespace CheckingIn
 
                     delayTime = InTime - Person.WorkTimeClass.InTime;
 
-                    if (delayTime > new TimeSpan(0, 0, 30, 0))//每天30分钟机动时间
+                    var halfhour = new TimeSpan(0, 0, 30, 0);
+                    if (delayTime > halfhour)//每天30分钟机动时间
                     {
 
-                        var dt = delayTime - new TimeSpan(0, 0, 30, 0);
+                        var dt = delayTime - halfhour;
                         if (dt.TotalMinutes < 120)
                         {
                             Person.DelayTime += dt;
@@ -557,7 +542,7 @@ namespace CheckingIn
                             _warns.Add(new WarnInfo(Date, "上班未打卡"));
                         }
 
-                        delayTime = new TimeSpan(0, 0, 30, 0);
+                        delayTime = halfhour;
 
 
                     }
@@ -592,22 +577,32 @@ namespace CheckingIn
 
         public bool HaveWarn => Warns.Count > 0;
 
+
+
         public string Info;
         public DataView Sourcerec;
 
-        public CheckInfo(PersonInfo p, WorkDay d, TimeSpan it, TimeSpan ot, string info = "")
+        internal string warninfo
+        {
+            get
+            {
+                var s = "";
+                foreach (var w in Warns)
+                {
+                    s += w.Info + " ";
+                }
+                return s;
+            }
+        }
+
+        public CheckInfo(PersonInfo p, WorkDay d)
         {
             Person = p;
             Date = d;
 
-            InTime = it;
-            OutTime = ot;
-            Info = info;
-        }
-        public CheckInfo(PersonInfo p, WorkDay d)
-            : this(p, d, UnKownTimeSpan, UnKownTimeSpan)
-        {
-
+            InTime = UnKownTimeSpan;
+            OutTime = UnKownTimeSpan;
+            Info = "";
         }
 
 
@@ -623,9 +618,12 @@ namespace CheckingIn
         /// <summary>
         /// 有人出勤的日期
         /// </summary>
-        public static Dictionary<DateTime, bool> AllDays = new Dictionary<DateTime, bool>();
+        public static List<DateTime> AllDays = new List<DateTime>();
 
         private static int _workcount = -1;
+        /// <summary>
+        /// 应工作天数 
+        /// </summary>
         public static int WorkCount
         {
             get
@@ -635,14 +633,22 @@ namespace CheckingIn
                 _workcount = 0;
                 foreach (var i in AllDays)
                 {
-                    if (i.Value)
-                        _workcount++;
+                    //todo 
+                    _workcount++;
                 }
                 return _workcount;
             }
         }
 
-        public bool IsWorkDay => AllDays[_date];
+        public bool IsWorkDay
+        {
+            get
+            {
+                var str = _date.Month.ToString("00") + _date.Day.ToString("00");
+
+                return !CheckingIn.Inst.workdaysjson.Keys.Contains(str);
+            }
+        }
 
         private readonly DateTime _date;
 

@@ -7,15 +7,14 @@ using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Config;
 using SuperSocket.SocketBase.Protocol;
 using ILog = log4net.ILog;
-using LitJson;
 
 
 namespace CheckingIn
 {
     public class HttpSever
     {
-        private HttpAppServer _server;
-        private ServerConfig _config;
+        private readonly HttpAppServer _server;
+        private readonly ServerConfig _config;
 
         private readonly string _filepath = Directory.GetCurrentDirectory() + "\\wwwroot";
 
@@ -55,9 +54,9 @@ namespace CheckingIn
         private void Server_NewRequestReceived(HttpSession session, HttpRequsetInfo requestInfo)
         {
 
-            var fileallpath = _filepath + requestInfo.URL;
+            var fileallpath = _filepath + requestInfo.Url;
 
-            var filestring = "ERR:no file " + requestInfo.URL;
+            var filestring = "ERR:no file " + requestInfo.Url;
 
             //把文件读出来 发送过去
             if (File.Exists(fileallpath))
@@ -66,9 +65,9 @@ namespace CheckingIn
                 filestring = sr.ReadToEnd();
                 sr.Close();
             }
-            else if (requestInfo.parameter.Count > 0)
+            else if (requestInfo.Parameter.Count > 0)
             {
-                var name = requestInfo.parameter["name"];
+                var name = requestInfo.Parameter["name"];
                 if (name == "") return;
 
                 if (!DB.Persons.ContainsKey(name))
@@ -108,10 +107,7 @@ namespace CheckingIn
                 case "css":
                     //  sb.AppendLine("Content-Type: text/html; charset=utf-8");
                     break;
-                default:
-                    //sb.AppendLine("Content-Type: text/html; charset=utf-8");
-                    break;
-
+                //sb.AppendLine("Content-Type: text/html; charset=utf-8");
             }
 
 
@@ -137,13 +133,13 @@ namespace CheckingIn
     public class HttpRequsetInfo : IRequestInfo
     {
 
-        public string URL { get; set; }
+        public string Url { get; set; }
 
         public string Key { get; }
 
 
-        public Dictionary<string, string> parameter = new Dictionary<string, string>();
-        internal bool ishavepars;
+        public Dictionary<string, string> Parameter = new Dictionary<string, string>();
+        internal bool IsHavePars;
     }
 
     public class HttpReceiveFilter : IReceiveFilter<HttpRequsetInfo>
@@ -163,20 +159,20 @@ namespace CheckingIn
             if (methodstr[1] == "/")
                 methodstr[1] = "/index.html";
 
-            hr.URL = methodstr[1].Replace("/?", "/index.html?");
+            hr.Url = methodstr[1].Replace("/?", "/index.html?");
 
 
 
-            if (hr.URL.IndexOf("?") >= 0)
+            if (hr.Url.IndexOf("?") >= 0)
             {
-                var ps = hr.URL.Split('?');
-                hr.URL = ps[0];
-                hr.ishavepars = true;
+                var ps = hr.Url.Split('?');
+                hr.Url = ps[0];
+                hr.IsHavePars = true;
                 var pss = ps[1].Split('&');
                 foreach (var i in pss)
                 {
                     var kv = i.Split('=');
-                    hr.parameter.Add(kv[0], HttpUtility.UrlDecode(kv[1], Encoding.UTF8));
+                    hr.Parameter.Add(kv[0], HttpUtility.UrlDecode(kv[1], Encoding.UTF8));
                 }
 
             }
@@ -190,7 +186,7 @@ namespace CheckingIn
 
         public void Reset()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public int LeftBufferSize { get; }

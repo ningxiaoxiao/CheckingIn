@@ -9,8 +9,8 @@ function addwarn(date, info) {
     $('#warn').append(d);
 }
 
-function adddata(name, date, intime, outtime,info) {
-    var d = '<tr><td class="text-left">' + name + '</td><td class="text-left">' + date + '</td><td class="text-left">' + intime + '</td><td class="text-left">' + outtime + '</td><td class="text-left">' + info + '</td></tr>';
+function adddata(name, date, intime, outtime, info,warninfo) {
+    var d = '<tr><td class="text-left">' + name + '</td><td class="text-left">' + date + '</td><td class="text-left">' + intime + '</td><td class="text-left">' + outtime + '</td><td class="text-left">' + info + '</td><td class="text-left">' + warninfo + '</td></tr>';
     $('#data').append(d);
 }
 
@@ -23,14 +23,10 @@ function getdata(name) {
             addprofile(i, profile[i]);
         }
 
-
-        var warns = JSON.parse(d.warns);
-        for (var i in warns) {
-            addwarn(warns[i].date, warns[i].info);
-        }
+        
         var datas = JSON.parse(d.data);
         for (var i in datas) {
-            adddata(name, datas[i].date, datas[i].intime, datas[i].outtime,datas[i].info);
+            adddata(name, datas[i].date, datas[i].intime, datas[i].outtime, datas[i].info, datas[i].warninfo);
         }
     });
 }

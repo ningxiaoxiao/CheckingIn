@@ -63,6 +63,7 @@
             this.删除文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除所有数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.清空OA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.工作日设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
@@ -136,7 +137,7 @@
             this.listView_warn.Location = new System.Drawing.Point(520, 323);
             this.listView_warn.MultiSelect = false;
             this.listView_warn.Name = "listView_warn";
-            this.listView_warn.Size = new System.Drawing.Size(484, 164);
+            this.listView_warn.Size = new System.Drawing.Size(521, 368);
             this.listView_warn.TabIndex = 12;
             this.listView_warn.UseCompatibleStateImageBehavior = false;
             this.listView_warn.View = System.Windows.Forms.View.Details;
@@ -160,10 +161,11 @@
             this.oA数据ToolStripMenuItem,
             this.邮箱ToolStripMenuItem,
             this.查看ToolStripMenuItem,
-            this.数据库ToolStripMenuItem});
+            this.数据库ToolStripMenuItem,
+            this.工作日设置ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1067, 25);
+            this.menuStrip1.Size = new System.Drawing.Size(1051, 25);
             this.menuStrip1.TabIndex = 13;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -371,6 +373,13 @@
             this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.清空OA数据ToolStripMenuItem.Text = "清空OA数据";
             // 
+            // 工作日设置ToolStripMenuItem
+            // 
+            this.工作日设置ToolStripMenuItem.Name = "工作日设置ToolStripMenuItem";
+            this.工作日设置ToolStripMenuItem.Size = new System.Drawing.Size(80, 21);
+            this.工作日设置ToolStripMenuItem.Text = "工作日设置";
+            this.工作日设置ToolStripMenuItem.Click += new System.EventHandler(this.工作日设置ToolStripMenuItem_Click);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -379,9 +388,9 @@
             this.toolStripProgressBar1,
             this.toolStripLabel1,
             this.toolStripLabel2});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 493);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 694);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1067, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(1051, 25);
             this.toolStrip1.TabIndex = 14;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -465,7 +474,7 @@
             this.listView_log.Location = new System.Drawing.Point(12, 308);
             this.listView_log.MultiSelect = false;
             this.listView_log.Name = "listView_log";
-            this.listView_log.Size = new System.Drawing.Size(496, 179);
+            this.listView_log.Size = new System.Drawing.Size(496, 383);
             this.listView_log.TabIndex = 25;
             this.listView_log.UseCompatibleStateImageBehavior = false;
             this.listView_log.View = System.Windows.Forms.View.Details;
@@ -497,7 +506,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(445, 41);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(433, 118);
+            this.dataGridView1.Size = new System.Drawing.Size(596, 105);
             this.dataGridView1.TabIndex = 27;
             // 
             // oa_dataGridView2
@@ -532,7 +541,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1067, 518);
+            this.ClientSize = new System.Drawing.Size(1051, 719);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.oa_dataGridView2);
@@ -620,6 +629,7 @@
         private System.Windows.Forms.ToolStripMenuItem 清空OA数据ToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem 工作日设置ToolStripMenuItem;
     }
 }
 

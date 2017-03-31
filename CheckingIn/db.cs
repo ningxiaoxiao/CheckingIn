@@ -56,6 +56,8 @@ namespace CheckingIn
         public static void ReadOriginalFormDb()
         {
             GetSql("select * from original", CheckOriginalDt);
+
+            
             //得到所有有人出勤的日期
             var dv = new DataView(CheckOriginalDt);
             //读出所有姓名
@@ -70,27 +72,31 @@ namespace CheckingIn
             {
                 //今日日期
                 var date = dater["date"];
+
+                WorkDay.AllDays.Add(((DateTime)date).Date);
                 //判断是不是工作日
+                /*
                 //如果有30个出勤,就算工作日
                 var dateview = new DataView(CheckOriginalDt) { RowFilter = $"date ='{date}'" }; //去重
                 var pcount = dateview.ToTable(true, "name");
+                */
 
-                WorkDay.AllDays.Add(((DateTime)date).Date, pcount.Rows.Count > 50);
             }
+        
 
             //生成所有人
             Persons.Clear();
-            CheckingIn.inst.comboBox1.Items.Clear();
+            CheckingIn.Inst.comboBox1.Items.Clear();
             foreach (DataRow r in _allnames.Rows)
             {
                 var n = r["name"].ToString();
 
                 Persons.Add(n, new PersonInfo(n));
-                CheckingIn.inst.comboBox1.Items.Add(n);
+                CheckingIn.Inst.comboBox1.Items.Add(n);
 
             }
-            if (CheckingIn.inst.comboBox1.Items.Count > 0)
-                CheckingIn.inst.comboBox1.SelectedIndex = 0;
+            if (CheckingIn.Inst.comboBox1.Items.Count > 0)
+                CheckingIn.Inst.comboBox1.SelectedIndex = 0;
 
             Log.Info("ReadOriginalFormDb done");
         }

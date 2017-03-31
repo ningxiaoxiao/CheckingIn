@@ -11,13 +11,14 @@ using System.Net;
 using System.Net.Mail;
 using System.Reflection;
 using System.Resources;
+using LitJson2;
 
 namespace CheckingIn
 {
     public partial class CheckingIn : Form
     {
 
-        public static CheckingIn inst;
+        public static CheckingIn Inst;
 
 
         private const string Smtpusername = "oatool@yj543.com";
@@ -28,11 +29,13 @@ namespace CheckingIn
 
 
         // private DataTable _alldates, _allnames;
-        private HttpSever http;
+        private readonly HttpSever _http;
 
+        public JsonData workdaysjson { get; private set; }
+        private const string Jsonyear = "2017";
         public CheckingIn()
         {
-            inst = this;
+            Inst = this;
 
             CheckForIllegalCrossThreadCalls = false;
             InitializeComponent();
@@ -46,7 +49,14 @@ namespace CheckingIn
             t.Start();
 
 
-            http = new HttpSever();
+            _http = new HttpSever();
+
+            var hh = new HttpHelper($"http://tool.bitefu.net/jiari/vip.php?d={Jsonyear}&type=0&apikey=123456");
+            var html = hh.OpenRead();
+            var sr = new StreamReader(html);
+            var htmlstr = sr.ReadToEnd();
+            workdaysjson = JsonMapper.ToObject(htmlstr);
+            workdaysjson = workdaysjson["data"][Jsonyear];
 
         }
 
@@ -141,7 +151,7 @@ namespace CheckingIn
 
         public static void comadd(string t)
         {
-            inst.comboBox1.Items.Add(t);
+            Inst.comboBox1.Items.Add(t);
         }
 
         private void OpenWorkTimeClassFile(string path)
@@ -212,6 +222,10 @@ namespace CheckingIn
         }
 
         #region 读取OA文件
+        /// <summary>
+        /// 加班
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenOverworkFile(string path)
         {
             DB.BeginTransaction();
@@ -258,6 +272,10 @@ namespace CheckingIn
 
 
         }
+        /// <summary>
+        /// 外出
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenOutFile(string path)
         {
             DB.BeginTransaction();
@@ -301,6 +319,10 @@ namespace CheckingIn
 
 
         }
+        /// <summary>
+        /// 考勤异常
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenAddCheckinFile(string path)
         {//开始事务
             DB.BeginTransaction();
@@ -365,6 +387,10 @@ namespace CheckingIn
 
 
         }
+        /// <summary>
+        /// 出差
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenOutworkFile(string path)
         {//开始事务
             DB.BeginTransaction();
@@ -400,7 +426,10 @@ namespace CheckingIn
 
 
         }
-
+        /// <summary>
+        /// 请假
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenVacationFile(string path)
         {
             //开始事务
@@ -609,7 +638,7 @@ namespace CheckingIn
         private void CheckingIn_FormClosed(object sender, FormClosedEventArgs e)
         {
             DB.Close();
-            http.Close();
+            _http.Close();
         }
 
         private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -839,6 +868,12 @@ namespace CheckingIn
         private void 删除所有数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DB.DelOrigina();
+        }
+
+        private void 工作日设置ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var f = new workdaysetting();
+            f.Show();
         }
     }
 
