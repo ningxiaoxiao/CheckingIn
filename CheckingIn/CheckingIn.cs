@@ -106,14 +106,16 @@ namespace CheckingIn
 
         private void OpenDataFile()
         {
-            var dt = ExcelToDs(openFileDialog1.FileName);
+
+
+            var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true);
 
             DB.DelOrigina();
             try
             {
                 DB.BeginTransaction();
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     //读出时间
                     var time = DateTime.Parse(i["日期时间"].ToString());
@@ -163,12 +165,12 @@ namespace CheckingIn
 
             try
             {
-                var dt = ExcelToDs(path);
+                var dt = new ExcelHelper(path).ExcelToDataTable("", true);
 
                 //开始事务
 
                 //进行遍历处理    
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     //读出时间
                     var name = i["姓名"].ToString();
@@ -196,14 +198,14 @@ namespace CheckingIn
         /// <param name="path"></param>
         private void OpenMailFile(string path)
         {
-            var dt = ExcelToDs(path);
+            var dt = new ExcelHelper(path).ExcelToDataTable("", true);
 
             DB.BeginTransaction();
 
             try
             {
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     //读出时间
                     var name = i["姓名"].ToString();
@@ -238,10 +240,10 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-                var dt = ExcelToDs(path);
+                var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true, true);
                 //开始事务
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
                     var st = DateTime.Parse(i["加班开始"].ToString());
@@ -282,12 +284,12 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-                var dt = ExcelToDs(path);
+                var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true, true);
                 //开始事务
 
 
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
                     var st = DateTime.Parse(i["外出时间"].ToString());
@@ -327,12 +329,12 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-                var dt = ExcelToDs(path);
+                var dt = new ExcelHelper(path).ExcelToDataTable("", true, true);
 
                 var count = new Dictionary<string, int>();
 
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
 
 
@@ -397,12 +399,12 @@ namespace CheckingIn
             {
 
 
-                var dt = ExcelToDs(path);
+                var dt = new ExcelHelper(path).ExcelToDataTable("", true, true);
 
 
 
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
                     var st = DateTime.Parse(i["实际开始"].ToString());
@@ -435,10 +437,10 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-                var dt = ExcelToDs(path);
+                var dt = new ExcelHelper(path).ExcelToDataTable("", true, true);
 
                 //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Tables[0].Rows)
+                foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
                     var st = DateTime.Parse(i["实际开始"].ToString());
@@ -461,23 +463,8 @@ namespace CheckingIn
         }
         #endregion
 
-        public DataSet ExcelToDs(string path)
-        {
-            var strConn = "Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + path + ";" + "Extended Properties=Excel 8.0;";
-            var conn = new OleDbConnection(strConn);
-            conn.Open();
-            var strExcel = "";
-            OleDbDataAdapter myCommand = null;
-            DataSet ds = null;
-            var dt = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-            var tableName = dt.Rows[0][2].ToString().Trim();
 
-            strExcel = $"select * from [{tableName}]";
-            myCommand = new OleDbDataAdapter(strExcel, strConn);
-            ds = new DataSet();
-            myCommand.Fill(ds);
-            return ds;
-        }
+
         public void WriteExcel(DataTable dt, string path)
         {
 
@@ -854,15 +841,21 @@ namespace CheckingIn
             s.Show();
         }
 
-        private void 删除所有数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void 删除考勤原始数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DB.DelOrigina();
+
         }
 
         private void 工作日设置ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var f = new workdaysetting();
             f.Show();
+        }
+
+        private void 清空OA数据ToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            DB.DelOA();
         }
     }
 

@@ -113,6 +113,7 @@
       <DependentUpon>CheckingIn.cs</DependentUpon>
     </Compile>
     <Compile Include="DB.cs" />
+    <Compile Include="ExcelHelper.cs" />
     <Compile Include="HttpHelper.cs" />
     <Compile Include="HttpServer.cs" />
     <Compile Include="Log.cs" />

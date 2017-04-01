@@ -11,17 +11,19 @@ namespace CheckingIn
     public static class DB
     {
         /// <summary>
-        /// 处理后的表格 check +oa
+        /// 处理后的oa数据表格
         /// </summary>
         public static DataTable OaResults;
 
         public static DataTable PersonInfos;
         /// <summary>
-        /// chick 原始表格
+        /// check 原始表格
         /// </summary>
         public static DataTable CheckOriginalDt;
 
-
+        /// <summary>
+        /// oa的原始表
+        /// </summary>
         public static DataTable OaOriginaDt;
 
         private static SQLiteConnection _db;
@@ -48,11 +50,17 @@ namespace CheckingIn
             Log.Info("read person done");
         }
 
-        internal static void DelOrigina()
+        public static void DelOrigina()
         {
             Cmd("delete  from original");
             ReadOriginalFormDb();
             Log.Info("delete original");
+        }
+        public static void DelOA()
+        {
+            Cmd("delete  from oa");
+            Readoa();
+            Log.Info("delete oa");
         }
         public static void ReadOriginalFormDb()
         {
@@ -298,7 +306,7 @@ namespace CheckingIn
             var ex = Cmd(sql);
         }
 
-        public static void OaResultAdd(string name, DateTime date, TimeSpan t, string i)
+        private static void OaResultAdd(string name, DateTime date, TimeSpan t, string i)
         {
             var r = OaResults.NewRow();
             r["name"] = name;
@@ -361,5 +369,6 @@ namespace CheckingIn
             _tran.Rollback();
             _tran = null;
         }
+
     }
 }

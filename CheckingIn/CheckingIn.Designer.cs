@@ -356,22 +356,23 @@
             // 删除文件ToolStripMenuItem
             // 
             this.删除文件ToolStripMenuItem.Name = "删除文件ToolStripMenuItem";
-            this.删除文件ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.删除文件ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.删除文件ToolStripMenuItem.Text = "删除文件";
             this.删除文件ToolStripMenuItem.Click += new System.EventHandler(this.删除文件ToolStripMenuItem_Click);
             // 
             // 删除所有数据ToolStripMenuItem
             // 
             this.删除所有数据ToolStripMenuItem.Name = "删除所有数据ToolStripMenuItem";
-            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.删除所有数据ToolStripMenuItem.Text = "删除所有数据";
-            this.删除所有数据ToolStripMenuItem.Click += new System.EventHandler(this.删除所有数据ToolStripMenuItem_Click);
+            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.删除所有数据ToolStripMenuItem.Text = "删除考勤原始数据";
+            this.删除所有数据ToolStripMenuItem.Click += new System.EventHandler(this.删除考勤原始数据ToolStripMenuItem_Click);
             // 
             // 清空OA数据ToolStripMenuItem
             // 
             this.清空OA数据ToolStripMenuItem.Name = "清空OA数据ToolStripMenuItem";
-            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.清空OA数据ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.清空OA数据ToolStripMenuItem.Text = "清空OA数据";
+            this.清空OA数据ToolStripMenuItem.Click += new System.EventHandler(this.清空OA数据ToolStripMenuItem_Click_1);
             // 
             // 工作日设置ToolStripMenuItem
             // 
