@@ -119,7 +119,7 @@ namespace CheckingIn
 
                     var startindex = 0;
                     if (delfirstrow) //有的表带标题的
-                        startindex = 1;
+                        startindex = 2;
 
 
 

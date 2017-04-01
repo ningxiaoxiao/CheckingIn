@@ -237,12 +237,13 @@ namespace CheckingIn
         /// <param name="path"></param>
         private void OpenOverworkFile(string path)
         {
-            DB.BeginTransaction();
+
             try
             {
                 var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true, true);
                 //开始事务
                 //进行遍历处理 生成新的表
+                DB.BeginTransaction();
                 foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
@@ -268,8 +269,9 @@ namespace CheckingIn
             }
             catch (Exception ex)
             {
-                Log.Err("加班写入数据库出现问题" + ex.Message);
                 DB.Rollback();
+                Log.Err("加班写入数据库出现问题" + ex.Message);
+
                 throw;
             }
 
@@ -363,7 +365,14 @@ namespace CheckingIn
                     }
 
                     var r = i["上班或下班打卡异常"].ToString();
-                    var p = DB.Persons[name];
+                    PersonInfo p;
+                    if (DB.Persons.ContainsKey(name))
+                        p = DB.Persons[name];
+                    else
+                    {
+                        p = new PersonInfo(name);
+                        DB.Persons.Add(name, p);
+                    }
 
                     if (r == "上班")
                         st += p.WorkTimeClass.InTime;
@@ -407,6 +416,10 @@ namespace CheckingIn
                 foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
+
+                    if (i["实际开始"].ToString() == "")
+                        continue;
+
                     var st = DateTime.Parse(i["实际开始"].ToString());
                     var se = DateTime.Parse(i["实际结束"].ToString());
 

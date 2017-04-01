@@ -89,7 +89,7 @@
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.Filter = "表格文件|*.xls";
+            this.openFileDialog1.Filter = "表格文件2003|*.xls|表格文件2010|*.xlsx";
             this.openFileDialog1.Multiselect = true;
             // 
             // comboBox1
@@ -232,14 +232,14 @@
             // 增加ToolStripMenuItem
             // 
             this.增加ToolStripMenuItem.Name = "增加ToolStripMenuItem";
-            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
+            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.增加ToolStripMenuItem.Text = "增加";
             this.增加ToolStripMenuItem.Click += new System.EventHandler(this.增加ToolStripMenuItem_Click);
             // 
             // readoafileToolStripMenuItem
             // 
             this.readoafileToolStripMenuItem.Name = "readoafileToolStripMenuItem";
-            this.readoafileToolStripMenuItem.Size = new System.Drawing.Size(142, 22);
+            this.readoafileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.readoafileToolStripMenuItem.Text = "读取OA文件";
             this.readoafileToolStripMenuItem.Click += new System.EventHandler(this.readoafileToolStripMenuItem_Click);
             // 
