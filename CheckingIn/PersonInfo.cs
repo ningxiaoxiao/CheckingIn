@@ -256,7 +256,7 @@ namespace CheckingIn
                 AddCheck(c);
             }
             //todo 写到数据库
-
+            Checks.Sort();
             _geted = true;
 
         }
@@ -270,8 +270,6 @@ namespace CheckingIn
 
             csjs.WriteArrayStart();
 
-            //sort
-            Checks.Sort();
 
             foreach (var c in Checks)
             {
@@ -586,12 +584,7 @@ namespace CheckingIn
         {
             get
             {
-                var s = "";
-                foreach (var w in Warns)
-                {
-                    s += w.Info + " ";
-                }
-                return s;
+                return Warns.Aggregate("", (current, w) => current + (w.Info + " "));
             }
         }
 

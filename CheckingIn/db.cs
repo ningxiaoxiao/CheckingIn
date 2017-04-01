@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Text;
+using System.Windows.Forms;
 
 namespace CheckingIn
 {
@@ -57,7 +58,7 @@ namespace CheckingIn
         {
             GetSql("select * from original", CheckOriginalDt);
 
-            
+
             //得到所有有人出勤的日期
             var dv = new DataView(CheckOriginalDt);
             //读出所有姓名
@@ -71,9 +72,14 @@ namespace CheckingIn
             foreach (DataRow dater in _alldates.Rows)
             {
                 //今日日期
-                var date = dater["date"];
+                var date = ((DateTime)dater["date"]).Date;
 
-                WorkDay.AllDays.Add(((DateTime)date).Date);
+                //去掉非工作日
+                var wd = new WorkDay(date);
+                if (wd.IsWorkDay)
+                {
+                    WorkDay.AllDays.Add(date);
+                }
                 //判断是不是工作日
                 /*
                 //如果有30个出勤,就算工作日
@@ -82,7 +88,9 @@ namespace CheckingIn
                 */
 
             }
-        
+            WorkDay.AllDays.Sort();
+
+
 
             //生成所有人
             Persons.Clear();
@@ -195,7 +203,7 @@ namespace CheckingIn
             Log.Info("Readoa done");
         }
 
-        
+
         public static void Insertdb(string tablename, string[] k, object[] v)
         {
 

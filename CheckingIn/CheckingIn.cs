@@ -9,8 +9,6 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Net;
 using System.Net.Mail;
-using System.Reflection;
-using System.Resources;
 using LitJson2;
 
 namespace CheckingIn
@@ -24,7 +22,7 @@ namespace CheckingIn
         private const string Smtpusername = "oatool@yj543.com";
         private const string Smtppassword = "123qweASD";
 
-
+        private const string outputfilename = "out.xls";
 
 
 
@@ -43,12 +41,7 @@ namespace CheckingIn
             openFileDialog1.FileOk += OpenFileDialog1_FileOk;
 
             Log.Creat(listView_log);
-
-
-            var t = new Thread(DB.Creat);
-            t.Start();
-
-
+            //得到非工作日
             _http = new HttpSever();
 
             var hh = new HttpHelper($"http://tool.bitefu.net/jiari/vip.php?d={Jsonyear}&type=0&apikey=123456");
@@ -57,6 +50,13 @@ namespace CheckingIn
             var htmlstr = sr.ReadToEnd();
             workdaysjson = JsonMapper.ToObject(htmlstr);
             workdaysjson = workdaysjson["data"][Jsonyear];
+
+
+            var t = new Thread(DB.Creat);
+            t.Start();
+
+
+
 
         }
 
@@ -153,7 +153,10 @@ namespace CheckingIn
         {
             Inst.comboBox1.Items.Add(t);
         }
-
+        /// <summary>
+        /// 班次表
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenWorkTimeClassFile(string path)
         {
             DB.BeginTransaction();
@@ -187,6 +190,10 @@ namespace CheckingIn
                 throw ex;
             }
         }
+        /// <summary>
+        /// 邮件表
+        /// </summary>
+        /// <param name="path"></param>
         private void OpenMailFile(string path)
         {
             var dt = ExcelToDs(path);
@@ -231,12 +238,8 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-
-
                 var dt = ExcelToDs(path);
                 //开始事务
-
-
                 //进行遍历处理 生成新的表
                 foreach (DataRow i in dt.Tables[0].Rows)
                 {
@@ -253,8 +256,6 @@ namespace CheckingIn
                     }
 
                     //写到表里
-
-
                     if (st.Month == monthCalendar1.SelectionStart.Month)
                         DB.OaOriginaAdd(name, st, se, "加班");
 
@@ -281,8 +282,6 @@ namespace CheckingIn
             DB.BeginTransaction();
             try
             {
-
-
                 var dt = ExcelToDs(path);
                 //开始事务
 
@@ -481,7 +480,11 @@ namespace CheckingIn
         }
         public void WriteExcel(DataTable dt, string path)
         {
-            Thread.Sleep(1000);
+
+
+
+            if (File.Exists(path))
+                File.Delete(path);
 
 
             var sw = new StreamWriter(path, false, Encoding.GetEncoding("gb2312"));//打开写文件流
@@ -504,7 +507,8 @@ namespace CheckingIn
 
                 for (var j = 0; j < dt.Columns.Count; j++)//一行中的每列
                 {
-                    sb.Append(dt.Rows[i][j] + "\t");//每个单元格内容，加到StringBuilder中
+                    if (!dt.Rows[i][j].ToString().Contains("正常"))
+                        sb.Append(dt.Rows[i][j] + "\t");//每个单元格内容，加到StringBuilder中
                 }
                 sb.Append(Environment.NewLine);
             }
@@ -521,9 +525,6 @@ namespace CheckingIn
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-
-
-
             //对当前数据进行处理
 
             var p = DB.Persons[comboBox1.Text];
@@ -643,56 +644,44 @@ namespace CheckingIn
 
         private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
-            /*
-            //从结果进行遍历
-            if (_alldates.Rows.Count == 0)
-                return;
 
+
+            //所有人遍历
             var count = 0;
             var dt = new DataTable();
             dt.Columns.Add("name");
-            foreach (DataRow d in _alldates.Rows)
+            //加日期
+            foreach (var d in WorkDay.AllDays)
             {
-                dt.Columns.Add(((DateTime)d["Date"]).Day.ToString());
+                dt.Columns.Add(d.ToShortDateString());
             }
-
+            toolStripProgressBar1.Maximum = DB.Persons.Count;
             //对每人个进行遍历
-            foreach (DataRow n in _allnames.Rows)
+            foreach (var p in DB.Persons)
             {
                 //当前人名字
-                var name = n["name"].ToString();
+                var name = p.Value.Name;
 
                 var dr = dt.NewRow();
                 dr["name"] = name;
+                p.Value.GetData();
 
-                //GetData(Name);
-                //todo
-
-                foreach (DataRow d in _alldates.Rows)
+                //得到信息
+                foreach (var c in p.Value.Checks)
                 {
-                    //得到这一天的警告数据
-                    var dv = new DataView(DB.WarnDt) { RowFilter = $"name = '{name}' AND date = '{d["Date"]}'" };
-                    var warntxt = "";
-                    foreach (DataRowView i in dv)
-                    {
-                        warntxt += i.Row["txt"] + " ";
-                    }
-                    if (warntxt == "")
-                        warntxt = "正常";
 
-                    dr[((DateTime)d["Date"]).Day.ToString()] = warntxt;
+                    dr[c.Date.ToString()] = c.warninfo;
+
+
                 }
-
                 dt.Rows.Add(dr);
 
                 count++;
-                toolStripProgressBar1.Maximum = _allnames.Rows.Count;
                 toolStripProgressBar1.Value = count;
             }
 
-            WriteExcel(dt, "test.xls");
-            */
+            WriteExcel(dt, outputfilename);
+
         }
 
         private void 读取班次表ToolStripMenuItem_Click(object sender, EventArgs e)
