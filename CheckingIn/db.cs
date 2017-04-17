@@ -3,36 +3,40 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
-using System.Text;
-using System.Windows.Forms;
 
 namespace CheckingIn
 {
     public static class DB
     {
         /// <summary>
-        /// 处理后的oa数据表格
-        /// </summary>
-        public static DataTable OaResults;
-
-        public static DataTable PersonInfos;
-        /// <summary>
-        /// check 原始表格
-        /// </summary>
-        public static DataTable CheckOriginalDt;
-
-        /// <summary>
         /// oa的原始表
         /// </summary>
         public static DataTable OaOriginaDt;
 
-        private static SQLiteConnection _db;
-
+        /// <summary>
+        /// 处理后的oa数据表格
+        /// </summary>
+        public static DataTable OaResults;
+        /// <summary>
+        /// 员工表
+        /// </summary>
+        public static DataTable PersonInfos;
         /// <summary>
         /// 全公司的人
         /// </summary>
         public static Dictionary<string, PersonInfo> Persons = new Dictionary<string, PersonInfo>();
 
+
+        /// <summary>
+        /// check 原始表格
+        /// </summary>
+        public static DataTable CheckOriginalDt;
+
+
+
+        private static SQLiteConnection _db;
+
+        private static SQLiteTransaction _tran;
 
         public static void Creat()
         {
@@ -122,14 +126,14 @@ namespace CheckingIn
             OaOriginaDt = GetSql("select * from oa order by no asc");
             OaResults.Clear();
             //读出原始OA数据
-            foreach (DataRow i in DB.OaOriginaDt.Rows)
+            foreach (DataRow i in OaOriginaDt.Rows)
             {
                 var reason = i["reason"].ToString();
                 var name = i["name"].ToString();
 
-                if (!DB.Persons.ContainsKey(name))
-                    DB.Persons.Add(name, new PersonInfo(name));
-                var p = DB.Persons[name];//得到人
+                if (!Persons.ContainsKey(name))
+                    Persons.Add(name, new PersonInfo(name));
+                var p = Persons[name];//得到人
                 switch (reason)
                 {
                     case "加班":
@@ -140,8 +144,8 @@ namespace CheckingIn
 
                         //模拟两次打卡
 
-                        DB.OaResultAdd(name, st1.Date, st1.TimeOfDay, reason + "开始");
-                        DB.OaResultAdd(name, et1.Date, et1.TimeOfDay, reason + "结束");
+                        OaResultAdd(name, st1.Date, st1.TimeOfDay, reason + "开始");
+                        OaResultAdd(name, et1.Date, et1.TimeOfDay, reason + "结束");
 
                         break;
                     case "外出":
@@ -150,8 +154,8 @@ namespace CheckingIn
                         var et = (DateTime)i["end"];
 
 
-                        DB.OaResultAdd(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason + "开始");
-                        DB.OaResultAdd(name, (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, reason + "结束");
+                        OaResultAdd(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason + "开始");
+                        OaResultAdd(name, (DateTime)i["end"], ((DateTime)i["end"]).TimeOfDay, reason + "结束");
 
                         var ds = (int)(et - st).TotalDays;//得到相隔天数
 
@@ -161,18 +165,18 @@ namespace CheckingIn
                             var c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)p.WorkTimeClass.InTime;//上班时间
 
                             if (c > st && c < et)//如果在相隔时间内,加一次打卡
-                                DB.OaResultAdd(name, c.Date, c.TimeOfDay, reason);
+                                OaResultAdd(name, c.Date, c.TimeOfDay, reason);
 
                             c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)p.WorkTimeClass.OutTime;
 
                             if (c > st && c < et)//
-                                DB.OaResultAdd(name, c.Date, c.TimeOfDay, reason);
+                                OaResultAdd(name, c.Date, c.TimeOfDay, reason);
 
                         }
                         break;
                     case "补登":
 
-                        DB.OaResultAdd(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason);
+                        OaResultAdd(name, (DateTime)i["start"], ((DateTime)i["start"]).TimeOfDay, reason);
 
                         break;
                     case "出差":
@@ -181,8 +185,8 @@ namespace CheckingIn
                         var ee = (DateTime)i["end"];
 
                         //先增加开始和结束
-                        DB.OaResultAdd(name, s, (TimeSpan)p.WorkTimeClass.InTime, reason + "开始");
-                        DB.OaResultAdd(name, ee, (TimeSpan)p.WorkTimeClass.OutTime, reason + "结束");
+                        OaResultAdd(name, s, (TimeSpan)p.WorkTimeClass.InTime, reason + "开始");
+                        OaResultAdd(name, ee, (TimeSpan)p.WorkTimeClass.OutTime, reason + "结束");
 
                         //去掉时间
                         s = s.Date;
@@ -193,8 +197,8 @@ namespace CheckingIn
 
                         for (var d = 0; d <= days.Days; d++)
                         {
-                            DB.OaResultAdd(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.InTime, reason);
-                            DB.OaResultAdd(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.OutTime, reason);
+                            OaResultAdd(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.InTime, reason);
+                            OaResultAdd(name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)p.WorkTimeClass.OutTime, reason);
                         }
 
                         break;
@@ -283,8 +287,6 @@ namespace CheckingIn
             }
 
         }
-
-        private static SQLiteTransaction _tran;
 
         public static int Cmd(string cmd)
         {

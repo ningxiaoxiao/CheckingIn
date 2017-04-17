@@ -10,6 +10,7 @@ namespace CheckingIn
 
     public class PersonInfo
     {
+        private DateTime _lastGetTime { get; set; }
 
         //总属性
         public string Name;

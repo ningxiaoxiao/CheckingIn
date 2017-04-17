@@ -9,6 +9,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Net;
 using System.Net.Mail;
+using DotNet4.Utilities;
 using LitJson2;
 
 namespace CheckingIn
@@ -44,10 +45,15 @@ namespace CheckingIn
             //得到非工作日
             _http = new HttpSever();
 
-            var hh = new HttpHelper($"http://tool.bitefu.net/jiari/vip.php?d={Jsonyear}&type=0&apikey=123456");
-            var html = hh.OpenRead();
-            var sr = new StreamReader(html);
-            var htmlstr = sr.ReadToEnd();
+            var h = new HttpHelper();
+            var i = new HttpItem()
+            {
+                URL = $"http://tool.bitefu.net/jiari/vip.php?d={Jsonyear}&type=0&apikey=123456",
+                IsToLower = false,
+            };
+
+
+            var htmlstr = h.GetHtml(i).Html;
             workdaysjson = JsonMapper.ToObject(htmlstr);
             workdaysjson = workdaysjson["data"][Jsonyear];
 
@@ -82,24 +88,7 @@ namespace CheckingIn
                 case "选择邮箱文件":
                     OpenMailFile(openFileDialog1.FileName);
                     break;
-                case "选择OA文件":
 
-                    foreach (var item in openFileDialog1.FileNames)
-                    {
-                        if (item.Contains("加班"))
-                            OpenOverworkFile(item);
-                        else if (item.Contains("外出"))
-                            OpenOutFile(item);
-                        else if (item.Contains("出差"))
-                            OpenOutworkFile(item);
-                        else if (item.Contains("考勤异常"))
-                            OpenAddCheckinFile(item);
-                        else
-                            Log.Err("未知文件-" + item);
-                    }
-                    //刷新oa表
-                    DB.Readoa();
-                    break;
             }
 
         }
@@ -150,7 +139,10 @@ namespace CheckingIn
 
 
         }
-
+        /// <summary>
+        /// 列表中加人名
+        /// </summary>
+        /// <param name="t"></param>
         public static void comadd(string t)
         {
             Inst.comboBox1.Items.Add(t);
@@ -456,14 +448,14 @@ namespace CheckingIn
                 foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
-                    var st = DateTime.Parse(i["实际开始"].ToString());
-                    var se = DateTime.Parse(i["实际结束"].ToString());
+                    var st = DateTime.Parse(i["开始时间"].ToString());
+                    var se = DateTime.Parse(i["结束时间"].ToString());
+                    var reson = i["请假类型"].ToString();
 
                     //写到表里
                     if (st.Month == monthCalendar1.SelectionStart.Month)
-                        DB.OaOriginaAdd(name, st, se, "出差");
+                        DB.OaOriginaAdd(name, st, se, reson);
                 }
-
                 DB.Commit();
                 Log.Info(path + "-read done");
             }
@@ -840,12 +832,6 @@ namespace CheckingIn
             System.Diagnostics.Process.Start("http://127.0.0.1:8080?name=" + comboBox1.Text);
         }
 
-        private void readoafileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.Title = "选择OA文件";
-            openFileDialog1.ShowDialog();
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             var dateview = new DataView(DB.CheckOriginalDt) { RowFilter = $"date ='{monthCalendar1.SelectionStart.Date}'" };//去重
@@ -869,6 +855,13 @@ namespace CheckingIn
         private void 清空OA数据ToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
             DB.DelOA();
+        }
+
+        private void 读取oa数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //得到前一天的数据
+            oahelper.getAddwork(DateTime.Now.AddDays(-1));
+
         }
     }
 

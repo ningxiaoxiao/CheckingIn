@@ -114,7 +114,7 @@
     </Compile>
     <Compile Include="DB.cs" />
     <Compile Include="ExcelHelper.cs" />
-    <Compile Include="HttpHelper.cs" />
+    <Compile Include="HttpHelper2.cs" />
     <Compile Include="HttpServer.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="oadata.cs">
@@ -123,6 +123,7 @@
     <Compile Include="oadata.Designer.cs">
       <DependentUpon>oadata.cs</DependentUpon>
     </Compile>
+    <Compile Include="oahelper.cs" />
     <Compile Include="PersonInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
