@@ -40,41 +40,11 @@ namespace CheckingIn
         }
 
         private static DateTime _dateTime;
+
         /// <summary>
-        /// 以日期为开始 
+        /// 得到数据
         /// </summary>
-        /// <param name="st">开始日期 不包含</param>
-        /// <returns></returns>
-        private static void getAddwork()
-        {
-            //3     4    5         6        7       8    9
-            //姓名,部门,申请日期,开始时间,结束时间,事由,小计
-            login();
-            var d = getoaData("加班.txt");
-            var trans = DB.Context.BeginTransaction();
-            foreach (JsonData jrow in d)
-            {
-                var kssj = DateTime.Parse(jrow["field0006"].ToString());
-
-                if (kssj.Date <= _dateTime.Date)//数据合法时间
-                    continue;
-
-                var o = new Dos.Model.oa()
-                {
-                    name = jrow["field0003"].ToString(),
-                    start = kssj,
-                    end = DateTime.Parse(jrow["field0007"].ToString()),
-                    reason = "加班"
-                };
-                //加入oa表中
-                DB.Context.Insert<Dos.Model.oa>(o);
-
-
-            }
-            trans.Commit();
-            Log.Info("读取加班完成" + _dateTime);
-        }
-
+        /// <param name="t">开始时间 包含</param>
         public static void GetData(DateTime t)
         {
             _dateTime = t;
@@ -85,20 +55,20 @@ namespace CheckingIn
             readjson("出差", 1, 12, 12, 13, 5);
 
         }
-        private static object locker = new object();
+
         private static void readjson(string m, int namearg, int startarg, int endarg, int timearg, int subreasonarg = -1)
         {
 
-
             login();
             var d = getoaData(m + ".txt");
+
             var trans = DB.Context.BeginTransaction();
             var count = 0;
             foreach (JsonData jrow in d)
             {
                 var sqrj = DateTime.Parse(jrow["field00" + timearg.ToString("00")].ToString());
 
-                if (sqrj.Date <= _dateTime.Date)//数据合法时间
+                if (sqrj.Date < _dateTime.Date)//数据合法时间
                     continue;
 
                 var o = new Dos.Model.oa()
@@ -116,8 +86,6 @@ namespace CheckingIn
                 {
                     o.subreason = jrow["field00" + subreasonarg.ToString("00")].ToString();
                 }
-
-
 
                 //加入oa表中
                 DB.Context.Insert<Dos.Model.oa>(trans, o);

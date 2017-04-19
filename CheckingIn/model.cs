@@ -165,7 +165,7 @@ namespace Dos.Model
         #region Model
         private string _name;
         private DateTime? _date;
-        private int? _time;
+        private long? _time;
         private string _info;
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace Dos.Model
         /// 
         /// </summary>
         [Field("time")]
-        public int? time
+        public long? time
         {
             get { return _time; }
             set

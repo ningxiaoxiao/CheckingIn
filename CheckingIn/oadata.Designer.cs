@@ -30,7 +30,6 @@
         {
             this.dateTimePicker_end = new System.Windows.Forms.DateTimePicker();
             this.button_add = new System.Windows.Forms.Button();
-            this.comboBox_name = new System.Windows.Forms.ComboBox();
             this.dateTimePicker_start = new System.Windows.Forms.DateTimePicker();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
@@ -39,6 +38,7 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.radioButton6 = new System.Windows.Forms.RadioButton();
+            this.textBox_name = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -46,7 +46,7 @@
             // 
             this.dateTimePicker_end.CustomFormat = "yyyy/MM/dd HH:mm";
             this.dateTimePicker_end.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePicker_end.Location = new System.Drawing.Point(87, 36);
+            this.dateTimePicker_end.Location = new System.Drawing.Point(118, 36);
             this.dateTimePicker_end.Name = "dateTimePicker_end";
             this.dateTimePicker_end.Size = new System.Drawing.Size(136, 21);
             this.dateTimePicker_end.TabIndex = 13;
@@ -54,7 +54,7 @@
             // 
             // button_add
             // 
-            this.button_add.Location = new System.Drawing.Point(261, 12);
+            this.button_add.Location = new System.Drawing.Point(260, 9);
             this.button_add.Name = "button_add";
             this.button_add.Size = new System.Drawing.Size(75, 23);
             this.button_add.TabIndex = 12;
@@ -62,21 +62,11 @@
             this.button_add.UseVisualStyleBackColor = true;
             this.button_add.Click += new System.EventHandler(this.button_add_Click);
             // 
-            // comboBox_name
-            // 
-            this.comboBox_name.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
-            this.comboBox_name.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
-            this.comboBox_name.FormattingEnabled = true;
-            this.comboBox_name.Location = new System.Drawing.Point(12, 12);
-            this.comboBox_name.Name = "comboBox_name";
-            this.comboBox_name.Size = new System.Drawing.Size(69, 20);
-            this.comboBox_name.TabIndex = 11;
-            // 
             // dateTimePicker_start
             // 
             this.dateTimePicker_start.CustomFormat = "yyyy/MM/dd HH:mm";
             this.dateTimePicker_start.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePicker_start.Location = new System.Drawing.Point(87, 11);
+            this.dateTimePicker_start.Location = new System.Drawing.Point(118, 11);
             this.dateTimePicker_start.Name = "dateTimePicker_start";
             this.dateTimePicker_start.Size = new System.Drawing.Size(136, 21);
             this.dateTimePicker_start.TabIndex = 10;
@@ -160,11 +150,19 @@
             this.radioButton6.UseVisualStyleBackColor = true;
             this.radioButton6.CheckedChanged += new System.EventHandler(this.radioButton1_Click);
             // 
+            // textBox_name
+            // 
+            this.textBox_name.Location = new System.Drawing.Point(12, 11);
+            this.textBox_name.Name = "textBox_name";
+            this.textBox_name.Size = new System.Drawing.Size(100, 21);
+            this.textBox_name.TabIndex = 21;
+            // 
             // oadata
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(660, 328);
+            this.Controls.Add(this.textBox_name);
             this.Controls.Add(this.radioButton6);
             this.Controls.Add(this.radioButton5);
             this.Controls.Add(this.dataGridView1);
@@ -174,7 +172,6 @@
             this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.dateTimePicker_end);
             this.Controls.Add(this.button_add);
-            this.Controls.Add(this.comboBox_name);
             this.Controls.Add(this.dateTimePicker_start);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -191,7 +188,6 @@
         #endregion
         private System.Windows.Forms.DateTimePicker dateTimePicker_end;
         private System.Windows.Forms.Button button_add;
-        private System.Windows.Forms.ComboBox comboBox_name;
         private System.Windows.Forms.DateTimePicker dateTimePicker_start;
         private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.RadioButton radioButton2;
@@ -200,5 +196,6 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.RadioButton radioButton5;
         private System.Windows.Forms.RadioButton radioButton6;
+        private System.Windows.Forms.TextBox textBox_name;
     }
 }

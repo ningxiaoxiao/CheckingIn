@@ -175,8 +175,7 @@ namespace CheckingIn
             //遍历所有日期
             foreach (var date in AllDays)
             {
-
-
+                if (date >= DateTime.Today) break;
 
                 var willaddcheck = new CheckInfo(this, date);
                 if (isworkday(date))

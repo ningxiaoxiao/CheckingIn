@@ -9,13 +9,7 @@ namespace CheckingIn
         public oadata()
         {
             InitializeComponent();
-
-            var cm = new object[CheckingIn.Inst.comboBox1.Items.Count];
-
-            CheckingIn.Inst.comboBox1.Items.CopyTo(cm, 0);
-            comboBox_name.Items.AddRange(cm);
-            if (comboBox_name.Items.Count > 0)
-                comboBox_name.SelectedIndex = 0;
+            
 
             dataGridView1.DataSource = DB.OaOriginaDt;
 
@@ -25,15 +19,26 @@ namespace CheckingIn
         {
 
             //数据合法性
-            if (comboBox_name.Text == "" || dateTimePicker_start.Value > dateTimePicker_end.Value)
+            if (textBox_name.Text == "" || dateTimePicker_start.Value > dateTimePicker_end.Value)
                 return;
 
 
             //写到表里
 
+            var o = new Dos.Model.oa()
+            {
+                name = textBox_name.Text,
+                date = dateTimePicker_start.Value.Date,
+                start = dateTimePicker_start.Value,
+                end = dateTimePicker_end.Value.AddMinutes(1),
+                reason = _curReason,
+                subreason = ""
+
+            };
+
+            DB.Context.Insert(o);
 
 
-            DB.OaOriginaAdd(comboBox_name.Text, dateTimePicker_start.Value, dateTimePicker_end.Value.AddMinutes(1), _curReason);
         }
 
         private void radioButton1_Click(object sender, EventArgs e)
@@ -63,7 +68,7 @@ namespace CheckingIn
 
         private void oadata_FormClosed(object sender, FormClosedEventArgs e)
         {
-          
+
         }
     }
 }

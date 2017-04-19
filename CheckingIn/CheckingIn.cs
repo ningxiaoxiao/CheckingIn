@@ -12,6 +12,8 @@ using System.Net.Mail;
 using DotNet4.Utilities;
 using LitJson2;
 
+
+
 namespace CheckingIn
 {
     public partial class CheckingIn : Form
@@ -43,11 +45,24 @@ namespace CheckingIn
 
             Log.Creat(listView_log);
 
-           
 
-            //得到非工作日
+
+            //启动http服务
             _http = new HttpSever();
 
+            //得到非工作日
+            GetNoWorkday();
+
+
+            DB.Creat();
+
+
+
+
+
+        }
+        private void GetNoWorkday()
+        {
             var h = new HttpHelper();
             var i = new HttpItem()
             {
@@ -59,15 +74,7 @@ namespace CheckingIn
             var htmlstr = h.GetHtml(i).Html;
             workdaysjson = JsonMapper.ToObject(htmlstr);
             workdaysjson = workdaysjson["data"][Jsonyear];
-
-            DB.Creat();
-
-
-
-
-
         }
-
         /// <summary>
         /// 读取文件
         /// </summary>
@@ -101,10 +108,10 @@ namespace CheckingIn
 
             var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true);
 
-            DB.DelOrigina();
+            DB.Context.DeleteAll<Dos.Model.original>();
+            var tran = DB.Context.BeginTransaction();
             try
             {
-                DB.BeginTransaction();
                 //进行遍历处理 生成新的表
                 foreach (DataRow i in dt.Rows)
                 {
@@ -122,41 +129,36 @@ namespace CheckingIn
                     {
                         tt = time.TimeOfDay;
                     }
-                    //增加新记录
-                    DB.AddCheckOriginal(i["姓名"].ToString(), time.Date, tt, "");
+
+                    var o = new Dos.Model.original()
+                    {
+                        name = i["姓名"].ToString(),
+                        date = time.Date,
+                        time = tt.Ticks,
+
+                    };
+
+                    DB.Context.Insert(tran, o);
+
                 }
-                DB.Commit();
+                tran.Commit();
             }
             catch (Exception ex)
             {
-                DB.Rollback();
+                tran.Rollback();
                 Log.Err("读取考勤器文件出错." + ex.Message);
             }
 
-            DB.ReadOriginalFormDb();
 
             Log.Info("读取考勤器文件完成");
-
-
-
-
         }
-        /// <summary>
-        /// 列表中加人名
-        /// </summary>
-        /// <param name="t"></param>
-        public static void comadd(string t)
-        {
-            Inst.comboBox1.Items.Add(t);
-        }
+
         /// <summary>
         /// 班次表
         /// </summary>
         /// <param name="path"></param>
         private void OpenWorkTimeClassFile(string path)
         {
-            DB.BeginTransaction();
-
             try
             {
                 var dt = new ExcelHelper(path).ExcelToDataTable("", true);
@@ -171,18 +173,15 @@ namespace CheckingIn
                     //读出时间
                     var classname = i["对应时段"].ToString();
                     //写到表里
-                    var dv = new DataView(DB.PersonInfos) { RowFilter = $"name='{name}'" };
-                    DB.Cmd(dv.Count > 0
-                        ? $"update person set worktimeclass='{classname}' where name='{name}'"
-                        : $"insert into person (name,worktimeclass) values ('{name}','{classname}')");
+                    //todo
                 }
-                DB.Commit();
-                DB.ReadPersonDb();
+
+
                 Log.Info("worktimeclass done");
             }
             catch (Exception ex)
             {
-                DB.Rollback();
+
                 throw ex;
             }
         }
@@ -194,7 +193,7 @@ namespace CheckingIn
         {
             var dt = new ExcelHelper(path).ExcelToDataTable("", true);
 
-            DB.BeginTransaction();
+
 
             try
             {
@@ -211,264 +210,18 @@ namespace CheckingIn
                         ? $"update person set mail='{mail}' where name='{name}'"
                         : $"insert into person (name,mail) values ('{name}','{mail}')");
                 }
-                DB.Commit();
-
-                DB.ReadPersonDb();
+                //todo 
                 Log.Info("mail done");
             }
             catch (Exception ex)
             {
-                DB.Rollback();
+
 
                 throw ex;
             }
         }
 
-        #region 读取OA文件
-        /// <summary>
-        /// 加班
-        /// </summary>
-        /// <param name="path"></param>
-        private void OpenOverworkFile(string path)
-        {
 
-            try
-            {
-                var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true, true);
-                //开始事务
-                //进行遍历处理 生成新的表
-                DB.BeginTransaction();
-                foreach (DataRow i in dt.Rows)
-                {
-                    var name = i["姓名"].ToString();
-                    var st = DateTime.Parse(i["加班开始"].ToString());
-                    var se = DateTime.Parse(i["加班结束"].ToString());
-                    var d = i["天"].ToString();
-                    var h = i["小时"].ToString();
-
-                    if (se < st)
-                    {
-                        Log.Err(name + "-非法单据,加班线束小于加班开始");
-                        continue;
-                    }
-
-                    //写到表里
-                    if (st.Month == monthCalendar1.SelectionStart.Month)
-                        DB.OaOriginaAdd(name, st, se, "加班");
-
-                }
-                DB.Commit();
-
-                Log.Info(path + "-read done");
-            }
-            catch (Exception ex)
-            {
-                DB.Rollback();
-                Log.Err("加班写入数据库出现问题" + ex.Message);
-
-                throw;
-            }
-
-
-        }
-        /// <summary>
-        /// 外出
-        /// </summary>
-        /// <param name="path"></param>
-        private void OpenOutFile(string path)
-        {
-            DB.BeginTransaction();
-            try
-            {
-                var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true, true);
-                //开始事务
-
-
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Rows)
-                {
-                    var name = i["姓名"].ToString();
-                    var st = DateTime.Parse(i["外出时间"].ToString());
-                    var se = DateTime.Parse(i["实际返回"].ToString());
-
-                    if (se < st)
-                    {
-                        Log.Err(name + "-非法单据,返回时间小于开始时间");
-                        continue;
-                    }
-
-
-                    //写到表里
-                    if (st.Month == monthCalendar1.SelectionStart.Month)
-                        DB.OaOriginaAdd(name, st, se, "外出");
-
-                }
-                DB.Commit();
-
-                Log.Info(path + "-read done");
-            }
-            catch (Exception ex)
-            {
-                Log.Err("外出写入数据库出现问题" + ex.Message);
-                DB.Rollback();
-                throw;
-            }
-
-
-        }
-        /// <summary>
-        /// 考勤异常
-        /// </summary>
-        /// <param name="path"></param>
-        private void OpenAddCheckinFile(string path)
-        {//开始事务
-            DB.BeginTransaction();
-            try
-            {
-                var dt = new ExcelHelper(path).ExcelToDataTable("", true, true);
-
-                var count = new Dictionary<string, int>();
-
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Rows)
-                {
-
-
-                    var name = i["姓名"].ToString();
-
-
-                    var st = DateTime.Parse(i["打卡异常时间"].ToString());
-
-
-                    //月份不对.不处理
-                    if (st.Month != monthCalendar1.SelectionStart.Month)
-                        continue;
-
-                    if (count.ContainsKey(name))
-                    {
-                        count[name] = count[name] + 1;
-                        if (count[name] >= 4)
-                        {
-                            Log.Warn(name + "-超出3次补登,请注意");
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        count.Add(name, 1);
-                    }
-
-                    var r = i["上班或下班打卡异常"].ToString();
-                    PersonInfo p;
-                    if (DB.Persons.ContainsKey(name))
-                        p = DB.Persons[name];
-                    else
-                    {
-                        p = new PersonInfo(name);
-                        DB.Persons.Add(name, p);
-                    }
-
-                    if (r == "上班")
-                        st += p.WorkTimeClass.InTime;
-                    else
-                        st += p.WorkTimeClass.OutTime;
-
-                    //写到表里
-
-                    DB.OaOriginaAdd(name, st, st, "补登");
-                }
-
-                DB.Commit();
-
-                Log.Info(path + "-read done");
-            }
-            catch (Exception ex)
-            {
-                Log.Warn("补登写入数据库出现问题" + ex.Message);
-                DB.Rollback();
-                throw;
-            }
-
-
-        }
-        /// <summary>
-        /// 出差
-        /// </summary>
-        /// <param name="path"></param>
-        private void OpenOutworkFile(string path)
-        {//开始事务
-            DB.BeginTransaction();
-            try
-            {
-
-
-                var dt = new ExcelHelper(path).ExcelToDataTable("", true, true);
-
-
-
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Rows)
-                {
-                    var name = i["姓名"].ToString();
-
-                    if (i["实际开始"].ToString() == "")
-                        continue;
-
-                    var st = DateTime.Parse(i["实际开始"].ToString());
-                    var se = DateTime.Parse(i["实际结束"].ToString());
-
-                    //写到表里
-                    if (st.Month == monthCalendar1.SelectionStart.Month)
-                        DB.OaOriginaAdd(name, st, se, "出差");
-                }
-
-                DB.Commit();
-                Log.Info(path + "-read done");
-            }
-            catch (Exception ex)
-            {
-                Log.Warn("出差写入数据库出现问题" + ex.Message);
-                DB.Rollback();
-                throw;
-            }
-
-
-        }
-        /// <summary>
-        /// 请假
-        /// </summary>
-        /// <param name="path"></param>
-        private void OpenVacationFile(string path)
-        {
-            //开始事务
-            DB.BeginTransaction();
-            try
-            {
-                var dt = new ExcelHelper(path).ExcelToDataTable("", true, true);
-
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Rows)
-                {
-                    var name = i["姓名"].ToString();
-                    var st = DateTime.Parse(i["开始时间"].ToString());
-                    var se = DateTime.Parse(i["结束时间"].ToString());
-                    var reson = i["请假类型"].ToString();
-
-                    //写到表里
-                    if (st.Month == monthCalendar1.SelectionStart.Month)
-                        DB.OaOriginaAdd(name, st, se, reson);
-                }
-                DB.Commit();
-                Log.Info(path + "-read done");
-            }
-            catch (Exception ex)
-            {
-                Log.Warn("假期写入数据库出现问题" + ex.Message);
-                DB.Rollback();
-                throw;
-            }
-        }
-        #endregion
 
 
 
@@ -506,74 +259,13 @@ namespace CheckingIn
                 }
                 sb.Append(Environment.NewLine);
             }
-
             sw.Write(sb.ToString());//文件流写入内容
             sw.Flush();
             sw.Close();
-
-
         }
 
 
 
-
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //对当前数据进行处理
-
-            var p = DB.Persons[comboBox1.Text];
-            
-
-            //统计信息
-            
-            monthCalendar1.RemoveAllBoldedDates();
-            listView_warn.Items.Clear();
-
-            foreach (var c in p.Checks)
-            {
-
-                foreach (var w in c.Warns)
-                {
-                    monthCalendar1.AddBoldedDate(w.Date);
-                    listView_warn.Items.Add(
-                   new ListViewItem(new[]
-                   {
-                       w.Date.ToString(),
-                        w.Info  })
-                   );
-                }
-            }
-
-            var v = monthCalendar1.BoldedDates.Length > 0 ? monthCalendar1.BoldedDates[0] : monthCalendar1.SelectionStart;
-
-            monthCalendar1.SetDate(v.AddMonths(1));
-            monthCalendar1.SetDate(v);
-
-            //得到oa数据
-            oa_dataGridView2.DataSource = DB.GetSql("select * from oa where name ='" + p.Name + "'");
-
-        }
-
-        private void listView_warn_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //得到日期
-            if (listView_warn.SelectedItems.Count == 0)
-                return;
-
-            var d = listView_warn.SelectedItems[0].SubItems[0].Text;
-
-            var dt = DateTime.Parse(d);
-
-            //选定日期
-            monthCalendar1.SetDate(dt);
-
-        }
-
-        private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
-        {
-
-           
-        }
 
 
         private void 打开考勤器文件ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -614,7 +306,7 @@ namespace CheckingIn
 
                 var dr = dt.NewRow();
                 dr["name"] = name;
-               // p.Value.GetData();
+                // p.Value.GetData();
 
                 //得到信息
                 foreach (var c in p.Value.Checks)
@@ -659,7 +351,7 @@ namespace CheckingIn
                     throw new Exception("邮箱地址不合法");
                 }
 
-               // p.GetData();
+                // p.GetData();
 
                 //统计信息
                 var body = $"{p.Name}-考勤分析报表\r\n";
@@ -708,7 +400,6 @@ namespace CheckingIn
 
         private void 向当前用户发送ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Sendmail(DB.Persons[comboBox1.Text]);
         }
 
         private void 加班ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -742,54 +433,32 @@ namespace CheckingIn
         }
 
 
-        private void comboBox1_TextUpdate(object sender, EventArgs e)
-        {
-            if (comboBox1.AutoCompleteMode != AutoCompleteMode.SuggestAppend)
-                comboBox1.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-        }
-
-        private void 清空OA数据ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DB.Cmd("delete from oa");
-        }
 
         private void 个人信息表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var s = new ShowData(DB.PersonInfos);
+            var s = new ShowData(DB.Context.From<Dos.Model.person>().ToDataTable());
             s.Show();
         }
 
 
         private void 原始表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var s = new ShowData(DB.CheckOriginalDt);
+            var s = new ShowData(DB.Context.From<Dos.Model.original>().ToDataTable());
             s.Show();
         }
 
         private void oa表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var sql = "select * from oa";
-            var k = new ShowData(DB.GetSql(sql));
-            k.Show();
-        }
-
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("http://127.0.0.1:8080?name=" + comboBox1.Text);
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            var dateview = new DataView(DB.CheckOriginalDt) { RowFilter = $"date ='{monthCalendar1.SelectionStart.Date}'" };//去重
-            var pcount = dateview.ToTable(true, "name");
-            var s = new ShowData(pcount);
+            var s = new ShowData(DB.Context.From<Dos.Model.oa>().ToDataTable());
             s.Show();
         }
 
+
+
         private void 删除考勤数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DB.DelOrigina();
+            var i = DB.Context.DeleteAll<Dos.Model.original>();
+            Log.Info("delete original,count=" + i);
 
         }
 
@@ -801,13 +470,19 @@ namespace CheckingIn
 
         private void 删除OA数据ToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
-            DB.DelOA();
+            var i = DB.Context.DeleteAll<Dos.Model.oa>();
+            Log.Info("delete oa,count=" + i);
         }
 
         private void 读取oa数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //得到前一天的数据
-            oahelper.GetData(monthCalendar1.SelectionStart.Date);
+
+            var t = DateTime.Today;
+            t = t.AddDays(-t.Day + 1);
+
+
+            //得到当月第一天
+            oahelper.GetData(t);
 
         }
     }
