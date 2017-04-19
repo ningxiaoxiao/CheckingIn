@@ -15,6 +15,7 @@ namespace CheckingIn
         private static HttpHelper http;
         private static void login()
         {
+            if (jidcookie != "") return;//已经登录了.
             http = new HttpHelper();
             var item = new HttpItem()
             {
@@ -38,31 +39,100 @@ namespace CheckingIn
             }
         }
 
+        private static DateTime _dateTime;
         /// <summary>
         /// 以日期为开始 
         /// </summary>
         /// <param name="st">开始日期 不包含</param>
         /// <returns></returns>
-        public static DataTable getAddwork(DateTime st)
+        private static void getAddwork()
+        {
+            //3     4    5         6        7       8    9
+            //姓名,部门,申请日期,开始时间,结束时间,事由,小计
+            login();
+            var d = getoaData("加班.txt");
+            var trans = DB.Context.BeginTransaction();
+            foreach (JsonData jrow in d)
+            {
+                var kssj = DateTime.Parse(jrow["field0006"].ToString());
+
+                if (kssj.Date <= _dateTime.Date)//数据合法时间
+                    continue;
+
+                var o = new Dos.Model.oa()
+                {
+                    name = jrow["field0003"].ToString(),
+                    start = kssj,
+                    end = DateTime.Parse(jrow["field0007"].ToString()),
+                    reason = "加班"
+                };
+                //加入oa表中
+                DB.Context.Insert<Dos.Model.oa>(o);
+
+
+            }
+            trans.Commit();
+            Log.Info("读取加班完成" + _dateTime);
+        }
+
+        public static void GetData(DateTime t)
+        {
+            _dateTime = t;
+            readjson("加班", 7, 3, 4, 3);
+            readjson("外出", 1, 4, 8, 4);
+            readjson("休假", 1, 8, 9, 8, 7);
+            readjson("补登", 3, 5, 5, 5, 6);
+            readjson("出差", 1, 12, 12, 13, 5);
+
+        }
+        private static object locker = new object();
+        private static void readjson(string m, int namearg, int startarg, int endarg, int timearg, int subreasonarg = -1)
         {
 
 
-
-            //3     4    5         6        7       8    9
-            //姓名,部门,申请日期,开始时间,结束时间,事由,小计
-            var ret = new DataTable();
-            ret.Columns.Add("姓名", typeof(string));
-            ret.Columns.Add("开始时间", typeof(DateTime));
-            ret.Columns.Add("结束时间", typeof(DateTime));
-            ret.Columns.Add("事由", typeof(string));
-            ret.Columns.Add("小计", typeof(int));
-
-
-
-
-
             login();
-            var t = File.OpenText("加班.txt").ReadToEnd();
+            var d = getoaData(m + ".txt");
+            var trans = DB.Context.BeginTransaction();
+            var count = 0;
+            foreach (JsonData jrow in d)
+            {
+                var sqrj = DateTime.Parse(jrow["field00" + timearg.ToString("00")].ToString());
+
+                if (sqrj.Date <= _dateTime.Date)//数据合法时间
+                    continue;
+
+                var o = new Dos.Model.oa()
+                {
+                    name = jrow["field00" + namearg.ToString("00")].ToString(),
+                    date = DateTime.Parse(jrow["field00" + startarg.ToString("00")].ToString()).Date,
+                    start = DateTime.Parse(jrow["field00" + startarg.ToString("00")].ToString()),
+                    end = DateTime.Parse(jrow["field00" + endarg.ToString("00")].ToString()),
+                    reason = m,
+                };
+
+
+
+                if (subreasonarg != -1)
+                {
+                    o.subreason = jrow["field00" + subreasonarg.ToString("00")].ToString();
+                }
+
+
+
+                //加入oa表中
+                DB.Context.Insert<Dos.Model.oa>(trans, o);
+                count++;
+            }
+
+            trans.Commit();
+
+            Log.Info($"读取{m}完成,共查询{d.Count}条记录,合法{count}条,合法时间{_dateTime}");
+        }
+
+        private static JsonData getoaData(string findTxtPath)
+        {
+
+            var t = File.OpenText(findTxtPath).ReadToEnd();
             var item = new HttpItem()
             {
                 URL = "http://192.168.1.254/seeyon/ajax.do?method=ajaxAction&managerName=formQueryResultManager&rnd=" + new Random().Next(10000),
@@ -75,28 +145,7 @@ namespace CheckingIn
             var html = http.GetHtml(item).Html;
 
             var j = JsonMapper.ToObject(html);
-            var d = j["data"];
-            foreach (JsonData jrow in d)
-            {
-                var kssj = DateTime.Parse(jrow["field0006"].ToString());
-                if (kssj.Date <= st.Date)
-                    continue;
-
-
-
-                var row = ret.NewRow();
-                row["姓名"] = jrow["field0003"].ToString();
-                row["开始时间"] = kssj;
-                row["结束时间"] = DateTime.Parse(jrow["field0007"].ToString());
-                row["事由"] = jrow["field0008"].ToString();
-                row["小计"] = int.Parse(jrow["field0009"].ToString());
-
-                ret.Rows.Add(row);
-
-            }
-
-            Log.Info("读取加班完成");
-            return ret;
+            return j["data"];
 
         }
     }

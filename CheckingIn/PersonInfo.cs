@@ -23,34 +23,18 @@ namespace CheckingIn
         public WorkTimeClassInfo WorkTimeClass;
 
         /// <summary>
-        /// 可用假期
+        /// 剩余假期
         /// </summary>
-        public TimeSpan Holidays = TimeSpan.Zero;
+        public TimeSpan CanUseHolidayHour = TimeSpan.Zero;
+
+        //当月属性
 
         /// <summary>
         /// 出差天数
         /// </summary>
-        public TimeSpan Travel
-        {
-            get
-            {
-                if (_travel >= TimeSpan.Zero) return _travel;
+        public int Travel;
 
-                //找出所有出差
-                var dv = new DataView(DB.OaOriginaDt) { RowFilter = "name='" + Name + "' and reason = '出差'" };
-                //所有数据应该已经合法
-                _travel = TimeSpan.Zero;
-                foreach (DataRowView item in dv)
-                {
-                    var s = (DateTime)item["start"];
-                    var e = (DateTime)item["end"];
-
-
-                    _travel += e.Date.AddDays(1) - s.Date;
-                }
-                return _travel;
-            }
-        }
+        private int _warnDayCount = -1;
 
         /// <summary>
         /// 异常天数
@@ -76,8 +60,10 @@ namespace CheckingIn
         /// </summary>
         public TimeSpan DelayTime = TimeSpan.Zero;
 
-
-        public int WorkDayCount => WorkDay.WorkCount - WarnDayCount;
+        /// <summary>
+        /// 应出勤天数
+        /// </summary>
+        public int ShoudWorkDayCount;
 
         /// <summary>
         /// 工作时间
@@ -87,69 +73,46 @@ namespace CheckingIn
 
         public List<CheckInfo> Checks = new List<CheckInfo>();
 
-        private DataTable _checks;
-        private DataTable _warns;
-        private DataTable _oas;
-        private DataTable _rec;
 
-        private int _warnDayCount = -1;
-        private TimeSpan _overWorkTime = new TimeSpan(-1);
+
         /// <summary>
         /// 加班时间
         /// </summary>
-        public TimeSpan OverWorkTime
-        {
-            get
-            {
-                if (_overWorkTime >= TimeSpan.Zero) return _overWorkTime;
+        public TimeSpan OverWorkTime;
+        /// <summary>
+        /// 使用假使用
+        /// </summary>
+        public TimeSpan useHolidayhours;
+        /// <summary>
+        /// 扣薪假期
+        /// </summary>
+        public TimeSpan NoPayHolidaysHours;
 
+        private readonly List<DateTime> AllDays = new List<DateTime>();
 
-                var dv = new DataView(DB.OaOriginaDt) { RowFilter = "name='" + Name + "' and reason = '加班'" };
-                //所有数据应该已经合法
-                _overWorkTime = TimeSpan.Zero;
-
-                foreach (DataRowView item in dv)
-                {
-                    var s = (DateTime)item["start"];
-                    var e = (DateTime)item["end"];
-
-
-                    _overWorkTime += e - s;
-                }
-
-                return _overWorkTime;
-            }
-        }
-
-        //当月属性
-
-        private TimeSpan _travel = new TimeSpan(-1);
         public PersonInfo(string n)
         {
             Name = n;
-            //todo 从DB中得到相关数据
-
-
             //从db中得到相关信息
-            var dv = new DataView(DB.PersonInfos) { RowFilter = $"name ='{Name}'" };
-            if (dv.Count == 0)
+            var p = DB.Context.From<Dos.Model.person>().Where(d => (d.name == Name)).First();
+
+            if (p == null)
             {
+                //没有找到这个人相关数据
+
                 Mail = null;
                 WorkTimeClass = WorkTimeClassInfo.Default;
                 Log.Err(n + "-无法得到个人信息");
             }
             else
             {
-                Mail = dv[0]["mail"].ToString();
 
-
-                var wtc = dv[0]["worktimeclass"].ToString();
-
-                WorkTimeClass = new WorkTimeClassInfo(wtc);
+                Mail = p.mail;
+                WorkTimeClass = new WorkTimeClassInfo(p.worktimeclass);
 
                 if (Mail == "")
                     Log.Err(n + "-mail err");
-                if (wtc == "")
+                if (p.worktimeclass == "")
                     Log.Err(n + "-worktimeclass err");
 
             }
@@ -161,107 +124,275 @@ namespace CheckingIn
             Checks.Add(c);
             WorkTime += c.WorkTime;
         }
-
-
-        //处理这个人的数据
-        public void GetData()
+        private static void CheckDTAdd(string name, DateTime date, TimeSpan t, string i, DataTable dt)
         {
-            if (_geted) return;
-
-
-            foreach (var date in WorkDay.AllDays)
+            var r = dt.NewRow();
+            r["name"] = name;
+            r["date"] = date;
+            r["time"] = t.Ticks;
+            r["info"] = i;
+            dt.Rows.Add(r);
+        }
+        public void SetMonth(int m)
+        {
+            AllDays.Clear();
+            //得到本月所有的日期
+            var n = new DateTime(DateTime.Now.Year, m, 1);
+            while (n.Month == m)
             {
-                //今日日期
+                AllDays.Add(n);
+                n = n.AddDays(1);
+            }
+        }
 
-                var c = new CheckInfo(this, date);
 
+        private bool isworkday(DateTime dt)
+        {
+            var str = dt.Month.ToString("00") + dt.Day.ToString("00");
+
+            return !CheckingIn.Inst.workdaysjson.Keys.Contains(str);
+        }
+
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        /// <param name="month">月份</param>
+        public void GetData(int month)
+        {
+
+            Checks.Clear();
+
+            SetMonth(month);
+
+
+
+
+            var AllCheckDT = DB.Context.From<Dos.Model.original>().Where(d => d.name == Name).ToDataTable();
+            var AlloaDT = DB.Context.From<Dos.Model.oa>().Where(d => d.name == Name).ToDataTable();
+
+
+
+            //遍历所有日期
+            foreach (var date in AllDays)
+            {
+
+
+
+                var willaddcheck = new CheckInfo(this, date);
+                if (isworkday(date))
+                    ShoudWorkDayCount++;
+                else
+                {
+                    willaddcheck.Warns.Add(new WarnInfo(date, date.DayOfWeek.ToString(), WarnInfoType.Info));
+                }
 
                 //得到这个人今天所有的打卡时间
-                var chckedata = new DataView(DB.CheckOriginalDt)
+                var checkDT = new DataView(AllCheckDT)
                 {
-                    RowFilter = $"name = '{Name}' AND date = '{date}'",
-                };
+                    RowFilter = $"date = '{date}'",
+                }.ToTable();
+
                 //得到这个人今天的oa数据
-                var oadata = new DataView(DB.OaResults)
+                var oadata = new DataView(AlloaDT)
                 {
-                    RowFilter = $"name = '{Name}' AND date = '{date}'",
+                    RowFilter = $"date = '{date}'",
                 };
 
-                var datadt = new DataTable();
-                datadt.Load(chckedata.ToTable().CreateDataReader());
-                datadt.Load(oadata.ToTable().CreateDataReader());
+                ProssOA(checkDT, oadata);
 
-                var data = new DataView(datadt)
+                var data = new DataView(checkDT)
                 {
-                    RowFilter = $"name = '{Name}' AND date = '{date}'",
                     Sort = "time asc" //从小到大
                 };
-                c.Sourcerec = data;
+                willaddcheck.Sourcerec = data;
                 //合成信息
-                foreach (var r in from DataRowView t in data select t["info"].ToString() into r where !c.Info.Contains(r) select r)
+                foreach (var r in from DataRowView t in data select t["info"].ToString() into r where !willaddcheck.Info.Contains(r) select r)
                 {
-                    c.Info += r + " ";
+                    willaddcheck.Info += r + " ";
                 }
 
                 //得到上下班时间
-                switch (data.Count)
+                switch (data.Count)//这一天打卡次数
                 {
                     case 0:
                         break;
                     case 1:
                         //判断是上班,还是下班
 
-                        var t = (TimeSpan)data[0].Row["time"];
+                        var t = new TimeSpan((long)data[0].Row["time"]);
 
 
                         if (WorkTimeClass.IsWorkTimeClass)
                         {
-                            c.InTime = t;
+                            willaddcheck.InTime = t;
                         }
                         else
                         {
                             //大于上班时间4小时
                             if (t > WorkTimeClass.InTime + new TimeSpan(0, 4, 0, 0))
-                                c.OutTime = t;
+                                willaddcheck.OutTime = t;
                             else
-                                c.InTime = t;
+                                willaddcheck.InTime = t;
                         }
 
                         break;
 
                     default:
-                        var t1 = (TimeSpan)data[0].Row["time"];
-                        var t2 = (TimeSpan)data[data.Count - 1].Row["time"];
+                        //2次及2次以上 
+                        //取第一个 和最后一个
+
+                        var t1 = new TimeSpan((long)data[0].Row["time"]);
+                        var t2 = new TimeSpan((long)data[data.Count - 1].Row["time"]);
 
                         //综合工时直接计算
                         if (WorkTimeClass.IsWorkTimeClass)
                         {
-                            c.InTime = t1;
-                            c.OutTime = t2;
+                            willaddcheck.InTime = t1;
+                            willaddcheck.OutTime = t2;
                             break;
                         }
 
-                        //如果大于上班时间2小时 为不合法上班时间
+                        //todo 计算时间是不是合法
+                        //上班提前打卡
+                        //下班延时打卡
 
 
-                        // if (t1 < WorkTimeClass.InTime + new TimeSpan(0, 2, 0, 0))
-                        c.InTime = t1;
-
-                        //大于上班时间2小时的为合法下班时间
-
-
-                        // if (t2 > WorkTimeClass.InTime + new TimeSpan(0, 2, 0, 0))
-                        c.OutTime = t2;
+                        willaddcheck.InTime = t1;
+                        willaddcheck.OutTime = t2;
                         break;
                 }
-                AddCheck(c);
+                AddCheck(willaddcheck);
             }
             //todo 写到数据库
             Checks.Sort();
-            _geted = true;
+
 
         }
 
+        private void ProssOA(DataTable checkDT, DataView oadata)
+        {
+            //处理oa数据
+            OverWorkTime = new TimeSpan();
+            Travel = 0;
+            NoPayHolidaysHours = new TimeSpan();
+            useHolidayhours = new TimeSpan();
+            foreach (DataRowView drv in oadata)
+            {
+                var reason = drv["reason"].ToString();
+                var subreason = drv["subreason"].ToString();
+
+                switch (reason)
+                {
+                    case "加班":
+                        //累加到加班时间中去
+
+                        var st1 = (DateTime)drv["start"];
+                        var et1 = (DateTime)drv["end"];
+
+                        OverWorkTime += et1 - st1;
+
+                        //模拟两次打卡
+
+                        CheckDTAdd(Name, st1.Date, st1.TimeOfDay, reason + "开始", checkDT);
+                        CheckDTAdd(Name, et1.Date, et1.TimeOfDay, reason + "结束", checkDT);
+
+                        break;
+                    case "外出":
+
+                        var st = (DateTime)drv["start"];
+                        var et = (DateTime)drv["end"];
+
+                        //模拟打卡
+                        CheckDTAdd(Name, st.Date, st.TimeOfDay, reason + "开始", checkDT);
+                        CheckDTAdd(Name, et, et.TimeOfDay, reason + "结束", checkDT);
+
+                        var ds = (int)(et - st).TotalDays;//得到相隔天数
+
+
+                        for (var j = 0; j < ds; j++)
+                        {
+                            var c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)WorkTimeClass.InTime;//上班时间
+
+                            if (c > st && c < et)//如果在相隔时间内,加一次打卡
+                                CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
+
+                            c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)WorkTimeClass.OutTime;
+
+                            if (c > st && c < et)//
+                                CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
+
+                        }
+                        break;
+                    case "补登":
+
+                        CheckDTAdd(Name,
+                            (DateTime)drv["start"],
+                            subreason == "上班" ? WorkTimeClass.InTime : WorkTimeClass.OutTime,
+                            reason,
+                            checkDT);
+
+                        break;
+                    case "出差":
+                        //出差期间,每天自动增加一个上班打卡 和下班打卡
+                        var s = (DateTime)drv["start"];
+                        var ee = (DateTime)drv["end"];
+
+                        //累加出差天数
+                        Travel += ee.Day - s.Day + 1;
+
+
+                        //先增加开始和结束
+                        CheckDTAdd(Name, s, (TimeSpan)WorkTimeClass.InTime, reason + "开始", checkDT);
+                        CheckDTAdd(Name, ee, (TimeSpan)WorkTimeClass.OutTime, reason + "结束", checkDT);
+
+                        //去掉时间
+                        s = s.Date;
+                        ee = ee.Date;
+
+                        //得到出差几天
+                        var days = ee - s;
+
+                        for (var d = 0; d <= days.Days; d++)
+                        {
+                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)WorkTimeClass.InTime, "出差中", checkDT);
+                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)WorkTimeClass.OutTime, "出差中", checkDT);
+                        }
+
+                        break;
+                    case "休假":
+
+
+                        //模拟打卡
+
+                        var st2 = (DateTime)drv["start"];
+                        var et2 = (DateTime)drv["end"];
+
+                        var time = et2 - st2;
+
+                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, reason + "开始", checkDT);
+                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, reason + "结束", checkDT);
+
+
+
+
+                        switch (subreason)
+                        {
+                            case "事假":
+                            case "病假":
+                            case "公伤假":
+                                NoPayHolidaysHours += time;
+                                break;
+                            default:
+                                useHolidayhours += time;
+                                break;
+                        }
+
+
+                        break;
+
+                }
+            }
+        }
 
         public JsonData GetJson()
         {
@@ -280,17 +411,17 @@ namespace CheckingIn
                 csjs.WritePropertyName("date");
                 csjs.Write(c.Date.ToString());
 
-                csjs.WritePropertyName("intime");
-                csjs.Write(c.InTime.ToMyString());
-
-                csjs.WritePropertyName("outtime");
-                csjs.Write(c.OutTime.ToMyString());
-
                 csjs.WritePropertyName("info");
                 csjs.Write(c.Info);
 
                 csjs.WritePropertyName("warninfo");
                 csjs.Write(c.warninfo);
+
+                csjs.WritePropertyName("intime");
+                csjs.Write(c.InTime.ToMyString());
+
+                csjs.WritePropertyName("outtime");
+                csjs.Write(c.OutTime.ToMyString());
 
                 csjs.WriteObjectEnd();
 
@@ -303,26 +434,23 @@ namespace CheckingIn
             var profile = new JsonData();
 
             profile["姓名"] = Name;
-            profile["剩余假期"] = Holidays.TotalHours.ToString("0.#") + "小时";
+            profile["剩余假期"] = CanUseHolidayHour.TotalHours.ToString("0.#") + "小时";
             profile["工作班次"] = WorkTimeClass.ToString();
 
 
             if (WorkTimeClass.IsWorkTimeClass)
-                profile["工作时间"] = WorkTime.TotalHours.ToString("0.#") + "/" + WorkDay.WorkCount * 8 + "小时";
+                profile["工作时间"] = WorkTime.TotalHours.ToString("0.#") + "/" + ShoudWorkDayCount * 8 + "小时";
             else
             {
-                profile["工作天数"] = WorkDayCount.ToString("0") + "/" + WorkDay.WorkCount + "天";
-                profile["异常天数"] = WarnDayCount.ToString("0 '天'");
+                profile["工作天数"] = ShoudWorkDayCount - WarnDayCount + "/" + ShoudWorkDayCount + "天";
+                profile["异常天数"] = WarnDayCount + "天";
                 profile["迟到早退"] = DelayTime.TotalMinutes.ToString("0.# '分钟'");
             }
 
-            profile["使用调休假期"] = "未接入";
-            profile["使用扣薪假期"] = "未接入";
+            profile["使用调休假期"] = useHolidayhours.TotalHours.ToString("0.#") + "小时";
+            profile["使用扣薪假期"] = NoPayHolidaysHours.TotalHours.ToString("0.#") + "小时";
             profile["加班"] = OverWorkTime.TotalHours.ToString("0.# '小时'");
-            profile["出差"] = Travel.TotalDays.ToString("0.# '天'");
-
-
-
+            profile["出差"] = Travel + "天";
 
             j["profile"] = profile;
 
@@ -352,16 +480,7 @@ namespace CheckingIn
 
             return r;
         }
-        public CheckInfo GetCheck(WorkDay d)
-        {
 
-            foreach (var c in Checks)
-            {
-                if (c.Date == (DateTime)d)
-                    return c;
-            }
-            return null;
-        }
         public override string ToString()
         {
             return Name;
@@ -371,9 +490,9 @@ namespace CheckingIn
         {
             _warnDayCount = -1;
             _geted = false;
-            _travel = new TimeSpan(-1);
+            Travel = 0;
             DelayTime = TimeSpan.Zero;
-            _overWorkTime = new TimeSpan(-1);
+            OverWorkTime = new TimeSpan(-1);
         }
 
         private bool _geted;
@@ -387,9 +506,12 @@ namespace CheckingIn
         public TimeSpan InTime;
         public TimeSpan OutTime;
         public bool IsWorkTimeClass => ClassName == "综合班次";
+        public static WorkTimeClassInfo Default = new WorkTimeClassInfo("早班");
+
         public WorkTimeClassInfo(string n)
         {
             ClassName = n;
+            //todo 读取文件得到
             switch (n)
             {
                 case "早班":
@@ -419,40 +541,10 @@ namespace CheckingIn
             }
         }
 
-        public static WorkTimeClassInfo Default = new WorkTimeClassInfo("早班");
-
         public override string ToString()
         {
-            return ClassName;
+            return ClassName + "|" + InTime + "|" + OutTime;
         }
-    }
-
-    public struct WarnInfo
-    {
-        public WorkDay Date;
-        public string Info;
-        public WarnInfoType Type;
-        public WarnInfo(WorkDay d, string i, WarnInfoType t)
-        {
-            Date = d;
-            Info = i;
-            Type = t;
-
-        }
-        public WarnInfo(WorkDay d, string i)
-        {
-            Date = d;
-            Info = i;
-            Type = WarnInfoType.Warn;
-        }
-    }
-
-
-
-    public enum WarnInfoType
-    {
-        Info,
-        Warn
     }
 
     /// <summary>
@@ -492,7 +584,7 @@ namespace CheckingIn
 
                     //是不是单次打卡
                     if (InTime == UnKownTimeSpan || OutTime == UnKownTimeSpan)
-                        _warns.Add(new WarnInfo(Date, "单次打卡"));
+                        _warns.Add(new WarnInfo(Date, "单次打卡", WarnInfoType.Info));
 
                     return _warns;
 
@@ -538,7 +630,10 @@ namespace CheckingIn
                         }
                         else
                         {
+                            //迟到太多.直接算未打卡
+                            InTime = UnKownTimeSpan;
                             _warns.Add(new WarnInfo(Date, "上班未打卡"));
+
                         }
 
                         delayTime = halfhour;
@@ -574,7 +669,14 @@ namespace CheckingIn
             }
         }
 
-        public bool HaveWarn => Warns.Count > 0;
+        public bool HaveWarn
+        {
+            get
+            {
+                var w = Warns.Find(d => d.Type == WarnInfoType.Warn);
+                return w != null;
+            }
+        }
 
 
 
@@ -609,30 +711,7 @@ namespace CheckingIn
 
     public class WorkDay : IComparable<WorkDay>
     {
-        /// <summary>
-        /// 有人出勤的日期
-        /// </summary>
-        public static List<DateTime> AllDays = new List<DateTime>();
 
-        private static int _workcount = -1;
-        /// <summary>
-        /// 应工作天数 
-        /// </summary>
-        public static int WorkCount
-        {
-            get
-            {
-                if (_workcount != -1) return _workcount;
-
-                _workcount = 0;
-                foreach (var i in AllDays)
-                {
-                    //todo 
-                    _workcount++;
-                }
-                return _workcount;
-            }
-        }
 
         public bool IsWorkDay
         {
@@ -691,6 +770,32 @@ namespace CheckingIn
         {
             return _date.CompareTo(other._date);
         }
+    }
+
+    public class WarnInfo
+    {
+        public WorkDay Date;
+        public string Info;
+        public WarnInfoType Type;
+        public WarnInfo(WorkDay d, string i, WarnInfoType t)
+        {
+            Date = d;
+            Info = i;
+            Type = t;
+
+        }
+        public WarnInfo(WorkDay d, string i)
+        {
+            Date = d;
+            Info = i;
+            Type = WarnInfoType.Warn;
+        }
+    }
+
+    public enum WarnInfoType
+    {
+        Info,
+        Warn
     }
 
 }

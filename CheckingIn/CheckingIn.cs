@@ -42,6 +42,9 @@ namespace CheckingIn
             openFileDialog1.FileOk += OpenFileDialog1_FileOk;
 
             Log.Creat(listView_log);
+
+           
+
             //得到非工作日
             _http = new HttpSever();
 
@@ -57,9 +60,8 @@ namespace CheckingIn
             workdaysjson = JsonMapper.ToObject(htmlstr);
             workdaysjson = workdaysjson["data"][Jsonyear];
 
+            DB.Creat();
 
-            var t = new Thread(DB.Creat);
-            t.Start();
 
 
 
@@ -520,17 +522,10 @@ namespace CheckingIn
             //对当前数据进行处理
 
             var p = DB.Persons[comboBox1.Text];
-
-            p.GetData();
+            
 
             //统计信息
-
-            label5.Text = $"{WorkDay.WorkCount - p.WarnDayCount}/{WorkDay.WorkCount}\r\n" +
-                          $"{p.WorkTime.TotalHours.ToString(".#")}/{WorkDay.WorkCount * 8}\r\n" +
-                          $"{p.DelayTime.TotalMinutes.ToString("####")}\r\n" +
-                          $"{p.Travel}\r\n" +
-                          $"{p.OverWorkTime.TotalHours.ToString(".##")}";
-
+            
             monthCalendar1.RemoveAllBoldedDates();
             listView_warn.Items.Clear();
 
@@ -576,42 +571,8 @@ namespace CheckingIn
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
         {
-            if (comboBox1.Text == "") return;
 
-            var p = DB.Persons[comboBox1.Text];
-            var check = p.GetCheck(e.Start);
-
-            if (check != null)
-            {
-                var warntxt = "";
-                foreach (var i in check.Warns)
-                {
-                    warntxt += i.Info + " ";
-                }
-                if (warntxt == "")
-                    warntxt = "正常";
-
-
-
-                label4.Text = "";
-                label4.Text += check.Date + "\r\n";
-                label4.Text += check.InTime.ToMyString() + "\r\n";
-                label4.Text += check.OutTime.ToMyString() + "\r\n";
-                label4.Text += check.WorkTime.ToMyString() + "\r\n";
-                label4.Text += warntxt;
-
-
-
-                //原来的记录
-
-                dataGridView1.DataSource = check.Sourcerec.ToTable();
-
-
-            }
-            else
-            {
-                label4.Text = monthCalendar1.SelectionStart.ToShortDateString() + "\r\n00:00:00\r\n00:00:00\r\n00:00:00\r\nnodata";
-            }
+           
         }
 
 
@@ -643,10 +604,7 @@ namespace CheckingIn
             var dt = new DataTable();
             dt.Columns.Add("name");
             //加日期
-            foreach (var d in WorkDay.AllDays)
-            {
-                dt.Columns.Add(d.ToShortDateString());
-            }
+
             toolStripProgressBar1.Maximum = DB.Persons.Count;
             //对每人个进行遍历
             foreach (var p in DB.Persons)
@@ -656,7 +614,7 @@ namespace CheckingIn
 
                 var dr = dt.NewRow();
                 dr["name"] = name;
-                p.Value.GetData();
+               // p.Value.GetData();
 
                 //得到信息
                 foreach (var c in p.Value.Checks)
@@ -701,7 +659,7 @@ namespace CheckingIn
                     throw new Exception("邮箱地址不合法");
                 }
 
-                p.GetData();
+               // p.GetData();
 
                 //统计信息
                 var body = $"{p.Name}-考勤分析报表\r\n";
@@ -801,11 +759,6 @@ namespace CheckingIn
             s.Show();
         }
 
-        private void 结果表ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var s = new ShowData(DB.OaResults);
-            s.Show();
-        }
 
         private void 原始表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -815,17 +768,11 @@ namespace CheckingIn
 
         private void oa表ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DB.Readoa();
-            var s = new ShowData(DB.OaOriginaDt);
-            s.Show();
+            var sql = "select * from oa";
+            var k = new ShowData(DB.GetSql(sql));
+            k.Show();
         }
 
-        private void 删除文件ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DB.Close();
-            File.Delete("db.db");
-            DB.Creat();
-        }
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -840,7 +787,7 @@ namespace CheckingIn
             s.Show();
         }
 
-        private void 删除考勤原始数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void 删除考勤数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DB.DelOrigina();
 
@@ -852,7 +799,7 @@ namespace CheckingIn
             f.Show();
         }
 
-        private void 清空OA数据ToolStripMenuItem_Click_1(object sender, EventArgs e)
+        private void 删除OA数据ToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
             DB.DelOA();
         }
@@ -860,7 +807,7 @@ namespace CheckingIn
         private void 读取oa数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //得到前一天的数据
-            oahelper.getAddwork(DateTime.Now.AddDays(-1));
+            oahelper.GetData(monthCalendar1.SelectionStart.Date);
 
         }
     }

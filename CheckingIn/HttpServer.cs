@@ -68,6 +68,7 @@ namespace CheckingIn
             else if (requestInfo.Parameter.Count > 0)
             {
                 var name = requestInfo.Parameter["name"];
+                var month = int.Parse(requestInfo.Parameter["month"]);
                 if (name == "") return;
 
                 if (!DB.Persons.ContainsKey(name))
@@ -75,7 +76,7 @@ namespace CheckingIn
                     DB.Persons.Add(name, new PersonInfo(name));
                 }
                 var p = DB.Persons[name];
-                p.GetData();
+                p.GetData(month);
 
                 filestring = (p.GetJson()).ToJson();
             }
@@ -107,7 +108,7 @@ namespace CheckingIn
                 case "css":
                     //  sb.AppendLine("Content-Type: text/html; charset=utf-8");
                     break;
-                //sb.AppendLine("Content-Type: text/html; charset=utf-8");
+                    //sb.AppendLine("Content-Type: text/html; charset=utf-8");
             }
 
 

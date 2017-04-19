@@ -14,8 +14,8 @@ function adddata(name, date, intime, outtime, info,warninfo) {
     $('#data').append(d);
 }
 
-function getdata(name) {
-    $.get("getdata?name=" + name, function (data, status) {
+function getdata(name,month) {
+    $.get("getdata?name=" + name+"&month="+month, function (data, status) {
 
         var d = JSON.parse(data);
         var profile = d.profile;
@@ -41,7 +41,7 @@ function getUrlParam(name) {
 
 $().ready(function () {
     var name = getUrlParam("name");
-    getdata(name);
+    getdata(name, getUrlParam("month"));
     $("#t").text(name + " 考勤分析报表");
 
 })

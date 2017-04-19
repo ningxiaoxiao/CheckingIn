@@ -63,7 +63,7 @@ namespace CheckingIn
 
         private void oadata_FormClosed(object sender, FormClosedEventArgs e)
         {
-            DB.Readoa();
+          
         }
     }
 }
