@@ -161,6 +161,12 @@ namespace CheckingIn
         {
 
             Checks.Clear();
+            OverWorkTime = new TimeSpan();
+            Travel = 0;
+            NoPayHolidaysHours = new TimeSpan();
+            useHolidayhours = new TimeSpan();
+            DelayTime=new TimeSpan();
+            ShoudWorkDayCount = 0;
 
             SetMonth(month);
 
@@ -262,7 +268,7 @@ namespace CheckingIn
                 }
                 AddCheck(willaddcheck);
             }
-            //todo 写到数据库
+           
             Checks.Sort();
 
 
@@ -271,10 +277,7 @@ namespace CheckingIn
         private void ProssOA(DataTable checkDT, DataView oadata)
         {
             //处理oa数据
-            OverWorkTime = new TimeSpan();
-            Travel = 0;
-            NoPayHolidaysHours = new TimeSpan();
-            useHolidayhours = new TimeSpan();
+
             foreach (DataRowView drv in oadata)
             {
                 var reason = drv["reason"].ToString();
@@ -368,8 +371,8 @@ namespace CheckingIn
 
                         var time = et2 - st2;
 
-                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, reason + "开始", checkDT);
-                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, reason + "结束", checkDT);
+                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, subreason + "开始", checkDT);
+                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, subreason + "结束", checkDT);
 
 
 
@@ -596,26 +599,26 @@ namespace CheckingIn
                 {
 
                     delayTime = InTime - Person.WorkTimeClass.InTime;
-
-                    var halfhour = new TimeSpan(0, 0, 30, 0);
-                    if (delayTime > halfhour)//每天30分钟机动时间
+                    //机动时间
+                    var extime = new TimeSpan(0, 0, 5, 0);
+                    if (delayTime > extime)
                     {
 
-                        var dt = delayTime - halfhour;
-                        if (dt.TotalMinutes < 120)
+                        var dt = delayTime - extime;//迟到时间
+                        if (dt.TotalMinutes < 120)//2个小时
                         {
                             Person.DelayTime += dt;
                             _warns.Add(new WarnInfo(Date, $"迟到{dt.TotalMinutes.ToString("0.#")}分钟"));
                         }
                         else
                         {
-                            //迟到太多.直接算未打卡
+                            //迟到>2小时.直接算未打卡
                             InTime = UnKownTimeSpan;
                             _warns.Add(new WarnInfo(Date, "上班未打卡"));
 
                         }
 
-                        delayTime = halfhour;
+                        delayTime = extime;
 
 
                     }
@@ -637,7 +640,11 @@ namespace CheckingIn
 
                     }
                     else
+                    {
+                        OutTime = UnKownTimeSpan;
                         _warns.Add(new WarnInfo(Date, "下班未打卡"));
+                    }
+
 
 
                 }
