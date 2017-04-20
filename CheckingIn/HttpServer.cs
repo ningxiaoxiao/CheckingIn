@@ -38,7 +38,7 @@ namespace CheckingIn
 
         }
 
-
+        private Dictionary<string, string> buffer = new Dictionary<string, string>();
 
         private void Server_SessionClosed(HttpSession session, CloseReason value)
         {
@@ -56,13 +56,21 @@ namespace CheckingIn
 
             var fileallpath = _filepath + requestInfo.Url;
 
-            var filestring = "ERR:no file " + requestInfo.Url;
+            var retHtml = "ERR:no file " + requestInfo.Url;
 
-            //把文件读出来 发送过去
-            if (File.Exists(fileallpath))
+            //查看文件缓存
+            if (buffer.ContainsKey(fileallpath))
             {
+                retHtml = buffer[fileallpath];
+            }
+            else if (File.Exists(fileallpath))
+            {
+                //把文件读出来 发送过去
                 var sr = new StreamReader(File.OpenRead(fileallpath));
-                filestring = sr.ReadToEnd();
+                retHtml = sr.ReadToEnd();
+
+                buffer.Add(fileallpath, retHtml);
+
                 sr.Close();
             }
             else if (requestInfo.Parameter.Count > 0)
@@ -72,24 +80,17 @@ namespace CheckingIn
                 switch (requestInfo.Url)
                 {
                     case "/changepw":
-                        filestring = Changepw(requestInfo);
+                        retHtml = Changepw(requestInfo);
                         break;
                     case "/getdata":
-                        filestring = GetData(requestInfo);
+                        retHtml = GetData(requestInfo);
                         break;
-
-
                 }
-
-
             }
 
             //组装头
             var sb = new StringBuilder();
             sb.AppendLine("HTTP/1.1 200 OK");
-
-
-
 
             //chome 会自己进行相关头增加 加个头就好了
 
@@ -112,7 +113,7 @@ namespace CheckingIn
 
             //  sb.AppendLine("Connection: keep-alive");
             sb.AppendLine();//一个空行
-            sb.Append(filestring);
+            sb.Append(retHtml);
 
             var bs = Encoding.UTF8.GetBytes(sb.ToString());
 
@@ -163,7 +164,7 @@ namespace CheckingIn
 
                 return "用户名or密码错误";
 
-            var monthint = int.Parse(month.Split('-')[1]);
+            var monthint = int.Parse(month);
 
             //建立这个用户
             if (!DB.Persons.ContainsKey(name))

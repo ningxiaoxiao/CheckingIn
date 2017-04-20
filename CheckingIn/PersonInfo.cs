@@ -153,13 +153,8 @@ namespace CheckingIn
             return !CheckingIn.Inst.workdaysjson.Keys.Contains(str);
         }
 
-        /// <summary>
-        /// 处理数据
-        /// </summary>
-        /// <param name="month">月份</param>
-        public void GetData(int month)
+        private void reset()
         {
-
             Checks.Clear();
             OverWorkTime = new TimeSpan();
             Travel = 0;
@@ -167,6 +162,18 @@ namespace CheckingIn
             useHolidayhours = new TimeSpan();
             DelayTime = new TimeSpan();
             ShoudWorkDayCount = 0;
+            _warnDayCount = -1;
+        }
+
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        /// <param name="month">月份</param>
+        public void GetData(int month)
+        {
+
+            reset();
+
 
             SetMonth(month);
 

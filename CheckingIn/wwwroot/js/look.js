@@ -49,7 +49,7 @@ $().ready(function () {
     var name = getUrlParam("name");
     var m=getUrlParam("month");
     getdata(name,getUrlParam("password") ,m);
-    $("#t").text(name +" "+m+ " 考勤分析报表");
+    $("#t").text(name +" "+m+ "月 考勤分析报表");
 
 })
 

@@ -28,20 +28,24 @@
 
                 <div class="field-wrap">
                     <label>
-                        姓名<span class="req">*</span>
+                        姓名
                     </label>
                     <input name="name" type="text" required autocomplete="off" />
                 </div>
 
                 <div class="field-wrap">
                     <label>
-                        密码<span class="req">*</span>
+                        密码
                     </label>
                     <input name="password" type="password" required autocomplete="off" />
                 </div>
                 <div class="field-wrap">
-                    <input name="month" type="month" required autocomplete="off" />
+                    <select name="month" id="">
+                        <option value="1"> 1 月</option><option value="2"> 2 月</option><option value="3"> 3 月</option><option value="4"> 4 月</option><option value="5"> 5 月</option><option value="6"> 6 月</option><option value="7"> 7 月</option><option value="8"> 8 月</option><option value="9"> 9 月</option><option value="10"> 10 月</option><option value="11"> 11 月</option><option value="12"> 12 月</option>
+                    </select>
                 </div>
+                <span>初始密码 123456</span>
+
 
                 <button id="look" class="button button-block" />查看</button>
 
@@ -56,7 +60,7 @@
 
                 <div class="field-wrap">
                     <label>
-                        姓名<span class="req">*</span>
+                        姓名
                     </label>
                     <input name="cname" type="text" required autocomplete="off" />
                 </div>
@@ -64,13 +68,13 @@
 
                 <div class="field-wrap">
                     <label>
-                        原密码<span class="req">*</span>
+                        原密码
                     </label>
                     <input name="cpassword" type="password" required autocomplete="off" />
                 </div>
                 <div class="field-wrap">
                     <label>
-                        新密码<span class="req">*</span>
+                        新密码
                     </label>
                     <input name="newpassword" type="password" required autocomplete="off" />
                 </div>

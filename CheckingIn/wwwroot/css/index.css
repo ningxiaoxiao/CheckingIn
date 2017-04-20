@@ -104,7 +104,11 @@ label.active .req {
 label.highlight {
     color: #ffffff;
 }
-
+span{
+    color: #f7f7f7;
+    margin-bottom:20px;
+    display: block;
+}
 input, textarea {
     font-size: 22px;
     display: block;
