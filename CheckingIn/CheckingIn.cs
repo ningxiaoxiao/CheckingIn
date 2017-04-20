@@ -33,6 +33,7 @@ namespace CheckingIn
         private readonly HttpSever _http;
 
         public JsonData workdaysjson { get; private set; }
+        public JsonData worktimeclassjson { get; }
         private const string Jsonyear = "2017";
         public CheckingIn()
         {
@@ -52,6 +53,11 @@ namespace CheckingIn
 
             //得到非工作日
             GetNoWorkday();
+
+            var f = new StreamReader("worktimeclass.json").ReadToEnd();
+            worktimeclassjson = JsonMapper.ToObject(f);
+
+
 
 
             DB.Creat();
@@ -159,29 +165,50 @@ namespace CheckingIn
         /// <param name="path"></param>
         private void OpenWorkTimeClassFile(string path)
         {
+            //开始事务
+            var tran = DB.Context.BeginTransaction();
+
             try
             {
+                //读出文件
                 var dt = new ExcelHelper(path).ExcelToDataTable("", true);
-
-                //开始事务
-
                 //进行遍历处理    
                 foreach (DataRow i in dt.Rows)
                 {
-                    //读出时间
                     var name = i["姓名"].ToString();
-                    //读出时间
                     var classname = i["对应时段"].ToString();
-                    //写到表里
-                    //todo
+
+                    //是不是有用户,
+                    var dbp = DB.Context.From<Dos.Model.person>().Where(pp => pp.name == name).First();
+
+                    if (dbp == null)
+                    {
+                        var p = new Dos.Model.person()
+                        {
+                            name = name,
+                            worktimeclass = classname,
+                            password = "123456",
+
+                        };
+
+                        DB.Context.Insert(p);
+                    }
+                    else if (dbp.worktimeclass != classname)
+                    {
+                        dbp.worktimeclass = classname;
+                        DB.Context.Update(dbp);
+                    }
+
+
                 }
 
+                tran.Commit();
 
                 Log.Info("worktimeclass done");
             }
             catch (Exception ex)
             {
-
+                tran.Rollback();
                 throw ex;
             }
         }

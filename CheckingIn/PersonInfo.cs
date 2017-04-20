@@ -507,37 +507,17 @@ namespace CheckingIn
         public bool IsWorkTimeClass => ClassName == "综合班次";
         public static WorkTimeClassInfo Default = new WorkTimeClassInfo("早班");
 
+
+
         public WorkTimeClassInfo(string n)
         {
             ClassName = n;
-            //todo 读取文件得到
-            switch (n)
-            {
-                case "早班":
-                    InTime = new TimeSpan(0, 9, 0, 0);
-                    OutTime = new TimeSpan(0, 18, 0, 0);
-                    break;
-                case "中班":
-                    InTime = new TimeSpan(0, 9, 30, 0);
-                    OutTime = new TimeSpan(0, 18, 30, 0);
-                    break;
-                case "晚班":
-                    InTime = new TimeSpan(0, 11, 30, 0);
-                    OutTime = new TimeSpan(0, 20, 30, 0);
-                    break;
-                case "特别班次":
-                    InTime = new TimeSpan(0, 12, 0, 0);
-                    OutTime = new TimeSpan(0, 21, 0, 0);
-                    break;
-                case "综合班次":
-                    InTime = TimeSpan.Zero;
-                    OutTime = TimeSpan.Zero;
-                    break;
-                default:
-                    InTime = new TimeSpan(0, 9, 0, 0);
-                    OutTime = new TimeSpan(0, 18, 0, 0);
-                    break;
-            }
+
+            var j = CheckingIn.Inst.worktimeclassjson[n];
+
+            InTime = TimeSpan.Parse(j["in"].ToString());
+            OutTime = TimeSpan.Parse(j["out"].ToString());
+
         }
 
         public override string ToString()

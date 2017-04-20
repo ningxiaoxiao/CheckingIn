@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Dos.ORM, Version=1.10.7.3, Culture=neutral, processorArchitecture=MSIL">
@@ -211,7 +211,9 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>xcopy "$(ProjectDir)wwwroot"  "$(TargetDir)wwwroot" /e /y /i</PreBuildEvent>
+    <PreBuildEvent>xcopy "$(ProjectDir)wwwroot"  "$(TargetDir)wwwroot" /e /y /i
+copy "$(ProjectDir)worktimeclass.json" "$(TargetDir)worktimeclass.json"
+</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
