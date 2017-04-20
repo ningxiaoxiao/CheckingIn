@@ -67,25 +67,22 @@ namespace CheckingIn
             }
             else if (requestInfo.Parameter.Count > 0)
             {
-                var name = requestInfo.Parameter["name"];
-                var month = int.Parse(requestInfo.Parameter["month"]);
-                if (name == "") return;
 
-                if (!DB.Persons.ContainsKey(name))
+
+                switch (requestInfo.Url)
                 {
-                    DB.Persons.Add(name, new PersonInfo(name));
+                    case "/changepw":
+                        filestring = Changepw(requestInfo);
+                        break;
+                    case "/getdata":
+                        filestring = GetData(requestInfo);
+                        break;
+
+
                 }
-                var p = DB.Persons[name];
-                p.GetData(month);
 
-                filestring = (p.GetJson()).ToJson();
+
             }
-
-
-
-
-
-
 
             //组装头
             var sb = new StringBuilder();
@@ -121,6 +118,64 @@ namespace CheckingIn
 
             session.Send(bs, 0, bs.Length);
             session.Close();
+
+        }
+
+        private string Changepw(HttpRequsetInfo requestInfo)
+        {
+            var name = requestInfo.Parameter["name"];
+            var password = requestInfo.Parameter["pw"];
+
+            var newpassword = requestInfo.Parameter["newpw"];
+
+
+            var getp = DB.Context.From<Dos.Model.person>().Where(p => p.name == name && p.password == password).First();
+            if (getp == null)
+                return "用户名or密码错误";
+            getp.password = newpassword;
+
+
+            var i = DB.Context.Update(getp);
+
+            if (i > 0)
+                return "成功";
+            return "失败";
+
+
+
+
+        }
+
+        private string GetData(HttpRequsetInfo requestInfo)
+        {
+
+            var name = requestInfo.Parameter["name"];
+            var password = requestInfo.Parameter["password"];
+            var month = requestInfo.Parameter["month"];
+
+            if (name == null || password == null || month == null)
+                return "用户名or密码错误";
+
+
+            var getp = DB.Context.From<Dos.Model.person>().Where(p => p.name == name && p.password == password).First();
+
+            if (getp == null)
+
+                return "用户名or密码错误";
+
+            var monthint = int.Parse(month.Split('-')[1]);
+
+            //建立这个用户
+            if (!DB.Persons.ContainsKey(name))
+            {
+                DB.Persons.Add(name, new PersonInfo(name));
+            }
+            var pp = DB.Persons[name];
+
+            pp.GetData(monthint);
+
+            return pp.GetJson().ToJson();
+
 
         }
 

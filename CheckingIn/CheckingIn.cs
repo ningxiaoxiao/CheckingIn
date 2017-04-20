@@ -46,6 +46,8 @@ namespace CheckingIn
 
             Log.Creat(listView_log);
 
+            var i = int.Parse("04");
+
 
 
             //启动http服务

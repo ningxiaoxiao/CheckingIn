@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link href="http://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet">
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
@@ -9,24 +10,85 @@
 
 
 
+<div class="form">
 
-<div class="container">
-<div class="row">
-    <div class="col">
-        <div class="input-group">
-            <input id=name type="text" class="form-control" placeholder="姓名" aria-label="Username" aria-describedby="basic-addon1">
-            <button id="look" type="button" class="btn btn-primary">查看</button>
+    <ul class="tab-group">
+        <li class="tab active"><a href="#login">查看</a></li>
+        <li class="tab "><a href="#signup">更新密码</a></li>
+
+    </ul>
+
+    <div class="tab-content">
+
+
+        <div id="login">
+            <h1>查看</h1>
+
+            <form id="formlook"     action="/" method="get">
+
+                <div class="field-wrap">
+                    <label>
+                        姓名<span class="req">*</span>
+                    </label>
+                    <input name="name" type="text" required autocomplete="off" />
+                </div>
+
+                <div class="field-wrap">
+                    <label>
+                        密码<span class="req">*</span>
+                    </label>
+                    <input name="password" type="password" required autocomplete="off" />
+                </div>
+                <div class="field-wrap">
+                    <input name="month" type="month" required autocomplete="off" />
+                </div>
+
+                <button id="look" class="button button-block" />查看</button>
+
+            </form>
+
+        </div>
+        <div id="signup">
+            <h1>更新密码</h1>
+
+            <form id="pw" action="/" method="get">
+
+
+                <div class="field-wrap">
+                    <label>
+                        姓名<span class="req">*</span>
+                    </label>
+                    <input name="cname" type="text" required autocomplete="off" />
+                </div>
+
+
+                <div class="field-wrap">
+                    <label>
+                        原密码<span class="req">*</span>
+                    </label>
+                    <input name="cpassword" type="password" required autocomplete="off" />
+                </div>
+                <div class="field-wrap">
+                    <label>
+                        新密码<span class="req">*</span>
+                    </label>
+                    <input name="newpassword" type="password" required autocomplete="off" />
+                </div>
+
+                <button id="changepassword" type="submit" class="button button-block" />更新密码</button>
+
+            </form>
+
         </div>
     </div>
+    <!-- tab-content -->
+
 </div>
-
-
-</div>
+<!-- /form -->
 
 
 
-<script src='js/jquery.min.js'></script>
-<script src="http://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
 <script src="js/index.js"></script>
 </body>
 </html>

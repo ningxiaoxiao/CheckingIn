@@ -14,9 +14,16 @@ function adddata(name, date, intime, outtime, info,warninfo) {
     $('#data').append(d);
 }
 
-function getdata(name,month) {
-    $.get("getdata?name=" + name+"&month="+month, function (data, status) {
+function getdata(name,password,month) {
+    $.get("getdata?name=" + name+"&password="+password+"&month="+month, function (data, status) {
 
+        if(data=="用户名or密码错误")
+        {
+
+            alert(data);
+            self.location = 'index.html';
+            return;
+        }
         var d = JSON.parse(data);
         var profile = d.profile;
         for (var i in profile) {
@@ -38,11 +45,11 @@ function getUrlParam(name) {
     return null; //返回参数值
 }
 
-
 $().ready(function () {
     var name = getUrlParam("name");
-    getdata(name, getUrlParam("month"));
-    $("#t").text(name + " 考勤分析报表");
+    var m=getUrlParam("month");
+    getdata(name,getUrlParam("password") ,m);
+    $("#t").text(name +" "+m+ " 考勤分析报表");
 
 })
 
