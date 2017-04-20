@@ -165,7 +165,7 @@ namespace CheckingIn
             Travel = 0;
             NoPayHolidaysHours = new TimeSpan();
             useHolidayhours = new TimeSpan();
-            DelayTime=new TimeSpan();
+            DelayTime = new TimeSpan();
             ShoudWorkDayCount = 0;
 
             SetMonth(month);
@@ -191,19 +191,23 @@ namespace CheckingIn
                     willaddcheck.Warns.Add(new WarnInfo(date, date.DayOfWeek.ToString(), WarnInfoType.Info));
                 }
 
-                //得到这个人今天所有的打卡时间
-                var checkDT = new DataView(AllCheckDT)
-                {
-                    RowFilter = $"date = '{date}'",
-                }.ToTable();
 
+                // 先处理OA
                 //得到这个人今天的oa数据
                 var oadata = new DataView(AlloaDT)
                 {
                     RowFilter = $"date = '{date}'",
                 };
 
-                ProssOA(checkDT, oadata);
+                ProssOA(AllCheckDT, oadata);
+
+                //得到这个人今天所有的打卡时间
+                var checkDT = new DataView(AllCheckDT)
+                {
+                    RowFilter = $"date = '{date}'",
+                }.ToTable();
+
+
 
                 var data = new DataView(checkDT)
                 {
@@ -268,7 +272,7 @@ namespace CheckingIn
                 }
                 AddCheck(willaddcheck);
             }
-           
+
             Checks.Sort();
 
 
@@ -291,7 +295,9 @@ namespace CheckingIn
                         var st1 = (DateTime)drv["start"];
                         var et1 = (DateTime)drv["end"];
 
-                        OverWorkTime += et1 - st1;
+                        //取整小时
+                        var owt = et1 - st1;
+                        OverWorkTime += new TimeSpan(owt.Days, owt.Hours, 0, 0);
 
                         //模拟两次打卡
 
@@ -306,19 +312,19 @@ namespace CheckingIn
 
                         //模拟打卡
                         CheckDTAdd(Name, st.Date, st.TimeOfDay, reason + "开始", checkDT);
-                        CheckDTAdd(Name, et, et.TimeOfDay, reason + "结束", checkDT);
+                        CheckDTAdd(Name, et.Date, et.TimeOfDay, reason + "结束", checkDT);
 
                         var ds = (int)(et - st).TotalDays;//得到相隔天数
 
 
                         for (var j = 0; j < ds; j++)
                         {
-                            var c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)WorkTimeClass.InTime;//上班时间
+                            var c = st.Date + new TimeSpan(j, 0, 0, 0) + WorkTimeClass.InTime;//上班时间
 
                             if (c > st && c < et)//如果在相隔时间内,加一次打卡
                                 CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
 
-                            c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)WorkTimeClass.OutTime;
+                            c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)WorkTimeClass.OutTime;//下班时间
 
                             if (c > st && c < et)//
                                 CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
