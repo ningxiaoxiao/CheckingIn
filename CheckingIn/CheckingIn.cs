@@ -165,6 +165,10 @@ namespace CheckingIn
         /// <param name="path"></param>
         private void OpenWorkTimeClassFile(string path)
         {
+
+
+            var pdt = DB.Context.From<Dos.Model.person>().ToDataTable();
+
             //开始事务
             var tran = DB.Context.BeginTransaction();
 
@@ -178,10 +182,9 @@ namespace CheckingIn
                     var name = i["姓名"].ToString();
                     var classname = i["对应时段"].ToString();
 
-                    //是不是有用户,
-                    var dbp = DB.Context.From<Dos.Model.person>().Where(pp => pp.name == name).First();
+                    var rs = pdt.Select($"name ='{name}'");
 
-                    if (dbp == null)
+                    if (rs.Length == 0)
                     {
                         var p = new Dos.Model.person()
                         {
@@ -191,12 +194,12 @@ namespace CheckingIn
 
                         };
 
-                        DB.Context.Insert(p);
+                        DB.Context.Insert(tran,p);
                     }
-                    else if (dbp.worktimeclass != classname)
+                    else if (rs[0]["worktimeclass"].ToString() != classname)
                     {
-                        dbp.worktimeclass = classname;
-                        DB.Context.Update(dbp);
+
+                        DB.Context.Update<Dos.Model.person>(tran,Dos.Model.person._.worktimeclass, classname, Dos.Model.person._.name == name);
                     }
 
 
@@ -209,7 +212,7 @@ namespace CheckingIn
             catch (Exception ex)
             {
                 tran.Rollback();
-                throw ex;
+                Log.Err(ex.Message);
             }
         }
         /// <summary>
