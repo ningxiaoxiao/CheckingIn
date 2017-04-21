@@ -32,6 +32,8 @@ namespace oatoolDBhelper
             if (!File.Exists(path))
             {
                 log._logger.Error("文件不存在");
+                return;
+
             }
 
 

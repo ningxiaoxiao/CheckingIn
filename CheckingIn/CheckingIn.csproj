@@ -126,10 +126,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CheckingIn.cs">
+    <Compile Include="Form\CheckingIn.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CheckingIn.Designer.cs">
+    <Compile Include="Form\CheckingIn.Designer.cs">
       <DependentUpon>CheckingIn.cs</DependentUpon>
     </Compile>
     <Compile Include="DB.cs" />
@@ -138,10 +138,10 @@
     <Compile Include="HttpHelper2.cs" />
     <Compile Include="HttpServer.cs" />
     <Compile Include="Log.cs" />
-    <Compile Include="oadata.cs">
+    <Compile Include="Form\oadata.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="oadata.Designer.cs">
+    <Compile Include="Form\oadata.Designer.cs">
       <DependentUpon>oadata.cs</DependentUpon>
     </Compile>
     <Compile Include="PersonInfo.cs" />
@@ -152,24 +152,24 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="ShowData.cs">
+    <Compile Include="Form\ShowData.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ShowData.Designer.cs">
+    <Compile Include="Form\ShowData.Designer.cs">
       <DependentUpon>ShowData.cs</DependentUpon>
     </Compile>
     <Compile Include="ToStringHelper.cs" />
-    <Compile Include="workdaysetting.cs">
+    <Compile Include="Form\workdaysetting.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="workdaysetting.Designer.cs">
+    <Compile Include="Form\workdaysetting.Designer.cs">
       <DependentUpon>workdaysetting.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="CheckingIn.resx">
+    <EmbeddedResource Include="Form\CheckingIn.resx">
       <DependentUpon>CheckingIn.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="oadata.resx">
+    <EmbeddedResource Include="Form\oadata.resx">
       <DependentUpon>oadata.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -178,11 +178,11 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="ShowData.resx">
+    <EmbeddedResource Include="Form\ShowData.resx">
       <DependentUpon>ShowData.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="workdaysetting.resx">
+    <EmbeddedResource Include="Form\workdaysetting.resx">
       <DependentUpon>workdaysetting.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Config\log4net.config" />
@@ -208,6 +208,23 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="JsonData\休假.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="JsonData\出差.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="JsonData\加班.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="JsonData\外出.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="JsonData\补登.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.103\build\net20\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.103\build\net20\System.Data.SQLite.Core.targets')" />
