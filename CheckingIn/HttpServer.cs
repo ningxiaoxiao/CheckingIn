@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Web;
-using System.Web.UI;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Config;
 using SuperSocket.SocketBase.Protocol;
@@ -76,8 +75,6 @@ namespace CheckingIn
             }
             else if (requestInfo.Parameter.Count > 0)
             {
-
-
                 switch (requestInfo.Url)
                 {
                     case "/changepw":
@@ -107,7 +104,6 @@ namespace CheckingIn
                 case ".css":
                     sb.AppendLine("Content-Type: text/css");
                     break;
-
             }
             /*
             if (requestInfo.headers.ContainsKey("Content-Type"))
@@ -141,8 +137,6 @@ namespace CheckingIn
             var newpassword = requestInfo.Parameter["newpw"];
 
 
-
-
             Log.Info($"changePw,{name},{password},{newpassword}");
 
             var getp = DB.Context.From<Dos.Model.person>().Where(p => p.name == name && p.password == password).First();
@@ -156,9 +150,7 @@ namespace CheckingIn
             if (i > 0)
                 return "成功";
             return "失败";
-
-
-
+            
 
         }
 

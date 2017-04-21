@@ -506,17 +506,7 @@ namespace CheckingIn
             Log.Info("delete oa,count=" + i);
         }
 
-        private void 读取oa数据ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-            var t = DateTime.Today;
-            t = t.AddDays(-t.Day + 1);
-
-
-            //得到当月第一天
-            oahelper.GetData(t);
-
-        }
+    
     }
 
 }

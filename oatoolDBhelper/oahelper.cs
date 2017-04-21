@@ -5,7 +5,7 @@ using System.Web;
 using DotNet4.Utilities;
 using LitJson2;
 
-namespace CheckingIn
+namespace oatoolDBhelper
 {
     //自动拉取oa数据
     public static class oahelper
@@ -13,6 +13,8 @@ namespace CheckingIn
 
         private static string jidcookie = "";
         private static HttpHelper http;
+        private static DateTime _dateTime;
+
         private static void login()
         {
             if (jidcookie != "") return;//已经登录了.
@@ -39,8 +41,6 @@ namespace CheckingIn
             }
         }
 
-        private static DateTime _dateTime;
-
         /// <summary>
         /// 得到数据
         /// </summary>
@@ -53,7 +53,7 @@ namespace CheckingIn
             readjson("休假", 1, 8, 9, 8, 7);
             readjson("补登", 3, 5, 5, 5, 6);
             readjson("出差", 1, 12, 12, 13, 5);
-
+            log._logger.Info("get oa done");
         }
 
         private static void readjson(string m, int namearg, int startarg, int endarg, int timearg, int subreasonarg = -1)
@@ -94,7 +94,7 @@ namespace CheckingIn
 
             trans.Commit();
 
-            Log.Info($"读取{m}完成,共查询{d.Count}条记录,合法{count}条,合法时间{_dateTime}");
+            log._logger.Info($"读取{m}完成,共查询{d.Count}条记录,合法{count}条,合法时间{_dateTime}");
         }
 
         private static JsonData getoaData(string findTxtPath)

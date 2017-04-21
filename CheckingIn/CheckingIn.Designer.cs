@@ -39,7 +39,6 @@
             this.输出文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.oA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.增加ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.读取oa数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.邮箱ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向全体发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.向当前用户发送ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -142,8 +141,7 @@
             // oA数据ToolStripMenuItem
             // 
             this.oA数据ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.增加ToolStripMenuItem,
-            this.读取oa数据ToolStripMenuItem});
+            this.增加ToolStripMenuItem});
             this.oA数据ToolStripMenuItem.Name = "oA数据ToolStripMenuItem";
             this.oA数据ToolStripMenuItem.Size = new System.Drawing.Size(62, 21);
             this.oA数据ToolStripMenuItem.Text = "OA数据";
@@ -151,16 +149,9 @@
             // 增加ToolStripMenuItem
             // 
             this.增加ToolStripMenuItem.Name = "增加ToolStripMenuItem";
-            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.增加ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.增加ToolStripMenuItem.Text = "增加";
             this.增加ToolStripMenuItem.Click += new System.EventHandler(this.增加ToolStripMenuItem_Click);
-            // 
-            // 读取oa数据ToolStripMenuItem
-            // 
-            this.读取oa数据ToolStripMenuItem.Name = "读取oa数据ToolStripMenuItem";
-            this.读取oa数据ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
-            this.读取oa数据ToolStripMenuItem.Text = "读取oa数据";
-            this.读取oa数据ToolStripMenuItem.Click += new System.EventHandler(this.读取oa数据ToolStripMenuItem_Click);
             // 
             // 邮箱ToolStripMenuItem
             // 
@@ -266,14 +257,14 @@
             // 删除所有数据ToolStripMenuItem
             // 
             this.删除所有数据ToolStripMenuItem.Name = "删除所有数据ToolStripMenuItem";
-            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.删除所有数据ToolStripMenuItem.Text = "删除原始数据";
             this.删除所有数据ToolStripMenuItem.Click += new System.EventHandler(this.删除考勤数据ToolStripMenuItem_Click);
             // 
             // 删除OA数据ToolStripMenuItem
             // 
             this.删除OA数据ToolStripMenuItem.Name = "删除OA数据ToolStripMenuItem";
-            this.删除OA数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.删除OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.删除OA数据ToolStripMenuItem.Text = "清空OA数据";
             this.删除OA数据ToolStripMenuItem.Click += new System.EventHandler(this.删除OA数据ToolStripMenuItem_Click_1);
             // 
@@ -400,7 +391,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem 工作日设置ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 读取oa数据ToolStripMenuItem;
     }
 }
 
