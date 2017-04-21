@@ -4,18 +4,24 @@ function addprofile(a, b) {
 }
 
 
-function addwarn(date, info) {
-    var d = '<tr><td class="text-left">' + date + '</td><td class="text-left">' + info + '</td></tr>';
-    $('#warn').append(d);
-}
-
 function adddata(name, date, intime, outtime, info,warninfo) {
     var d = '<tr><td class="text-left">' + name + '</td><td class="text-left">' + date + '</td><td class="text-left">' + intime + '</td><td class="text-left">' + outtime + '</td><td class="text-left">' + info + '</td><td class="text-left">' + warninfo + '</td></tr>';
     $('#data').append(d);
 }
 
 function getdata(name,password,month) {
-    $.get("getdata?name=" + name+"&password="+password+"&month="+month, function (data, status) {
+
+    var getname;
+    //处理name乱码
+    if(name.indexOf("%")>0)
+    {
+        //解码
+        getname= decodeURI(name);
+    }
+
+    getname= encodeURI(name);
+
+    $.get("getdata?name=" + getname+"&password="+password+"&month="+month, function (data, status) {
 
         if(data=="用户名or密码错误")
         {

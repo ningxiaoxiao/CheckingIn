@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Web;
+using System.Web.UI;
 using SuperSocket.SocketBase;
 using SuperSocket.SocketBase.Config;
 using SuperSocket.SocketBase.Protocol;
@@ -26,7 +27,7 @@ namespace CheckingIn
             _server = new HttpAppServer();
 
             if (!_server.Setup(_config))
-                Log.Info("http setup err");
+                Log.Err("http setup err");
 
             _server.NewRequestReceived += Server_NewRequestReceived;
             _server.NewSessionConnected += Server_NewSessionConnected;
@@ -97,21 +98,31 @@ namespace CheckingIn
             var ex = Path.GetExtension(fileallpath);
             switch (ex)
             {
-                case "html":
+                case ".html":
                     sb.AppendLine("Content-Type: text/html; charset=utf-8");
                     break;
-                case "js":
-                    // sb.AppendLine("Content-Type: text/html; charset=utf-8");
-                    break;
-                case "css":
-                    //  sb.AppendLine("Content-Type: text/html; charset=utf-8");
-                    break;
+                case ".js":
                     //sb.AppendLine("Content-Type: text/html; charset=utf-8");
+                    break;
+                case ".css":
+                    sb.AppendLine("Content-Type: text/css");
+                    break;
+
+            }
+            /*
+            if (requestInfo.headers.ContainsKey("Content-Type"))
+            {
+                sb.Append("Content-Type: " + requestInfo.headers["Content-Type"]);
             }
 
+            if (requestInfo.headers.ContainsKey("Accept"))
+            {
+                var accepts = requestInfo.headers["Accept"].Split(',');
+                if (accepts.Length >= 2)
+                    sb.Append("Content-Type: " + accepts[0]);
+            }
+            */
 
-
-            //  sb.AppendLine("Connection: keep-alive");
             sb.AppendLine();//一个空行
             sb.Append(retHtml);
 
@@ -129,6 +140,10 @@ namespace CheckingIn
 
             var newpassword = requestInfo.Parameter["newpw"];
 
+
+
+
+            Log.Info($"changePw,{name},{password},{newpassword}");
 
             var getp = DB.Context.From<Dos.Model.person>().Where(p => p.name == name && p.password == password).First();
             if (getp == null)
@@ -154,6 +169,8 @@ namespace CheckingIn
             var password = requestInfo.Parameter["password"];
             var month = requestInfo.Parameter["month"];
 
+
+
             if (name == null || password == null || month == null)
                 return "用户名or密码错误";
 
@@ -174,7 +191,7 @@ namespace CheckingIn
             var pp = DB.Persons[name];
 
             pp.GetData(monthint);
-
+            Log.Info($"GetData,{name},{password},{month}");
             return pp.GetJson().ToJson();
 
 
@@ -189,13 +206,67 @@ namespace CheckingIn
 
     public class HttpRequsetInfo : IRequestInfo
     {
-
-        public string Url { get; set; }
-
         public string Key { get; }
 
+        public string Url { get; set; }
+        private readonly string _data;
+        public string name;
+        public HttpRequsetInfo(string data)
+        {
+            _data = data;
 
+            var keys = data.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            var methodstr = keys[0].Split(' ');
+
+
+            //解出头
+            foreach (var str in keys)
+            {
+                var kav = str.Split(':');
+                if (kav.Length == 2)
+                {
+                    headers.Add(kav[0], kav[1]);
+                }
+
+            }
+
+
+            if (methodstr[1] == "/")
+                methodstr[1] = "/index.html";
+
+            Url = methodstr[1].Replace("/?", "/index.html?");
+
+            //解参数
+
+            if (Url.IndexOf("?") >= 0)
+            {
+                var ps = Url.Split('?');
+                Url = ps[0];
+                IsHavePars = true;
+                var pss = ps[1].Split('&');
+                foreach (var i in pss)
+                {
+                    var kv = i.Split('=');
+
+                    var v = kv[1];
+
+                    if (kv[1].Contains("%"))
+                        v = HttpUtility.UrlDecode(v);
+                    Parameter.Add(kv[0], v);
+                }
+
+            }
+
+
+
+
+            //hr.Method=
+        }
+
+        public Dictionary<string, string> headers = new Dictionary<string, string>();
         public Dictionary<string, string> Parameter = new Dictionary<string, string>();
+
         internal bool IsHavePars;
     }
 
@@ -207,33 +278,9 @@ namespace CheckingIn
 
             var data = Encoding.UTF8.GetString(readBuffer, offset, length);
             rest = 0;
-            var keys = data.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            var hr = new HttpRequsetInfo();
+            var hr = new HttpRequsetInfo(data);
 
-            var methodstr = keys[0].Split(' ');
-
-            if (methodstr[1] == "/")
-                methodstr[1] = "/index.html";
-
-            hr.Url = methodstr[1].Replace("/?", "/index.html?");
-
-
-
-            if (hr.Url.IndexOf("?") >= 0)
-            {
-                var ps = hr.Url.Split('?');
-                hr.Url = ps[0];
-                hr.IsHavePars = true;
-                var pss = ps[1].Split('&');
-                foreach (var i in pss)
-                {
-                    var kv = i.Split('=');
-                    hr.Parameter.Add(kv[0], HttpUtility.UrlDecode(kv[1], Encoding.UTF8));
-                }
-
-            }
-            //hr.Method=
 
 
 
