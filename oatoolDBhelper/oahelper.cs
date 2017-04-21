@@ -60,7 +60,7 @@ namespace oatoolDBhelper
         {
 
             login();
-            var d = getoaData(m + ".txt");
+            var d = getoaData("JsonData\\" + m + ".txt");
 
             var trans = DB.Context.BeginTransaction();
             var count = 0;

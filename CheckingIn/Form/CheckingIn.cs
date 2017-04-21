@@ -46,25 +46,17 @@ namespace CheckingIn
 
             Log.Creat(listView_log);
 
-            var i = int.Parse("04");
-
-
-
             //启动http服务
             _http = new HttpSever();
 
             //得到非工作日
             GetNoWorkday();
 
-            var f = new StreamReader("worktimeclass.json").ReadToEnd();
+            var f = new StreamReader("JsonData\\worktimeclass.json").ReadToEnd();
             worktimeclassjson = JsonMapper.ToObject(f);
 
 
-
-
             DB.Creat();
-
-
 
 
 
