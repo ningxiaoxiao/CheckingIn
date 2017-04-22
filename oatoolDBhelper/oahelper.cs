@@ -47,13 +47,19 @@ namespace oatoolDBhelper
         /// <param name="t">开始时间 包含</param>
         public static void GetData(DateTime t)
         {
+            //清掉原有的数据
+
+            var c = DB.Context.DeleteAll<Dos.Model.oa>();
+
+            log._logger.Info($"清楚原有记录{c}条");
+
             _dateTime = t;
-            readjson("加班", 7, 3, 4, 3);
+            readjson("加班", 3, 6, 7, 3);
             readjson("外出", 1, 4, 8, 4);
             readjson("休假", 1, 8, 9, 8, 7);
             readjson("补登", 3, 5, 5, 5, 6);
             readjson("出差", 1, 12, 12, 13, 5);
-            log._logger.Info("get oa done");
+
         }
 
         private static void readjson(string m, int namearg, int startarg, int endarg, int timearg, int subreasonarg = -1)
@@ -94,7 +100,7 @@ namespace oatoolDBhelper
 
             trans.Commit();
 
-            log._logger.Info($"读取{m}完成,共查询{d.Count}条记录,合法{count}条,合法时间{_dateTime}");
+            log._logger.Info($"读取{m}完成,得到{d.Count}条记录,合法{count}条,合法时间{_dateTime}");
         }
 
         private static JsonData getoaData(string findTxtPath)

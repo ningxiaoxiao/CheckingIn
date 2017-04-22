@@ -16,6 +16,9 @@ namespace oatoolDBhelper
 
         static void Main(string[] args)
         {
+
+            
+
             //得到当月第一天
             var t = DateTime.Today;
             t = t.AddDays(-t.Day + 1);
