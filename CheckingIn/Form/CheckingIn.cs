@@ -87,10 +87,7 @@ namespace CheckingIn
 
             switch (openFileDialog1.Title)
             {
-                case "选择考勤器原始文件":
-                    var t = new Thread(OpenDataFile);
-                    t.Start();
-                    break;
+
                 case "选择班次文件":
                     OpenWorkTimeClassFile(openFileDialog1.FileName);
                     break;
@@ -102,56 +99,6 @@ namespace CheckingIn
 
         }
 
-        private void OpenDataFile()
-        {
-
-
-            var dt = new ExcelHelper(openFileDialog1.FileName).ExcelToDataTable("", true);
-
-            DB.Context.DeleteAll<Dos.Model.original>();
-            var tran = DB.Context.BeginTransaction();
-            try
-            {
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Rows)
-                {
-                    //读出时间
-                    var time = DateTime.Parse(i["日期时间"].ToString());
-
-                    //如果 时间是 05:00前的 就把日期算到前一天上面去
-                    TimeSpan tt;
-                    if (time.TimeOfDay < new TimeSpan(5, 0, 0))
-                    {
-                        time = time.AddDays(-1);
-                        tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
-                    }
-                    else
-                    {
-                        tt = time.TimeOfDay;
-                    }
-
-                    var o = new Dos.Model.original()
-                    {
-                        name = i["姓名"].ToString(),
-                        date = time.Date,
-                        time = tt.Ticks,
-
-                    };
-
-                    DB.Context.Insert(tran, o);
-
-                }
-                tran.Commit();
-            }
-            catch (Exception ex)
-            {
-                tran.Rollback();
-                Log.Err("读取考勤器文件出错." + ex.Message);
-            }
-
-
-            Log.Info("读取考勤器文件完成");
-        }
 
         /// <summary>
         /// 班次表
@@ -188,12 +135,12 @@ namespace CheckingIn
 
                         };
 
-                        DB.Context.Insert(tran,p);
+                        DB.Context.Insert(tran, p);
                     }
                     else if (rs[0]["worktimeclass"].ToString() != classname)
                     {
 
-                        DB.Context.Update<Dos.Model.person>(tran,Dos.Model.person._.worktimeclass, classname, Dos.Model.person._.name == name);
+                        DB.Context.Update<Dos.Model.person>(tran, Dos.Model.person._.worktimeclass, classname, Dos.Model.person._.name == name);
                     }
 
 
@@ -215,44 +162,18 @@ namespace CheckingIn
         /// <param name="path"></param>
         private void OpenMailFile(string path)
         {
-            var dt = new ExcelHelper(path).ExcelToDataTable("", true);
+
+            //todo 
 
 
-
-            try
-            {
-                //进行遍历处理 生成新的表
-                foreach (DataRow i in dt.Rows)
-                {
-                    //读出时间
-                    var name = i["姓名"].ToString();
-                    //读出时间
-                    var mail = i["邮箱"].ToString();
-                    //写到表里
-                    var dv = new DataView(DB.PersonInfos) { RowFilter = $"name='{name}'" };
-                    DB.Cmd(dv.Count > 0
-                        ? $"update person set mail='{mail}' where name='{name}'"
-                        : $"insert into person (name,mail) values ('{name}','{mail}')");
-                }
-                //todo 
-                Log.Info("mail done");
-            }
-            catch (Exception ex)
-            {
-
-
-                throw ex;
-            }
         }
 
 
 
 
 
-        public void WriteExcel(DataTable dt, string path)
+        public void WriteDtToExcelFile(DataTable dt, string path)
         {
-
-
 
             if (File.Exists(path))
                 File.Delete(path);
@@ -319,7 +240,18 @@ namespace CheckingIn
             var count = 0;
             var dt = new DataTable();
             dt.Columns.Add("name");
-            //加日期
+            //生成日期列
+
+
+
+            //得到本月所有的日期
+            var n = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);//本月第一天
+            while (n.Month == DateTime.Now.Month)
+            {
+                dt.Columns.Add(n.ToShortDateString());
+                n = n.AddDays(1);
+            }
+
 
             toolStripProgressBar1.Maximum = DB.Persons.Count;
             //对每人个进行遍历
@@ -330,7 +262,7 @@ namespace CheckingIn
 
                 var dr = dt.NewRow();
                 dr["name"] = name;
-                // p.Value.GetData();
+                p.Value.GetData(DateTime.Now.Month);
 
                 //得到信息
                 foreach (var c in p.Value.Checks)
@@ -346,7 +278,7 @@ namespace CheckingIn
                 toolStripProgressBar1.Value = count;
             }
 
-            WriteExcel(dt, outputfilename);
+            WriteDtToExcelFile(dt, outputfilename);
 
         }
 
@@ -498,7 +430,7 @@ namespace CheckingIn
             Log.Info("delete oa,count=" + i);
         }
 
-    
+
     }
 
 }

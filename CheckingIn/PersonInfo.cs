@@ -133,7 +133,7 @@ namespace CheckingIn
             r["info"] = i;
             dt.Rows.Add(r);
         }
-        public void SetMonth(int m)
+        private void SetMonth(int m)
         {
             AllDays.Clear();
             //得到本月所有的日期
@@ -195,7 +195,8 @@ namespace CheckingIn
                     ShoudWorkDayCount++;
                 else
                 {
-                    willaddcheck.Warns.Add(new WarnInfo(date, date.DayOfWeek.ToString(), WarnInfoType.Info));
+
+                    willaddcheck.Warns.Add(new WarnInfo(date, System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(date.DayOfWeek), WarnInfoType.Info));
                 }
 
 

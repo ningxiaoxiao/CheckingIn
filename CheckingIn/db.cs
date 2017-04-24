@@ -15,11 +15,7 @@ namespace CheckingIn
         /// oa的原始表
         /// </summary>
         public static DataTable OaOriginaDt;
-        
-        /// <summary>
-        /// 员工表
-        /// </summary>
-        public static DataTable PersonInfos;
+
         /// <summary>
         /// 全公司的人
         /// </summary>
@@ -40,7 +36,7 @@ namespace CheckingIn
             _db = new SQLiteConnection("Data Source=db.db");
             _db.Open();
         }
-        
+
         private static void CreatSqlTable()
         {
             Cmd("create table person (name varchar(20) primary key , mail varchar(50),worktimeclass varchar(20),password varchar(20))");
@@ -69,8 +65,15 @@ namespace CheckingIn
         public static void Creat()
         {
             CheckSqlFile();
+            //建立所有人的实例
+            var ps = Context.From<Dos.Model.person>().ToList();
+            foreach (var p in ps)
+            {
+                Persons.Add(p.name, new PersonInfo(p.name));
+            }
+            Log.Info($"共读取{ps.Count}人");
         }
-        
+
         public static void Close()
         {
             _db.Close();
