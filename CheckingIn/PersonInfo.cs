@@ -195,7 +195,6 @@ namespace CheckingIn
                     ShoudWorkDayCount++;
                 else
                 {
-
                     willaddcheck.Warns.Add(new WarnInfo(date, System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(date.DayOfWeek), WarnInfoType.Info));
                 }
 
@@ -322,7 +321,10 @@ namespace CheckingIn
                         CheckDTAdd(Name, st.Date, st.TimeOfDay, reason + "开始", checkDT);
                         CheckDTAdd(Name, et.Date, et.TimeOfDay, reason + "结束", checkDT);
 
-                        var ds = (int)(et - st).TotalDays;//得到相隔天数
+
+
+
+                        var ds = et.Day - st.Day;
 
 
                         for (var j = 0; j < ds; j++)
