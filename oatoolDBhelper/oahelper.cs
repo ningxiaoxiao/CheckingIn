@@ -54,11 +54,11 @@ namespace oatoolDBhelper
             log._logger.Info($"清楚原有记录{c}条");
 
             _dateTime = t;
-            readjson("加班", 3, 6, 7, 3);
+            readjson("加班", 3, 6, 7, 6);
             readjson("外出", 1, 4, 8, 4);
             readjson("休假", 1, 8, 9, 8, 7);
             readjson("补登", 3, 5, 5, 5, 6);
-            readjson("出差", 1, 12, 12, 13, 5);
+            readjson("出差", 1, 12, 13, 12, 5);
 
         }
 
