@@ -51,7 +51,7 @@ namespace oatoolDBhelper
 
             var c = DB.Context.DeleteAll<Dos.Model.oa>();
 
-            log._logger.Info($"清楚原有记录{c}条");
+            log._logger.Info($"清楚OA原有记录{c}条");
 
             _dateTime = t;
             readjson("加班", 3, 6, 7, 6);

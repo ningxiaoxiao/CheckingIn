@@ -276,9 +276,6 @@ namespace CheckingIn
                             break;
                         }
 
-                        //上班提前打卡
-                        //下班延时打卡
-
 
                         willaddcheck.InTime = t1;
                         willaddcheck.OutTime = t2;
@@ -341,7 +338,7 @@ namespace CheckingIn
                             if (c > st && c < et)//如果在相隔时间内,加一次打卡
                                 CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
 
-                            c = st.Date + new TimeSpan(j, 0, 0, 0) + (TimeSpan)WorkTimeClass.OutTime;//下班时间
+                            c = st.Date + new TimeSpan(j, 0, 0, 0) + WorkTimeClass.OutTime;//下班时间
 
                             if (c > st && c < et)//
                                 CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
@@ -367,8 +364,8 @@ namespace CheckingIn
 
 
                         //先增加开始和结束
-                        CheckDTAdd(Name, s, (TimeSpan)WorkTimeClass.InTime, reason + "开始", checkDT);
-                        CheckDTAdd(Name, ee, (TimeSpan)WorkTimeClass.OutTime, reason + "结束", checkDT);
+                        CheckDTAdd(Name, s, WorkTimeClass.InTime, reason + "开始", checkDT);
+                        CheckDTAdd(Name, ee, WorkTimeClass.OutTime, reason + "结束", checkDT);
 
                         //去掉时间
                         s = s.Date;
@@ -396,9 +393,6 @@ namespace CheckingIn
 
                         CheckDTAdd(Name, st2.Date, st2.TimeOfDay, subreason + "开始", checkDT);
                         CheckDTAdd(Name, et2.Date, et2.TimeOfDay, subreason + "结束", checkDT);
-
-
-
 
                         switch (subreason)
                         {
@@ -636,8 +630,7 @@ namespace CheckingIn
                         else
                         {
                             //迟到>2小时.直接算未打卡
-                            InTime = UnKownTimeSpan;
-                            _warns.Add(new WarnInfo(Date, "上班未打卡"));
+                            _warns.Add(new WarnInfo(Date, $"上班未打卡(超时),迟到{dt.TotalMinutes.ToString("0.#")}分钟"));
 
                         }
 
@@ -664,8 +657,7 @@ namespace CheckingIn
                     }
                     else
                     {
-                        OutTime = UnKownTimeSpan;
-                        _warns.Add(new WarnInfo(Date, "下班未打卡"));
+                        _warns.Add(new WarnInfo(Date, $"下班未打卡(超时),早退{delayTime.TotalMinutes.ToString("0.#")}分钟"));
                     }
 
 
