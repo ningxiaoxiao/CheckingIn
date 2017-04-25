@@ -17,10 +17,19 @@ namespace oatoolDBhelper
 
         static void Main(string[] args)
         {
+
+            var a = "abc\0\0";
+
+            var b = a.TrimEnd('\0');
+
+
+
             //得到当月第一天
             var t = DateTime.Today;
             t = t.AddDays(-t.Day + 1);
             oahelper.GetData(t);
+
+
 
 
             //OpenDataFile("data.xls");
@@ -174,7 +183,11 @@ namespace oatoolDBhelper
                 var count = 0;
                 while (sdk.GetAllUserInfo(iMachineNumber, ref idwEnrollNumber, ref sName, ref sPassword, ref iPrivilege, ref bEnabled))//get all the users' information from the memory
                 {
-                    users.Add(idwEnrollNumber.ToString(), sName);
+
+                    var sb = sName.Split('\0');
+
+
+                    users.Add(idwEnrollNumber.ToString(), sb[0]);
                     count++;
                 }
                 sdk.EnableDevice(iMachineNumber, true);

@@ -189,9 +189,9 @@ namespace CheckingIn
             foreach (var date in AllDays)
             {
 
-                //更新前天的数据
+                //更新到昨天的数据
 
-                if (date >= DateTime.Today.AddDays(-1))
+                if (date >= DateTime.Today)
                     break;
 
 
