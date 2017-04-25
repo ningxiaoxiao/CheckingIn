@@ -188,7 +188,15 @@ namespace CheckingIn
             //遍历所有日期
             foreach (var date in AllDays)
             {
-                if (date >= DateTime.Today) break;
+
+                //更新前天的数据
+
+                if (date >= DateTime.Today.AddDays(-1))
+                    break;
+
+
+
+
 
                 var willaddcheck = new CheckInfo(this, date);
                 if (isworkday(date))
@@ -268,7 +276,6 @@ namespace CheckingIn
                             break;
                         }
 
-                        //todo 计算时间是不是合法
                         //上班提前打卡
                         //下班延时打卡
 

