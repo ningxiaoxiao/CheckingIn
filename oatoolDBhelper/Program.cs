@@ -247,6 +247,13 @@ namespace oatoolDBhelper
                                     tt = time.TimeOfDay;
                                 }
 
+                                if (!users.ContainsKey(idwEnrollNumber.ToString()))
+                                {
+                                    log._logger.Error("找不到用户,id=" + idwEnrollNumber);
+                                    continue;
+                                }
+
+
                                 var o = new Dos.Model.original()
                                 {
                                     name = users[idwEnrollNumber.ToString()],
@@ -268,10 +275,10 @@ namespace oatoolDBhelper
 
                     tran.Commit();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     sdk.GetLastError(ref idwErrorCode);
-                    log._logger.Info("General Log Data Count:0 ErrorCode=" + idwErrorCode);
+                    log._logger.Error(ex + "readcount=" + iLogCount + " ErrorCode=" + idwErrorCode);
 
                     tran.Rollback();
                 }
