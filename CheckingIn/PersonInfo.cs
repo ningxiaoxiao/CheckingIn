@@ -359,18 +359,21 @@ namespace CheckingIn
 
 
                         //先增加开始和结束
-                        CheckDTAdd(Name, s, WorkTimeClass.InTime, reason + "开始", checkDT);
-                        CheckDTAdd(Name, ee, WorkTimeClass.OutTime, reason + "结束", checkDT);
+                       // CheckDTAdd(Name, s, WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 9, 0, 0) : WorkTimeClass.InTime, reason + "开始", checkDT);
+                      //  CheckDTAdd(Name, ee, WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 17, 0, 0) : WorkTimeClass.OutTime, reason + "结束", checkDT);
 
-                      
+
 
                         //得到出差几天
                         var days = ee - s;
 
-                        for (var d = 0; d < days.Days; d++)//2天以上 1天应该不执行
+                        for (var d = 0; d <= days.Days; d++)//2天以上 1天应该不执行
                         {
-                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), WorkTimeClass.InTime, "出差中", checkDT);
-                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), WorkTimeClass.OutTime, "出差中", checkDT);
+                            var waddd = s + new TimeSpan(d, 0, 0, 0);
+                            var waddt = WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 9, 0, 0) : WorkTimeClass.InTime;
+                            CheckDTAdd(Name, waddd, waddt, "出差", checkDT);
+                            waddt = WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 17, 0, 0) : WorkTimeClass.OutTime;
+                            CheckDTAdd(Name, waddd, waddt, "出差", checkDT);
                         }
 
                         break;
