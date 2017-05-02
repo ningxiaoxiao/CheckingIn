@@ -54,7 +54,6 @@
             this.数据库ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除所有数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除OA数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.工作日设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
@@ -79,8 +78,7 @@
             this.oA数据ToolStripMenuItem,
             this.邮箱ToolStripMenuItem,
             this.查看ToolStripMenuItem,
-            this.数据库ToolStripMenuItem,
-            this.工作日设置ToolStripMenuItem});
+            this.数据库ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(454, 25);
@@ -97,7 +95,7 @@
             this.toolStripMenuItem3,
             this.输出文件ToolStripMenuItem});
             this.文件ToolStripMenuItem.Name = "文件ToolStripMenuItem";
-            this.文件ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.文件ToolStripMenuItem.Size = new System.Drawing.Size(94, 21);
             this.文件ToolStripMenuItem.Text = "文件";
             // 
             // 打开文件ToolStripMenuItem
@@ -194,54 +192,54 @@
             // 加班ToolStripMenuItem
             // 
             this.加班ToolStripMenuItem.Name = "加班ToolStripMenuItem";
-            this.加班ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.加班ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.加班ToolStripMenuItem.Text = "加班";
             this.加班ToolStripMenuItem.Click += new System.EventHandler(this.加班ToolStripMenuItem_Click);
             // 
             // 出差ToolStripMenuItem
             // 
             this.出差ToolStripMenuItem.Name = "出差ToolStripMenuItem";
-            this.出差ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.出差ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.出差ToolStripMenuItem.Text = "出差";
             this.出差ToolStripMenuItem.Click += new System.EventHandler(this.出差ToolStripMenuItem_Click);
             // 
             // 外出ToolStripMenuItem
             // 
             this.外出ToolStripMenuItem.Name = "外出ToolStripMenuItem";
-            this.外出ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.外出ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.外出ToolStripMenuItem.Text = "外出";
             this.外出ToolStripMenuItem.Click += new System.EventHandler(this.外出ToolStripMenuItem_Click);
             // 
             // 补登ToolStripMenuItem
             // 
             this.补登ToolStripMenuItem.Name = "补登ToolStripMenuItem";
-            this.补登ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.补登ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.补登ToolStripMenuItem.Text = "补登";
             this.补登ToolStripMenuItem.Click += new System.EventHandler(this.补登ToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(145, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // 个人信息表ToolStripMenuItem
             // 
             this.个人信息表ToolStripMenuItem.Name = "个人信息表ToolStripMenuItem";
-            this.个人信息表ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.个人信息表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.个人信息表ToolStripMenuItem.Text = "个人信息表";
             this.个人信息表ToolStripMenuItem.Click += new System.EventHandler(this.个人信息表ToolStripMenuItem_Click);
             // 
             // 原始表ToolStripMenuItem
             // 
             this.原始表ToolStripMenuItem.Name = "原始表ToolStripMenuItem";
-            this.原始表ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.原始表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.原始表ToolStripMenuItem.Text = "考勤器原始表";
             this.原始表ToolStripMenuItem.Click += new System.EventHandler(this.原始表ToolStripMenuItem_Click);
             // 
             // oa表ToolStripMenuItem
             // 
             this.oa表ToolStripMenuItem.Name = "oa表ToolStripMenuItem";
-            this.oa表ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.oa表ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.oa表ToolStripMenuItem.Text = "oa原始表";
             this.oa表ToolStripMenuItem.Click += new System.EventHandler(this.oa表ToolStripMenuItem_Click);
             // 
@@ -257,23 +255,16 @@
             // 删除所有数据ToolStripMenuItem
             // 
             this.删除所有数据ToolStripMenuItem.Name = "删除所有数据ToolStripMenuItem";
-            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.删除所有数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.删除所有数据ToolStripMenuItem.Text = "删除原始数据";
             this.删除所有数据ToolStripMenuItem.Click += new System.EventHandler(this.删除考勤数据ToolStripMenuItem_Click);
             // 
             // 删除OA数据ToolStripMenuItem
             // 
             this.删除OA数据ToolStripMenuItem.Name = "删除OA数据ToolStripMenuItem";
-            this.删除OA数据ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.删除OA数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.删除OA数据ToolStripMenuItem.Text = "清空OA数据";
             this.删除OA数据ToolStripMenuItem.Click += new System.EventHandler(this.删除OA数据ToolStripMenuItem_Click_1);
-            // 
-            // 工作日设置ToolStripMenuItem
-            // 
-            this.工作日设置ToolStripMenuItem.Name = "工作日设置ToolStripMenuItem";
-            this.工作日设置ToolStripMenuItem.Size = new System.Drawing.Size(80, 21);
-            this.工作日设置ToolStripMenuItem.Text = "工作日设置";
-            this.工作日设置ToolStripMenuItem.Click += new System.EventHandler(this.工作日设置ToolStripMenuItem_Click);
             // 
             // toolStrip1
             // 
@@ -390,7 +381,6 @@
         private System.Windows.Forms.ToolStripMenuItem 删除OA数据ToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
-        private System.Windows.Forms.ToolStripMenuItem 工作日设置ToolStripMenuItem;
     }
 }
 

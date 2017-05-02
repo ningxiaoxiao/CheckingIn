@@ -112,7 +112,8 @@ namespace CheckingIn
 
             //开始事务
             var tran = DB.Context.BeginTransaction();
-
+            var updatacount = 0;
+            var addcount = 0;
             try
             {
                 //读出文件
@@ -136,11 +137,14 @@ namespace CheckingIn
                         };
 
                         DB.Context.Insert(tran, p);
+                        addcount++;
                     }
                     else if (rs[0]["worktimeclass"].ToString() != classname)
                     {
 
                         DB.Context.Update<Dos.Model.person>(tran, Dos.Model.person._.worktimeclass, classname, Dos.Model.person._.name == name);
+                        Log.Info($"updata name={name},wt={classname}");
+                        updatacount++;
                     }
 
 
@@ -148,7 +152,7 @@ namespace CheckingIn
 
                 tran.Commit();
 
-                Log.Info("worktimeclass done");
+                Log.Info($"worktimeclass done,add={addcount},updatacount={updatacount}");
             }
             catch (Exception ex)
             {
@@ -240,17 +244,31 @@ namespace CheckingIn
             var count = 0;
             var dt = new DataTable();
             dt.Columns.Add("name");
+            //统计列
+
+            dt.Columns.Add("剩余假期");
+            dt.Columns.Add("工作天数");
+            dt.Columns.Add("工作时间");
+            dt.Columns.Add("迟到早退");
+            dt.Columns.Add("使用调休假期");
+            dt.Columns.Add("使用扣薪假期");
+            dt.Columns.Add("加班");
+            dt.Columns.Add("出差");
+
+
+
             //生成日期列
 
 
 
-            //得到本月所有的日期
-            var n = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);//本月第一天
-            while (n.Month == DateTime.Now.Month)
+            //得到上月所有的日期
+            var n = new DateTime(DateTime.Now.Year, DateTime.Now.Month - 1, 1);//上月第一天
+            while (n.Month < DateTime.Now.Month)
             {
                 dt.Columns.Add(n.ToShortDateString());
                 n = n.AddDays(1);
             }
+
 
 
             toolStripProgressBar1.Maximum = DB.Persons.Count;
@@ -262,13 +280,27 @@ namespace CheckingIn
 
                 var dr = dt.NewRow();
                 dr["name"] = name;
-                p.Value.GetData(DateTime.Now.Month);
+                p.Value.GetData(DateTime.Now.Month - 1);
+
+                //统计信息
+                dr["剩余假期"] = p.Value.CanUseHolidayHour.TotalHours.ToString("0.#") + "小时";
+                dr["工作时间"] = p.Value.WorkTime.TotalHours.ToString("0.#") + "/" + p.Value.ShoudWorkDayCount * 8 + "小时";
+                dr["工作天数"] = p.Value.ShoudWorkDayCount - p.Value.WarnDayCount + "/" + p.Value.ShoudWorkDayCount + "天";
+
+                dr["迟到早退"] = p.Value.DelayTime.TotalMinutes.ToString("0.# '分钟'");
+
+                dr["使用调休假期"] = p.Value.useHolidayhours.TotalHours.ToString("0.#") + "小时";
+                dr["使用扣薪假期"] = p.Value.NoPayHolidaysHours.TotalHours.ToString("0.#") + "小时";
+                dr["加班"] = p.Value.OverWorkTime.TotalHours.ToString("0.# '小时'");
+                dr["出差"] = p.Value.Travel + "天";
+
+
 
                 //得到信息
                 foreach (var c in p.Value.Checks)
                 {
-
-                    dr[c.Date.ToString()] = c.warninfo;
+                    if (((DateTime)c.Date).Month < DateTime.Now.Month)
+                        dr[c.Date.ToString()] = c.warninfo + c.Info;
 
 
                 }

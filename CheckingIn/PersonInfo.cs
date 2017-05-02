@@ -194,10 +194,6 @@ namespace CheckingIn
                 if (date >= DateTime.Today)
                     break;
 
-
-
-
-
                 var willaddcheck = new CheckInfo(this, date);
                 if (isworkday(date))
                     ShoudWorkDayCount++;
@@ -268,13 +264,6 @@ namespace CheckingIn
                         var t1 = new TimeSpan((long)data[0].Row["time"]);
                         var t2 = new TimeSpan((long)data[data.Count - 1].Row["time"]);
 
-                        //综合工时直接计算
-                        if (WorkTimeClass.IsWorkTimeClass)
-                        {
-                            willaddcheck.InTime = t1;
-                            willaddcheck.OutTime = t2;
-                            break;
-                        }
 
 
                         willaddcheck.InTime = t1;
@@ -331,16 +320,16 @@ namespace CheckingIn
                         var ds = et.Day - st.Day;
 
 
-                        for (var j = 0; j < ds; j++)
+                        for (var j = 0; j <= ds; j++)
                         {
                             var c = st.Date + new TimeSpan(j, 0, 0, 0) + WorkTimeClass.InTime;//上班时间
 
-                            if (c > st && c < et)//如果在相隔时间内,加一次打卡
+                            if (c >= st && c <= et)//如果在相隔时间内,加一次打卡
                                 CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
 
                             c = st.Date + new TimeSpan(j, 0, 0, 0) + WorkTimeClass.OutTime;//下班时间
 
-                            if (c > st && c < et)//
+                            if (c >= st && c <= et)//
                                 CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
 
                         }
@@ -358,26 +347,30 @@ namespace CheckingIn
                         //出差期间,每天自动增加一个上班打卡 和下班打卡
                         var s = (DateTime)drv["start"];
                         var ee = (DateTime)drv["end"];
+                        //去掉时间
+                        s = s.Date;
+                        ee = ee.Date;
+
 
                         //累加出差天数
                         Travel += ee.Day - s.Day + 1;
+
+
 
 
                         //先增加开始和结束
                         CheckDTAdd(Name, s, WorkTimeClass.InTime, reason + "开始", checkDT);
                         CheckDTAdd(Name, ee, WorkTimeClass.OutTime, reason + "结束", checkDT);
 
-                        //去掉时间
-                        s = s.Date;
-                        ee = ee.Date;
+                      
 
                         //得到出差几天
                         var days = ee - s;
 
-                        for (var d = 0; d <= days.Days; d++)
+                        for (var d = 0; d < days.Days; d++)//2天以上 1天应该不执行
                         {
-                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)WorkTimeClass.InTime, "出差中", checkDT);
-                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), (TimeSpan)WorkTimeClass.OutTime, "出差中", checkDT);
+                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), WorkTimeClass.InTime, "出差中", checkDT);
+                            CheckDTAdd(Name, s + new TimeSpan(d, 0, 0, 0), WorkTimeClass.OutTime, "出差中", checkDT);
                         }
 
                         break;

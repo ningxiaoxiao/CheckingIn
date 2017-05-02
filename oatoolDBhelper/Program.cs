@@ -24,9 +24,10 @@ namespace oatoolDBhelper
 
 
 
-            //得到当月第一天
+            //得到这两个月的OA数据
             var t = DateTime.Today;
             t = t.AddDays(-t.Day + 1);
+            t = t.AddMonths(-1);
             oahelper.GetData(t);
 
 
