@@ -297,12 +297,17 @@ namespace CheckingIn
 
                         //取整小时
                         var owt = et1 - st1;
-                        OverWorkTime += new TimeSpan(owt.Days, owt.Hours, 0, 0);
+
+                        owt = new TimeSpan(owt.Days, owt.Hours, 0, 0);
+
+
+
+                        OverWorkTime += owt;
 
                         //模拟两次打卡
 
-                        CheckDTAdd(Name, st1.Date, st1.TimeOfDay, reason + "开始", checkDT);
-                        CheckDTAdd(Name, et1.Date, et1.TimeOfDay, reason + "结束", checkDT);
+                        CheckDTAdd(Name, st1.Date, st1.TimeOfDay, reason + owt.TotalHours + "小时", checkDT);
+                        CheckDTAdd(Name, et1.Date, et1.TimeOfDay, reason + owt.TotalHours + "小时", checkDT);
 
                         break;
                     case "外出":
@@ -311,8 +316,8 @@ namespace CheckingIn
                         var et = (DateTime)drv["end"];
 
                         //模拟打卡
-                        CheckDTAdd(Name, st.Date, st.TimeOfDay, reason + "开始", checkDT);
-                        CheckDTAdd(Name, et.Date, et.TimeOfDay, reason + "结束", checkDT);
+                        CheckDTAdd(Name, st.Date, st.TimeOfDay, reason, checkDT);
+                        CheckDTAdd(Name, et.Date, et.TimeOfDay, reason, checkDT);
 
 
 
@@ -325,12 +330,12 @@ namespace CheckingIn
                             var c = st.Date + new TimeSpan(j, 0, 0, 0) + WorkTimeClass.InTime;//上班时间
 
                             if (c >= st && c <= et)//如果在相隔时间内,加一次打卡
-                                CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
+                                CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出", checkDT);
 
                             c = st.Date + new TimeSpan(j, 0, 0, 0) + WorkTimeClass.OutTime;//下班时间
 
                             if (c >= st && c <= et)//
-                                CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出中", checkDT);
+                                CheckDTAdd(Name, c.Date, c.TimeOfDay, "外出", checkDT);
 
                         }
                         break;
@@ -353,21 +358,12 @@ namespace CheckingIn
 
 
                         //累加出差天数
-                        Travel += ee.Day - s.Day + 1;
-
-
-
-
-                        //先增加开始和结束
-                       // CheckDTAdd(Name, s, WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 9, 0, 0) : WorkTimeClass.InTime, reason + "开始", checkDT);
-                      //  CheckDTAdd(Name, ee, WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 17, 0, 0) : WorkTimeClass.OutTime, reason + "结束", checkDT);
-
 
 
                         //得到出差几天
-                        var days = ee - s;
-
-                        for (var d = 0; d <= days.Days; d++)//2天以上 1天应该不执行
+                        var days = ee.Day - s.Day;
+                        Travel += days+1;
+                        for (var d = 0; d <= days; d++)
                         {
                             var waddd = s + new TimeSpan(d, 0, 0, 0);
                             var waddt = WorkTimeClass.IsWorkTimeClass ? new TimeSpan(0, 9, 0, 0) : WorkTimeClass.InTime;
@@ -387,8 +383,12 @@ namespace CheckingIn
 
                         var time = et2 - st2;
 
-                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, subreason + "开始", checkDT);
-                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, subreason + "结束", checkDT);
+                        if (time.TotalHours > 8)//如果是8小时以上休假,变成8小时
+                            time = new TimeSpan(8, 0, 0);
+
+
+                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, reason + subreason + time.TotalHours + "小时", checkDT);
+                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, reason + subreason + time.TotalHours + "小时", checkDT);
 
                         switch (subreason)
                         {

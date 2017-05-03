@@ -108,7 +108,7 @@ namespace CheckingIn
         {
 
 
-            var pdt = DB.Context.From<Dos.Model.person>().ToDataTable();
+
 
             //开始事务
             var tran = DB.Context.BeginTransaction();
@@ -118,13 +118,34 @@ namespace CheckingIn
             {
                 //读出文件
                 var dt = new ExcelHelper(path).ExcelToDataTable("", true);
+                var dbdt = DB.Context.From<Dos.Model.person>().ToDataTable();
+                var delcount = 0;
+                //清理文件中没有的人
+                foreach (DataRow i in dbdt.Rows)
+                {
+                    var name = i["name"].ToString();
+                    var cn = i["worktimeclass"].ToString();
+
+                    var rs = dt.Select($"姓名 ='{name}'");
+                    if (rs.Length == 0)
+                    {
+                        //没有这个人了.删除
+                        DB.Context.Delete<Dos.Model.person>(tran, p => p.name == name);
+                        delcount++;
+
+                    }
+                }
+
+                Log.Info("delcount=" + delcount);
+
+
                 //进行遍历处理    
                 foreach (DataRow i in dt.Rows)
                 {
                     var name = i["姓名"].ToString();
                     var classname = i["对应时段"].ToString();
 
-                    var rs = pdt.Select($"name ='{name}'");
+                    var rs = dbdt.Select($"name ='{name}'");
 
                     if (rs.Length == 0)
                     {
@@ -278,21 +299,24 @@ namespace CheckingIn
                 //当前人名字
                 var name = p.Value.Name;
 
-                var dr = dt.NewRow();
-                dr["name"] = name;
+                var drup = dt.NewRow();
+                var drdown = dt.NewRow();
+                drup["name"] = name + "上午";
+                drdown["name"] = name + "下午";
+
                 p.Value.GetData(DateTime.Now.Month - 1);
 
                 //统计信息
-                dr["剩余假期"] = p.Value.CanUseHolidayHour.TotalHours.ToString("0.#") + "小时";
-                dr["工作时间"] = p.Value.WorkTime.TotalHours.ToString("0.#") + "/" + p.Value.ShoudWorkDayCount * 8 + "小时";
-                dr["工作天数"] = p.Value.ShoudWorkDayCount - p.Value.WarnDayCount + "/" + p.Value.ShoudWorkDayCount + "天";
+                drup["剩余假期"] = p.Value.CanUseHolidayHour.TotalHours.ToString("0.#") + "小时";
+                drup["工作时间"] = p.Value.WorkTime.TotalHours.ToString("0.#") + "/" + p.Value.ShoudWorkDayCount * 8 + "小时";
+                drup["工作天数"] = p.Value.ShoudWorkDayCount - p.Value.WarnDayCount + "/" + p.Value.ShoudWorkDayCount + "天";
 
-                dr["迟到早退"] = p.Value.DelayTime.TotalMinutes.ToString("0.# '分钟'");
+                drup["迟到早退"] = p.Value.DelayTime.TotalMinutes.ToString("0.# '分钟'");
 
-                dr["使用调休假期"] = p.Value.useHolidayhours.TotalHours.ToString("0.#") + "小时";
-                dr["使用扣薪假期"] = p.Value.NoPayHolidaysHours.TotalHours.ToString("0.#") + "小时";
-                dr["加班"] = p.Value.OverWorkTime.TotalHours.ToString("0.# '小时'");
-                dr["出差"] = p.Value.Travel + "天";
+                drup["使用调休假期"] = p.Value.useHolidayhours.TotalHours.ToString("0.#") + "小时";
+                drup["使用扣薪假期"] = p.Value.NoPayHolidaysHours.TotalHours.ToString("0.#") + "小时";
+                drup["加班"] = p.Value.OverWorkTime.TotalHours.ToString("0.# '小时'");
+                drup["出差"] = p.Value.Travel + "天";
 
 
 
@@ -300,11 +324,63 @@ namespace CheckingIn
                 foreach (var c in p.Value.Checks)
                 {
                     if (((DateTime)c.Date).Month < DateTime.Now.Month)
-                        dr[c.Date.ToString()] = c.warninfo + c.Info;
+                    {
+                        var upstr = "√";
+                        var donwstr = "√";
+
+
+                        var willaddstrs = c.warninfo.Split(' ');
+
+                        foreach (var willaddstr in willaddstrs)
+                        {
+
+                            if (willaddstr.Contains("分钟"))
+                            {
+                                if (p.Value.DelayTime > new TimeSpan(0, 30, 0))//如果总时间小于30 就去掉迟到时间
+                                {
+                                    if (willaddstr.Contains("迟到"))
+                                        upstr = willaddstr;
+                                    else if (willaddstr.Contains("早退"))
+                                        donwstr = willaddstr;
+                                }
+
+
+                            }
+                            else if (willaddstr.Contains("上班未打卡"))
+                            {
+                                upstr = "上未";
+                            }
+                            else if (willaddstr.Contains("下班未打卡"))
+                            {
+                                donwstr = "下未";
+                            }
+
+                            if (c.Info.Contains("休假"))
+                            {
+                                upstr = c.Info;
+
+                            }
+
+                            if (!c.Date.IsWorkDay)
+                            {
+                                upstr = "圆";
+                                donwstr = "圆";
+                            }
+                            drup[c.Date.ToString()] = upstr;
+                            drdown[c.Date.ToString()] = donwstr;
+
+                        }
+
+
+
+
+
+                    }
 
 
                 }
-                dt.Rows.Add(dr);
+                dt.Rows.Add(drup);
+                dt.Rows.Add(drdown);
 
                 count++;
                 toolStripProgressBar1.Value = count;
