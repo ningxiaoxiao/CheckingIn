@@ -106,10 +106,6 @@ namespace CheckingIn
         /// <param name="path"></param>
         private void OpenWorkTimeClassFile(string path)
         {
-
-
-
-
             //开始事务
             var tran = DB.Context.BeginTransaction();
             var updatacount = 0;
@@ -199,15 +195,12 @@ namespace CheckingIn
 
         public void WriteDtToExcelFile(DataTable dt, string path)
         {
+            StringToFile(DtToString(dt), path);
+        }
 
-            if (File.Exists(path))
-                File.Delete(path);
-
-
-            var sw = new StreamWriter(path, false, Encoding.GetEncoding("gb2312"));//打开写文件流
+        public string DtToString(DataTable dt)
+        {
             var sb = new StringBuilder();
-
-
 
             //写标题
             for (var k = 0; k < dt.Columns.Count; k++)
@@ -229,12 +222,20 @@ namespace CheckingIn
                 }
                 sb.Append(Environment.NewLine);
             }
-            sw.Write(sb.ToString());//文件流写入内容
+            return sb.ToString();
+        }
+
+        public void StringToFile(string s, string path)
+        {
+
+            if (File.Exists(path))
+                File.Delete(path);
+
+            var sw = new StreamWriter(path, false, Encoding.GetEncoding("gb2312"));//打开写文件流
+            sw.Write(s);//文件流写入内容
             sw.Flush();
             sw.Close();
         }
-
-
 
 
 
@@ -257,10 +258,14 @@ namespace CheckingIn
             _http.Close();
         }
 
-        private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)
+
+        public string GetOutXlsString()
         {
+            return DtToString(GetOutXlsDt());
+        }
 
-
+        private DataTable GetOutXlsDt()
+        {
             //所有人遍历
             var count = 0;
             var dt = new DataTable();
@@ -368,13 +373,7 @@ namespace CheckingIn
                             }
                             drup[c.Date.ToString()] = upstr;
                             drdown[c.Date.ToString()] = donwstr;
-
                         }
-
-
-
-
-
                     }
 
 
@@ -385,8 +384,22 @@ namespace CheckingIn
                 count++;
                 toolStripProgressBar1.Value = count;
             }
+            return dt;
+        }
 
-            WriteDtToExcelFile(dt, outputfilename);
+        public void GetOutXlsFile()
+        {
+           
+
+            WriteDtToExcelFile(GetOutXlsDt(), outputfilename);
+        }
+
+        private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+
+            GetOutXlsFile();
+
 
         }
 

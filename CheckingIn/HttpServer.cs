@@ -83,6 +83,10 @@ namespace CheckingIn
                     case "/getdata":
                         retHtml = GetData(requestInfo);
                         break;
+                    case "/getout.xls":
+                        //生成文件
+                        retHtml = CheckingIn.Inst.GetOutXlsString();
+                        break;
                 }
             }
 
@@ -103,6 +107,10 @@ namespace CheckingIn
                     break;
                 case ".css":
                     sb.AppendLine("Content-Type: text/css");
+                    break;
+                case ".xls":
+                    sb.AppendLine("Content-Type: application/octet-stream");
+                    sb.AppendLine("Content-Disposition:attachment; filename=\"getout.xls\"");
                     break;
             }
             /*
