@@ -454,7 +454,7 @@ namespace CheckingIn
 
 
             if (WorkTimeClass.IsWorkTimeClass)
-                profile["工作时间"] = WorkTime.TotalHours.ToString("0.#") + "/" + ShoudWorkDayCount * 8 + "小时";
+                profile["工作时间"] = WorkTime.TotalHours.ToString("0.#") + "/" + ShoudWorkDayCount * 9 + "小时";
             else
             {
                 profile["工作天数"] = ShoudWorkDayCount - WarnDayCount + "/" + ShoudWorkDayCount + "天";
