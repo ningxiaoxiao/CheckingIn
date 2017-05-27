@@ -162,6 +162,7 @@ namespace CheckingIn
             useHolidayhours = new TimeSpan();
             DelayTime = new TimeSpan();
             ShoudWorkDayCount = 0;
+            WorkTime=new TimeSpan();
             _warnDayCount = -1;
         }
 
