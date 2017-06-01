@@ -334,37 +334,43 @@ namespace CheckingIn
                         var donwstr = "√";
 
 
-                        var willaddstrs = c.warninfo.Split(' ');
+                        var warninfos = c.warninfo.Split(' ');
 
-                        foreach (var willaddstr in willaddstrs)
+                        foreach (var wraninfo in warninfos)
                         {
 
-                            if (willaddstr.Contains("分钟"))
+                            if (wraninfo.Contains("分钟"))
                             {
                                 if (p.Value.DelayTime > new TimeSpan(0, 30, 0))//如果总时间小于30 就去掉迟到时间
                                 {
-                                    if (willaddstr.Contains("迟到"))
-                                        upstr = willaddstr;
-                                    else if (willaddstr.Contains("早退"))
-                                        donwstr = willaddstr;
+                                    if (wraninfo.Contains("迟到"))
+                                        upstr = wraninfo;
+                                    else if (wraninfo.Contains("早退"))
+                                        donwstr = wraninfo;
                                 }
-
-
                             }
-                            else if (willaddstr.Contains("上班未打卡"))
+                            if (wraninfo.Contains("上班未打卡"))
                             {
                                 upstr = "上未";
                             }
-                            else if (willaddstr.Contains("下班未打卡"))
+
+                            if (wraninfo.Contains("下班未打卡"))
                             {
                                 donwstr = "下未";
+                            }
+
+                            if (wraninfo.Contains("旷工"))
+                            {
+                                upstr = "旷工";
+                                donwstr = "旷工";
                             }
 
                             if (c.Info.Contains("休假"))
                             {
                                 upstr = c.Info;
-
+                                donwstr = c.Info;
                             }
+
 
                             if (!c.Date.IsWorkDay)
                             {
