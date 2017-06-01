@@ -85,7 +85,7 @@ namespace CheckingIn
                         break;
                     case "/getout.xls":
                         //生成文件
-                        retHtml = CheckingIn.Inst.GetOutXlsString();
+                        retHtml = CheckingIn.Inst.GetOutXlsString(int.Parse(requestInfo.Parameter["month"].ToString()));
                         break;
                 }
             }
