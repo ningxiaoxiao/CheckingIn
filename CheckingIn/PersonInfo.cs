@@ -162,7 +162,7 @@ namespace CheckingIn
             useHolidayhours = new TimeSpan();
             DelayTime = new TimeSpan();
             ShoudWorkDayCount = 0;
-            WorkTime=new TimeSpan();
+            WorkTime = new TimeSpan();
             _warnDayCount = -1;
         }
 
@@ -341,11 +341,11 @@ namespace CheckingIn
                         }
                         break;
                     case "补登":
-
+                        //补登多出5分钟,不然早上迟到 会有早退
                         CheckDTAdd(Name,
                             (DateTime)drv["start"],
-                            subreason == "上班" ? WorkTimeClass.InTime : WorkTimeClass.OutTime,
-                            reason,
+                            subreason == "上班" ? WorkTimeClass.InTime.Add(new TimeSpan(0, 5, 0)) : WorkTimeClass.OutTime.Add(new TimeSpan(0, 5, 0)),
+                            reason + subreason,
                             checkDT);
 
                         break;
@@ -363,7 +363,7 @@ namespace CheckingIn
 
                         //得到出差几天
                         var days = ee.Day - s.Day;
-                        Travel += days+1;
+                        Travel += days + 1;
                         for (var d = 0; d <= days; d++)
                         {
                             var waddd = s + new TimeSpan(d, 0, 0, 0);
