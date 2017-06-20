@@ -226,7 +226,15 @@ namespace CheckingIn
                     Sort = "time asc" //从小到大
                 };
                 willaddcheck.Sourcerec = data;
+                /*
+                foreach (DataRowView drv in data)
+                {
+                    willaddcheck.Info += drv["info"] + " ";
+                }*/
+
+               
                 //合成信息
+                //bug 如果一天有多次同样的OA  只会出现一次提示,比如调休
                 foreach (var r in from DataRowView t in data select t["info"].ToString() into r where !willaddcheck.Info.Contains(r) select r)
                 {
                     willaddcheck.Info += r + " ";
@@ -388,8 +396,8 @@ namespace CheckingIn
                             time = new TimeSpan(8, 0, 0);
 
 
-                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, reason + subreason + time.TotalHours + "小时", checkDT);
-                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, reason + subreason + time.TotalHours + "小时", checkDT);
+                        CheckDTAdd(Name, st2.Date, st2.TimeOfDay, reason + subreason + time.TotalHours.ToString("0.#") + "小时", checkDT);//开始打一次
+                        CheckDTAdd(Name, et2.Date, et2.TimeOfDay, reason + subreason + time.TotalHours.ToString("0.#") + "小时", checkDT);//结束打一次
 
                         switch (subreason)
                         {

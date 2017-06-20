@@ -55,13 +55,21 @@ namespace oatoolDBhelper
 
             _dateTime = t;
             readjson("加班", 3, 6, 7, 6);
-            readjson("外出", 1, 4, 8, 4);
+            readjson("外出", 1, 5, 8, 5);
             readjson("休假", 1, 8, 9, 8, 7);
             readjson("补登", 3, 5, 5, 5, 6);
             readjson("出差", 1, 12, 13, 12, 5);
 
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="m">原因</param>
+        /// <param name="namearg"></param>
+        /// <param name="startarg"></param>
+        /// <param name="endarg"></param>
+        /// <param name="timearg"></param>
+        /// <param name="subreasonarg"></param>
         private static void readjson(string m, int namearg, int startarg, int endarg, int timearg, int subreasonarg = -1)
         {
 

@@ -184,7 +184,7 @@ namespace CheckingIn
         private void OpenMailFile(string path)
         {
 
-            //todo 
+            //todo  发送邮件
 
 
         }
