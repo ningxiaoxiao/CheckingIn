@@ -225,6 +225,7 @@
     <Content Include="JsonData\外出.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="JsonData\外出2.txt" />
     <Content Include="JsonData\补登.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
