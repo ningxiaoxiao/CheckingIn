@@ -320,6 +320,7 @@ namespace CheckingIn
 
                         break;
                     case "外出":
+                    case "外出2":
 
                         var st = (DateTime)drv["start"];
                         var et = (DateTime)drv["end"];

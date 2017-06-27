@@ -86,12 +86,16 @@ namespace oatoolDBhelper
                 if (sqrj.Date < _dateTime.Date)//数据合法时间
                     continue;
 
+                var jargDate = jrow["field00" + startarg.ToString("00")];
+                var jargStart = jrow["field00" + startarg.ToString("00")];
+                var jargEnd = jrow["field00" + endarg.ToString("00")];
+
                 var o = new Dos.Model.oa()
                 {
                     name = jrow["field00" + namearg.ToString("00")].ToString(),
-                    date = DateTime.Parse(jrow["field00" + startarg.ToString("00")].ToString()).Date,
-                    start = DateTime.Parse(jrow["field00" + startarg.ToString("00")].ToString()),
-                    end = DateTime.Parse(jrow["field00" + endarg.ToString("00")].ToString()),
+                    date = DateTime.Parse(jargDate.ToString()).Date,
+                    start = DateTime.Parse(jargStart.ToString()),
+                    end = DateTime.Parse(jargEnd.ToString()),
                     reason = m,
                 };
 
