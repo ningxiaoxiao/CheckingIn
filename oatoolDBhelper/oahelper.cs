@@ -54,6 +54,7 @@ namespace oatoolDBhelper
             log._logger.Info($"清楚OA原有记录{c}条");
 
             _dateTime = t;
+            log._logger.Info($"数据合法时间:{_dateTime}");
             readjson("加班", 3, 6, 7, 6);
             readjson("外出", 1, 5, 8, 5);
             readjson("外出2", 1, 4, 8, 4);
@@ -69,14 +70,15 @@ namespace oatoolDBhelper
         /// <param name="namearg"></param>
         /// <param name="startarg"></param>
         /// <param name="endarg"></param>
-        /// <param name="timearg"></param>
+        /// <param name="timearg">提交时间,用于合法性过滤</param>
         /// <param name="subreasonarg"></param>
         private static void readjson(string m, int namearg, int startarg, int endarg, int timearg, int subreasonarg = -1)
         {
 
             login();
             var d = getoaData("JsonData\\" + m + ".txt");
-
+            if(d==null)return;
+            
             var trans = DB.Context.BeginTransaction();
             var count = 0;
             foreach (JsonData jrow in d)
@@ -86,28 +88,65 @@ namespace oatoolDBhelper
                 if (sqrj.Date < _dateTime.Date)//数据合法时间
                     continue;
 
-                var jargDate = jrow["field00" + startarg.ToString("00")];
-                var jargStart = jrow["field00" + startarg.ToString("00")];
-                var jargEnd = jrow["field00" + endarg.ToString("00")];
+                var jargDate = DateTime.Parse(jrow["field00" + startarg.ToString("00")].ToString()).Date;
+                var jargStart = DateTime.Parse(jrow["field00" + startarg.ToString("00")].ToString());
+                var jargEnd = DateTime.Parse(jrow["field00" + endarg.ToString("00")].ToString());
 
-                var o = new Dos.Model.oa()
+                //查看时间有没有跨月.
+
+              
+
+                if (jargEnd.Month - jargStart.Month == 1)
                 {
-                    name = jrow["field00" + namearg.ToString("00")].ToString(),
-                    date = DateTime.Parse(jargDate.ToString()).Date,
-                    start = DateTime.Parse(jargStart.ToString()),
-                    end = DateTime.Parse(jargEnd.ToString()),
-                    reason = m,
-                };
+
+                    var lastdayofmonth = jargEnd.AddDays(-jargEnd.Day);
+                    var firstdayofmonth = lastdayofmonth.AddDays(1);
 
 
+                    //切时间
+                    var o1 = new Dos.Model.oa()
+                    {
+                        name = jrow["field00" + namearg.ToString("00")].ToString(),
+                        date = jargStart.Date,
+                        start = jargStart,
+                        end = lastdayofmonth,//改成这个月的最后一天.
+                        reason = m,
+                        subreason = subreasonarg!=-1?jrow["field00" + subreasonarg.ToString("00")].ToString():""
+                    };
 
-                if (subreasonarg != -1)
+                    var o2 = new Dos.Model.oa()
+                    {
+                        name = jrow["field00" + namearg.ToString("00")].ToString(),
+                        date = firstdayofmonth.Date,
+                        start = firstdayofmonth,
+                        end = jargEnd,
+                        reason = m,
+                        subreason = subreasonarg != -1 ? jrow["field00" + subreasonarg.ToString("00")].ToString() : ""
+                    };
+
+                    DB.Context.Insert(trans, o1);
+                    DB.Context.Insert(trans, o2);
+                    log._logger.Info("出现分割日期");
+
+                }
+                else
                 {
-                    o.subreason = jrow["field00" + subreasonarg.ToString("00")].ToString();
+                    var o = new Dos.Model.oa()
+                    {
+                        name = jrow["field00" + namearg.ToString("00")].ToString(),
+                        date = jargDate,
+                        start = jargStart,
+                        end = jargEnd,
+                        reason = m,
+                        subreason = subreasonarg != -1 ? jrow["field00" + subreasonarg.ToString("00")].ToString() : ""
+                    };
+                    //加入oa表中
+                    DB.Context.Insert(trans, o);
                 }
 
-                //加入oa表中
-                DB.Context.Insert<Dos.Model.oa>(trans, o);
+            
+
+              
                 count++;
             }
 
@@ -130,7 +169,11 @@ namespace oatoolDBhelper
                 ContentType = "application/x-www-form-urlencoded; charset=UTF-8",
             };
             var html = http.GetHtml(item).Html;
-
+            if (html == "")
+            {
+                log._logger.Info("得到返回文本是空的-"+findTxtPath);
+                return null;
+            }
             var j = JsonMapper.ToObject(html);
             return j["data"];
 

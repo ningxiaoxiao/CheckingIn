@@ -18,16 +18,9 @@ namespace oatoolDBhelper
         static void Main(string[] args)
         {
 
-            var a = "abc\0\0";
-
-            var b = a.TrimEnd('\0');
-
-
-
             //得到这两个月的OA数据
             var t = DateTime.Today;
-            t = t.AddDays(-t.Day + 1);
-            t = t.AddMonths(-1);
+            t = t.AddDays(-40);
             oahelper.GetData(t);
 
 

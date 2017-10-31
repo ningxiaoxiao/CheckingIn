@@ -70,10 +70,21 @@ namespace CheckingIn
                 IsToLower = false,
             };
 
-
             var htmlstr = h.GetHtml(i).Html;
-            workdaysjson = JsonMapper.ToObject(htmlstr);
-            workdaysjson = workdaysjson["data"][Jsonyear];
+            try
+            {
+              
+                workdaysjson = JsonMapper.ToObject(htmlstr);
+                workdaysjson = workdaysjson["data"][Jsonyear];
+            }
+            catch (Exception )
+            {
+                Log.Err("非工作日调用接口有问题,使用自己的接口文件");
+
+                htmlstr= File.OpenText("JsonData\\notworkdays.json").ReadToEnd();
+                workdaysjson = JsonMapper.ToObject(htmlstr);
+                
+            }
         }
         /// <summary>
         /// 读取文件
@@ -288,7 +299,7 @@ namespace CheckingIn
 
 
             //日期
-            var n = new DateTime(DateTime.Now.Year, month, 1);//上月第一天
+            var n = new DateTime(DateTime.Now.Year, month, 1);//这个月的第一天
             while (n.Month == month)
             {
                 dt.Columns.Add(n.ToShortDateString());
@@ -328,61 +339,57 @@ namespace CheckingIn
                 //得到信息
                 foreach (var c in p.Value.Checks)
                 {
-                    if (((DateTime)c.Date).Month < DateTime.Now.Month)
+                    if (c.Date >= DateTime.Now) continue;
+                    var upstr = "√";
+                    var donwstr = "√";
+
+
+                    var warninfos = c.warninfo.Split(' ');
+
+                    foreach (var wraninfo in warninfos)
                     {
-                        var upstr = "√";
-                        var donwstr = "√";
 
-
-                        var warninfos = c.warninfo.Split(' ');
-
-                        foreach (var wraninfo in warninfos)
+                        if (wraninfo.Contains("分钟"))
                         {
-
-                            if (wraninfo.Contains("分钟"))
+                            if (p.Value.DelayTime > new TimeSpan(0, 30, 0))//如果总时间小于30 就去掉迟到时间
                             {
-                                if (p.Value.DelayTime > new TimeSpan(0, 30, 0))//如果总时间小于30 就去掉迟到时间
-                                {
-                                    if (wraninfo.Contains("迟到"))
-                                        upstr = wraninfo;
-                                    else if (wraninfo.Contains("早退"))
-                                        donwstr = wraninfo;
-                                }
+                                if (wraninfo.Contains("迟到"))
+                                    upstr = wraninfo;
+                                else if (wraninfo.Contains("早退"))
+                                    donwstr = wraninfo;
                             }
-                            if (wraninfo.Contains("上班未打卡"))
-                            {
-                                upstr = "上未";
-                            }
-
-                            if (wraninfo.Contains("下班未打卡"))
-                            {
-                                donwstr = "下未";
-                            }
-
-                            if (wraninfo.Contains("旷工"))
-                            {
-                                upstr = "旷工";
-                                donwstr = "旷工";
-                            }
-
-                            if (c.Info.Contains("休假"))
-                            {
-                                upstr = c.Info;
-                                donwstr = c.Info;
-                            }
-
-
-                            if (!c.Date.IsWorkDay)
-                            {
-                                upstr = "圆";
-                                donwstr = "圆";
-                            }
-                            drup[c.Date.ToString()] = upstr;
-                            drdown[c.Date.ToString()] = donwstr;
                         }
+                        if (wraninfo.Contains("上班未打卡"))
+                        {
+                            upstr = "上未";
+                        }
+
+                        if (wraninfo.Contains("下班未打卡"))
+                        {
+                            donwstr = "下未";
+                        }
+
+                        if (wraninfo.Contains("旷工"))
+                        {
+                            upstr = "旷工";
+                            donwstr = "旷工";
+                        }
+
+                        if (c.Info.Contains("休假"))
+                        {
+                            upstr = c.Info;
+                            donwstr = c.Info;
+                        }
+
+
+                        if (!c.Date.IsWorkDay)
+                        {
+                            upstr = "圆";
+                            donwstr = "圆";
+                        }
+                        drup[c.Date.ToString()] = upstr;
+                        drdown[c.Date.ToString()] = donwstr;
                     }
-
-
                 }
                 dt.Rows.Add(drup);
                 dt.Rows.Add(drdown);

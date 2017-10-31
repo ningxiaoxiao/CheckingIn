@@ -187,6 +187,9 @@
     </EmbeddedResource>
     <None Include="Config\log4net.config" />
     <None Include="Config\log4net.unix.config" />
+    <None Include="JsonData\notworkdays.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="JsonData\worktimeclass.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -226,7 +229,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="JsonData\外出2.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="JsonData\补登.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

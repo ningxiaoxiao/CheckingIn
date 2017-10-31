@@ -148,6 +148,7 @@ namespace CheckingIn
 
         private bool isworkday(DateTime dt)
         {
+
             var str = dt.Month.ToString("00") + dt.Day.ToString("00");
 
             return !CheckingIn.Inst.workdaysjson.Keys.Contains(str);
