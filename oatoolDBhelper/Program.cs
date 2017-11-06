@@ -17,19 +17,20 @@ namespace oatoolDBhelper
 
         static void Main(string[] args)
         {
-
+            
             //得到这两个月的OA数据
             var t = DateTime.Today;
             t = t.AddDays(-40);
             oahelper.GetData(t);
 
+    
 
 
+          
+            var delcount = DB.Context.DeleteAll<Dos.Model.original>();
+            log._logger.Info($"清楚考勤原有记录{delcount}条");
 
-            //OpenDataFile("data.xls");
-
-
-            var Device = new WorkThread("192.168.1.3", 4370);//You can custom the LAN Segment.
+            var Device = new WorkThread("192.168.4.31", 4370);//You can custom the LAN Segment.
 
             Device.Connect();
             Device.GetUser();
@@ -38,9 +39,16 @@ namespace oatoolDBhelper
 
             Device.DisConnect();
 
+             Device = new WorkThread("192.168.4.32", 4370);//You can custom the LAN Segment.
+
+            Device.Connect();
+            Device.GetUser();
+
+            Device.GetLog();
+
+            Device.DisConnect();
 
         }
-
 
         private static void OpenDataFile(string path)
         {
@@ -149,16 +157,9 @@ namespace oatoolDBhelper
                 //judge whether the device supports 9.0 fingerprint arithmetic
                 string sOption = "~ZKFPVersion";
                 string sValue = "";
-                //if (axCZKEM1.GetSysOption(iMachineNumber, sOption, out sValue))
-                //{
-                //    if (sValue == "10")
-                //    {
-                //        MessageBox.Show("Your device is not using 9.0 arithmetic!", "Error");
-                //        return;
-                //    }
-                //}
 
-                int idwEnrollNumber = 0;
+
+                string idwEnrollNumber ="";
                 string sName = "";
                 string sPassword = "";
                 int iPrivilege = 0;
@@ -170,14 +171,13 @@ namespace oatoolDBhelper
                 int iUpdateFlag = 1;
 
                 sdk.EnableDevice(iMachineNumber, false);
-                //sdk.BeginBatchUpdate(iMachineNumber, 1);//create memory space for batching data
                 sdk.ReadAllUserID(iMachineNumber);//read all the user information to the memory
                                                   //  sdk.ReadAllTemplate(iMachineNumber);//read all the users' fingerprint templates to the memory
-
+                sdk.ReadAllTemplate(iMachineNumber);
                 var count = 0;
-                while (sdk.GetAllUserInfo(iMachineNumber, ref idwEnrollNumber, ref sName, ref sPassword, ref iPrivilege, ref bEnabled))//get all the users' information from the memory
+                while (sdk.SSR_GetAllUserInfo(iMachineNumber, out idwEnrollNumber, out sName, out sPassword, out iPrivilege, out bEnabled))//get all the users' information from the memory
                 {
-
+                    
                     var sb = sName.Split('\0');
 
 
@@ -193,74 +193,90 @@ namespace oatoolDBhelper
                 int iLogCount = 0;
                 int idwErrorCode = 0;
 
-                sdk.EnableDevice(iMachineNumber, false);//disable the device
-                var delcount = DB.Context.DeleteAll<Dos.Model.original>();
-                log._logger.Info($"清楚考勤原有记录{delcount}条");
+               
                 var tran = DB.Context.BeginTransaction();
                 try
                 {
                     if (sdk.ReadGeneralLogData(iMachineNumber))
                     {
-                        int idwTMachineNumber = 0;
-                        int idwEnrollNumber = 0;
-                        int idwEMachineNumber = 0;
+                        string sdwEnrollNumber = "";
                         int idwVerifyMode = 0;
                         int idwInOutMode = 0;
                         int idwYear = 0;
                         int idwMonth = 0;
-                        var idwDay = 0;
-                        var idwHour = 0;
-                        var idwMinute = 0;
-                        var sTime = "";
+                        int idwDay = 0;
+                        int idwHour = 0;
+                        int idwMinute = 0;
+                        int idwSecond = 0;
+                        int idwWorkcode = 0;
 
 
-                        while (sdk.GetGeneralLogDataStr(iMachineNumber, ref idwEnrollNumber, ref idwVerifyMode, ref idwInOutMode, ref sTime))//get the records from memory
+                        sdk.EnableDevice(iMachineNumber, false);//disable the device
+                        if (sdk.ReadAllGLogData(iMachineNumber))
                         {
-                            iLogCount++;//increase the number of attendance records
-
-                            lock (myObject)//make the object exclusive 
+                            while (sdk.SSR_GetGeneralLogData(iMachineNumber, out sdwEnrollNumber, out idwVerifyMode,
+                            out idwInOutMode, out idwYear, out idwMonth, out idwDay, out idwHour, out idwMinute, out idwSecond, ref idwWorkcode))//get the records from memory
                             {
+                                iLogCount++;//increase the number of attendance records
 
-                                // string k = $"enroll={idwEnrollNumber},VerifyMode={idwVerifyMode},time={sTime}";
-
-                                // log._logger.Info(k);
-
-
-                                //读出时间
-                                var time = DateTime.Parse(sTime);
-
-                                //如果 时间是 05:00前的 就把日期算到前一天上面去
-                                TimeSpan tt;
-                                if (time.TimeOfDay < new TimeSpan(5, 0, 0))
+                                lock (myObject)//make the object exclusive 
                                 {
-                                    time = time.AddDays(-1);
-                                    tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
+
+                                    // string k = $"enroll={idwEnrollNumber},VerifyMode={idwVerifyMode},time={sTime}";
+
+                                    // log._logger.Info(k);
+                                  
+
+                                    //读出时间
+                                    var time = new DateTime(idwYear,idwMonth,idwDay,idwHour,idwMinute,idwSecond);
+
+                                    //如果 时间是 05:00前的 就把日期算到前一天上面去
+                                    TimeSpan tt;
+                                    if (time.TimeOfDay < new TimeSpan(5, 0, 0))
+                                    {
+                                        time = time.AddDays(-1);
+                                        tt = time.TimeOfDay.Add(new TimeSpan(1, 0, 0, 0));//时间值多一天
+                                    }
+                                    else
+                                    {
+                                        tt = time.TimeOfDay;
+                                    }
+
+                                    if (!users.ContainsKey(sdwEnrollNumber.ToString()))
+                                    {
+                                        log._logger.Error("找不到用户,id=" + sdwEnrollNumber);
+                                        continue;
+                                    }
+
+
+                                    var o = new Dos.Model.original()
+                                    {
+                                        name = users[sdwEnrollNumber.ToString()],
+                                        date = time.Date,
+                                        time = tt.Ticks,
+
+                                    };
+
+                                    DB.Context.Insert(tran, o);
+
+
                                 }
-                                else
-                                {
-                                    tt = time.TimeOfDay;
-                                }
-
-                                if (!users.ContainsKey(idwEnrollNumber.ToString()))
-                                {
-                                    log._logger.Error("找不到用户,id=" + idwEnrollNumber);
-                                    continue;
-                                }
-
-
-                                var o = new Dos.Model.original()
-                                {
-                                    name = users[idwEnrollNumber.ToString()],
-                                    date = time.Date,
-                                    time = tt.Ticks,
-
-                                };
-
-                                DB.Context.Insert(tran, o);
-
-
                             }
                         }
+                        else
+                        {
+                            sdk.GetLastError(ref idwErrorCode);
+
+                            if (idwErrorCode != 0)
+                            {
+                                log._logger.Error("Reading data from terminal failed,ErrorCode: " + idwErrorCode.ToString());
+                            }
+                            else
+                            {
+                                log._logger.Error("No data from terminal returns!");
+                            }
+                        }
+                       
                     }
                     else
                     {
