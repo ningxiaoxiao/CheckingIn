@@ -85,7 +85,7 @@ namespace CheckingIn
 
                 htmlstr= File.OpenText("JsonData\\notworkdays.json").ReadToEnd();
                 workdaysjson = JsonMapper.ToObject(htmlstr);
-                
+                workdaysjson = workdaysjson["data"][Jsonyear];
             }
 
 
