@@ -34,7 +34,7 @@ namespace CheckingIn
 
         public JsonData workdaysjson { get; private set; }
         public JsonData worktimeclassjson { get; }
-        private const string Jsonyear = "2017";
+        private string Jsonyear => DateTime.Now.Year.ToString(); 
         public CheckingIn()
         {
             Inst = this;
@@ -76,15 +76,19 @@ namespace CheckingIn
               
                 workdaysjson = JsonMapper.ToObject(htmlstr);
                 workdaysjson = workdaysjson["data"][Jsonyear];
+                //写入文件
+                File.WriteAllText("JsonData\\notworkdays.json", htmlstr);
             }
             catch (Exception )
             {
-                Log.Err("非工作日调用接口有问题,使用自己的接口文件");
+                Log.Err("非工作日调用接口有问题,使用上一次的有效文件");
 
                 htmlstr= File.OpenText("JsonData\\notworkdays.json").ReadToEnd();
                 workdaysjson = JsonMapper.ToObject(htmlstr);
                 
             }
+
+
         }
         /// <summary>
         /// 读取文件

@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using log4net;
 
-[assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config", Watch = true)]
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.oahelper.config", Watch = true)]
 namespace oatoolDBhelper
 {
    

@@ -367,7 +367,7 @@ namespace CheckingIn
                         s = s.Date;
                         ee = ee.Date;
 
-
+                        //bug 重复的单会增加出差时间
                         //累加出差天数
 
 
