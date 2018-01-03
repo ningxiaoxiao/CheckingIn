@@ -4,27 +4,25 @@ function addprofile(a, b) {
 }
 
 
-function adddata(name, date, intime, outtime, info,warninfo) {
+function adddata(name, date, intime, outtime, info, warninfo) {
     var d = '<tr><td class="text-left">' + name + '</td><td class="text-left">' + date + '</td><td class="text-left">' + intime + '</td><td class="text-left">' + outtime + '</td><td class="text-left">' + info + '</td><td class="text-left">' + warninfo + '</td></tr>';
     $('#data').append(d);
 }
 
-function getdata(name,password,month) {
+function getdata(name, password, year, month) {
 
     var getname;
     //处理name乱码
-    if(name.indexOf("%")>0)
-    {
+    if (name.indexOf("%") > 0) {
         //解码
-        getname= decodeURI(name);
+        getname = decodeURI(name);
     }
 
-    getname= encodeURI(name);
+    getname = encodeURI(name);
 
-    $.get("getdata?name=" + getname+"&password="+password+"&month="+month, function (data, status) {
+    $.get("getdata?name=" + getname + "&password=" + password + "&month=" + month + "&year=" + year, function(data, status) {
 
-        if(data=="用户名or密码错误")
-        {
+        if (data == "用户名or密码错误") {
 
             alert(data);
             self.location = 'index.html';
@@ -36,7 +34,7 @@ function getdata(name,password,month) {
             addprofile(i, profile[i]);
         }
 
-        
+
         var datas = JSON.parse(d.data);
         for (var i in datas) {
             adddata(name, datas[i].date, datas[i].intime, datas[i].outtime, datas[i].info, datas[i].warninfo);
@@ -46,16 +44,16 @@ function getdata(name,password,month) {
 //获取url中的参数
 function getUrlParam(name) {
     var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
-    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    var r = window.location.search.substr(1).match(reg); //匹配目标参数
     if (r != null) return decodeURI(r[2]);
     return null; //返回参数值
 }
 
-$().ready(function () {
+$().ready(function() {
     var name = getUrlParam("name");
-    var m=getUrlParam("month");
-    getdata(name,getUrlParam("password") ,m);
-    $("#t").text(name +" "+m+ "月 考勤分析报表");
+    var m = getUrlParam("month");
+    var year = getUrlParam("year");
+    getdata(name, getUrlParam("password"), year, m);
+    $("#t").text(name + " " + m + "月 考勤分析报表");
 
 })
-

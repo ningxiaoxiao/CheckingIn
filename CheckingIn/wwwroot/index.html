@@ -1,98 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta name="renderer" content="webkit" /> 
+    <meta name="renderer" content="webkit" />
     <link href="css/index.css" rel="stylesheet">
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
+
 <body>
 
 
 
-<div class="form">
+    <div class="form">
 
-    <ul class="tab-group">
-        <li class="tab active"><a href="#login">查看</a></li>
-        <li class="tab "><a href="#signup">更新密码</a></li>
+        <ul class="tab-group">
+            <li class="tab active"><a href="#login">查看</a></li>
+            <li class="tab "><a href="#signup">更新密码</a></li>
 
-    </ul>
+        </ul>
 
-    <div class="tab-content">
+        <div class="tab-content">
 
 
-        <div id="login">
-            <h1>查看</h1>
+            <div id="login">
+                <h1>查看</h1>
 
-            <form id="formlook"     action="/" method="get">
+                <form id="formlook" action="/" method="get">
 
-                <div class="field-wrap">
-                    <label>
+                    <div class="field-wrap">
+                        <label>
                         姓名
                     </label>
-                    <input name="name" type="text" required autocomplete="off" />
-                </div>
+                        <input name="name" type="text" required autocomplete="off" />
+                    </div>
 
-                <div class="field-wrap">
-                    <label>
+                    <div class="field-wrap">
+                        <label>
                         密码
                     </label>
-                    <input name="password" type="password" required autocomplete="off" />
-                </div>
-                <div class="field-wrap">
-                    <select name="month" id="">
-                        <option value="1"> 1 月</option><option value="2"> 2 月</option><option value="3"> 3 月</option><option value="4"> 4 月</option><option value="5"> 5 月</option><option value="6"> 6 月</option><option value="7"> 7 月</option><option value="8"> 8 月</option><option value="9"> 9 月</option><option value="10"> 10 月</option><option value="11"> 11 月</option><option value="12"> 12 月</option>
+                        <input name="password" type="password" required autocomplete="off" />
+                    </div>
+                    <div class="field-wrap">
+                        <select name="year" id="">
+                            <option value="2018">2018年</option>
+                            <option value="2017">2017年</option>
                     </select>
-                </div>
-                <span>初始密码 123456</span>
+                        <select name="month" id="">
+                        <option value="1"> 1 月</option>
+                        <option value="2"> 2 月</option>
+                        <option value="3"> 3 月</option>
+                        <option value="4"> 4 月</option>
+                        <option value="5"> 5 月</option>
+                        <option value="6"> 6 月</option>
+                        <option value="7"> 7 月</option>
+                        <option value="8"> 8 月</option>
+                        <option value="9"> 9 月</option>
+                        <option value="10"> 10 月</option>
+                        <option value="11"> 11 月</option>
+                        <option value="12"> 12 月</option>
+                    </select>
+                    </div>
+                    <span>初始密码 123456</span>
 
 
-                <button id="look" class="button button-block" >查看</button>
+                    <button id="look" class="button button-block">查看</button>
 
-            </form>
+                </form>
 
-        </div>
-        <div id="signup">
-            <h1>更新密码</h1>
+            </div>
+            <div id="signup">
+                <h1>更新密码</h1>
 
-            <form id="pw" action="/" method="get">
+                <form id="pw" action="/" method="get">
 
 
-                <div class="field-wrap">
-                    <label>
+                    <div class="field-wrap">
+                        <label>
                         姓名
                     </label>
-                    <input name="cname" type="text" required autocomplete="off" />
-                </div>
+                        <input name="cname" type="text" required autocomplete="off" />
+                    </div>
 
 
-                <div class="field-wrap">
-                    <label>
+                    <div class="field-wrap">
+                        <label>
                         原密码
                     </label>
-                    <input name="cpassword" type="password" required autocomplete="off" />
-                </div>
-                <div class="field-wrap">
-                    <label>
+                        <input name="cpassword" type="password" required autocomplete="off" />
+                    </div>
+                    <div class="field-wrap">
+                        <label>
                         新密码
                     </label>
-                    <input name="newpassword" type="password" required autocomplete="off" />
-                </div>
+                        <input name="newpassword" type="password" required autocomplete="off" />
+                    </div>
 
-                <button id="changepassword" type="submit" class="button button-block" >更新密码</button>
+                    <button id="changepassword" type="submit" class="button button-block">更新密码</button>
 
-            </form>
+                </form>
 
+            </div>
         </div>
+        <!-- tab-content -->
+
     </div>
-    <!-- tab-content -->
-
-</div>
-<!-- /form -->
+    <!-- /form -->
 
 
 
-<script src='js/jquery.min.js'></script>
-<script src="js/index.js"></script>
+    <script src='js/jquery.min.js'></script>
+    <script src="js/index.js"></script>
 </body>
+
 </html>

@@ -274,12 +274,12 @@ namespace CheckingIn
         }
 
 
-        public string GetOutXlsString(int month)
+        public string GetOutXlsString(int year, int month)
         {
-            return DtToString(GetOutXlsDt(month));
+            return DtToString(GetOutXlsDt(year,month));
         }
 
-        private DataTable GetOutXlsDt(int month)
+        private DataTable GetOutXlsDt(int year,int month)
         {
             //所有人遍历
             var count = 0;
@@ -303,7 +303,7 @@ namespace CheckingIn
 
 
             //日期
-            var n = new DateTime(DateTime.Now.Year, month, 1);//这个月的第一天
+            var n = new DateTime(year, month, 1);//这个月的第一天
             while (n.Month == month)
             {
                 dt.Columns.Add(n.ToShortDateString());
@@ -324,7 +324,7 @@ namespace CheckingIn
                 drup["name"] = name + "上午";
                 drdown["name"] = name + "下午";
 
-                p.Value.GetData(month);
+                p.Value.GetData(year,month);
 
                 //统计信息
                 drup["剩余假期"] = p.Value.CanUseHolidayHour.TotalHours.ToString("0.#") + "小时";
@@ -407,7 +407,7 @@ namespace CheckingIn
         public void GetOutXlsFile()
         {
 
-            WriteDtToExcelFile(GetOutXlsDt(DateTime.Now.Month), outputfilename);
+            WriteDtToExcelFile(GetOutXlsDt(DateTime.Now.Year,DateTime.Now.Month), outputfilename);
         }
 
         private void 输出文件ToolStripMenuItem_Click(object sender, EventArgs e)

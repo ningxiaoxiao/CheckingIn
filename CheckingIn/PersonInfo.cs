@@ -133,11 +133,11 @@ namespace CheckingIn
             r["info"] = i;
             dt.Rows.Add(r);
         }
-        private void SetMonth(int m)
+        private void SetAllDay(int y,int m)
         {
             AllDays.Clear();
             //得到本月所有的日期
-            var n = new DateTime(DateTime.Now.Year, m, 1);
+            var n = new DateTime(y, m, 1);
             while (n.Month == m)
             {
                 AllDays.Add(n);
@@ -171,13 +171,13 @@ namespace CheckingIn
         /// 处理数据
         /// </summary>
         /// <param name="month">月份</param>
-        public void GetData(int month)
+        public void GetData(int year,int month)
         {
 
             reset();
 
 
-            SetMonth(month);
+            SetAllDay(year,month);
 
 
 
@@ -233,7 +233,7 @@ namespace CheckingIn
                     willaddcheck.Info += drv["info"] + " ";
                 }*/
 
-               
+
                 //合成信息
                 //bug 如果一天有多次同样的OA  只会出现一次提示,比如调休
                 foreach (var r in from DataRowView t in data select t["info"].ToString() into r where !willaddcheck.Info.Contains(r) select r)
@@ -540,7 +540,18 @@ namespace CheckingIn
         {
             ClassName = n;
 
-            var j = CheckingIn.Inst.worktimeclassjson[n];
+
+
+            var j = CheckingIn.Inst.worktimeclassjson["早班"]; ;
+            try
+            {
+                j = CheckingIn.Inst.worktimeclassjson[n];
+
+            }
+            catch
+            {
+                Log.Err("出现未定义班次:" + n);
+            }
 
             InTime = TimeSpan.Parse(j["in"].ToString());
             OutTime = TimeSpan.Parse(j["out"].ToString());

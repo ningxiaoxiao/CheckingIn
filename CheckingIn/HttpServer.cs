@@ -85,7 +85,7 @@ namespace CheckingIn
                         break;
                     case "/getout.xls":
                         //生成文件
-                        retHtml = CheckingIn.Inst.GetOutXlsString(int.Parse(requestInfo.Parameter["month"].ToString()));
+                        retHtml = CheckingIn.Inst.GetOutXlsString(int.Parse(requestInfo.Parameter["year"].ToString()), int.Parse(requestInfo.Parameter["month"].ToString()));
                         break;
                 }
             }
@@ -110,7 +110,7 @@ namespace CheckingIn
                     break;
                 case ".xls":
                     sb.AppendLine("Content-Type: application/octet-stream");
-                    sb.AppendLine("Content-Disposition:attachment; filename=\"getout.xls\"");
+                    sb.AppendLine("Content-Disposition: attachment; filename=\"getout.xls\";");
                     break;
             }
             /*
@@ -126,7 +126,7 @@ namespace CheckingIn
                     sb.Append("Content-Type: " + accepts[0]);
             }
             */
-
+            //sb.AppendLine("Content-Length: ")
             sb.AppendLine();//一个空行
             sb.Append(retHtml);
 
@@ -168,7 +168,7 @@ namespace CheckingIn
             var name = requestInfo.Parameter["name"];
             var password = requestInfo.Parameter["password"];
             var month = requestInfo.Parameter["month"];
-
+            var year = requestInfo.Parameter["year"];
 
 
             if (name == null || password == null || month == null)
@@ -187,7 +187,6 @@ namespace CheckingIn
             if (password != "chaoji666" && getp.password != password)
                 return "用户名or密码错误";
 
-            var monthint = int.Parse(month);
 
             //建立这个用户
             if (!DB.Persons.ContainsKey(name))
@@ -196,7 +195,7 @@ namespace CheckingIn
             }
             var pp = DB.Persons[name];
 
-            pp.GetData(monthint);
+            pp.GetData(int.Parse(year), int.Parse(month));
             Log.Info($"GetData,{name},{password},{month}");
             return pp.GetJson().ToJson();
 
